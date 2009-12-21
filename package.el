@@ -140,6 +140,7 @@
 ;; Stefan Monnier <monnier@iro.umontreal.ca>
 ;; Vinicius Jose Latorre <viniciusjl@ig.com.br>
 ;; Phil Hagelberg <phil@hagelb.org>
+;; Samuel Bronson <naesten@gmail.com>
 
 ;;; ToDo:
 
@@ -330,9 +331,11 @@ E.g., if given \"quux-23.0\", will return \"quux\""
 (defun package-load-descriptor (dir package)
   "Load the description file for a package.
 Return nil if the package could not be found."
-  (let ((pkg-dir (concat (file-name-as-directory dir) package "/")))
+  (let ((pkg-dir (expand-file-name package dir)))
     (if (file-directory-p pkg-dir)
-	(load (concat pkg-dir (package-strip-version package) "-pkg") nil t))))
+	(load (expand-file-name (concat (package-strip-version package) "-pkg")
+                                pkg-dir)
+              nil t))))
 
 (defun package-load-all-descriptors ()
   "Load descriptors of all packages.
@@ -822,6 +825,7 @@ May narrow buffer or move point even on failure."
   "Find package information for a tar file.
 FILE is the name of the tar file to examine.
 The return result is a vector like `package-buffer-info'."
+  (setq file (expand-file-name file))
   (unless (string-match "^\\(.+\\)-\\([0-9.]+\\)\\.tar$" file)
     (error "`%s' doesn't have a package-ish name" file))
   (let* ((pkg-name (file-name-nondirectory (match-string-no-properties 1 file)))
@@ -1236,7 +1240,7 @@ available for download."
 (defun package-menu-quick-help ()
   "Show short key binding help for package-menu-mode."
   (interactive)
-  (message "n-ext, i-nstall, d-elete, u-nmark, x-ecute, r-efresh, h-elp"))
+  (message "n-ext, i-nstall, d-elete, u-nmark, x-ecute, r-efresh, h-elp ?-view commentary"))
 
 (defun package-menu-view-commentary ()
   "Display information about this package.
