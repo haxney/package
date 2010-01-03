@@ -25,14 +25,6 @@
 ;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 ;; Boston, MA 02110-1301, USA.
 
-;;; Change Log:
-
-;;  2 Apr 2007 - now using ChangeLog file
-;; 15 Mar 2007 - updated documentation
-;; 14 Mar 2007 - Changed how obsolete packages are handled
-;; 13 Mar 2007 - Wrote package-install-from-buffer
-;; 12 Mar 2007 - Wrote package-menu mode
-
 ;;; Commentary:
 
 ;; To use this, put package.el somewhere on your load-path.  Then add
@@ -209,15 +201,6 @@ Note that some code in package.el assumes that this is an http: URL.")
 (defconst package-archive-version 1
   "Version number of the package archive understood by this file.
 Lower version numbers than this will probably be understood as well.")
-
-;; Note that this only works if you have the password, which you
-;; probably don't :-).  Also if you are using Emacs 21 then you will
-;; need to hack ange-ftp-name-format to make this work.
-(defvar package-archive-upload-base "/elpa@tromey.com@tromey.com:/"
-  "Base location for uploading to package archive.")
-
-(defconst package-el-maintainer "Tom Tromey <elpa@tromey.com>"
-  "The package.el maintainer.")
 
 (defconst package-el-version "0.9"
   "Version of package.el.")
@@ -933,21 +916,6 @@ The file can either be a tar file or an Emacs Lisp file."
     (setq string (replace-match "&quot;" t nil string)))
   string)
 
-(defun package--make-rss-entry (title text)
-  (let ((date-string (format-time-string "%a, %d %B %Y %T %z")))
-    (concat "<item>\n"
-	    "<title>" (package--encode title) "</title>\n"
-	    ;; FIXME: should have a link in the web page.
-	    "<link>" package-archive-base "news.html</link>\n"
-	    "<description>" (package--encode text) "</description>\n"
-	    "<pubDate>" date-string "</pubDate>\n"
-	    "</item>\n")))
-
-(defun package--make-html-entry (title text)
-  (concat "<li> " (format-time-string "%B %e") " - "
-	  title " - " (package--encode text)
-	  " </li>\n"))
-
 (defun package--update-file (file location text)
   (save-excursion
     (let ((old-buffer (find-buffer-visiting file)))
@@ -961,137 +929,6 @@ The file can either be a tar file or an Emacs Lisp file."
 	  (save-buffer))
 	(unless old-buffer
 	  (kill-buffer (current-buffer)))))))
-
-(defun package-maint-add-news-item (title description)
-  "Add a news item to the ELPA web pages.
-TITLE is the title of the news item.
-DESCRIPTION is the text of the news item.
-You need administrative access to ELPA to use this."
-  (interactive "sTitle: \nsText: ")
-  (package--update-file (concat package-archive-upload-base "elpa.rss")
-			"<description>"
-			(package--make-rss-entry title description))
-  (package--update-file (concat package-archive-upload-base "news.html")
-			"New entries go here"
-			(package--make-html-entry title description)))
-
-(defun package--update-news (package version description)
-  "Update the ELPA web pages when a package is uploaded."
-  (package-maint-add-news-item (concat package " version " version)
-			       description))
-
-(defun package-upload-buffer-internal (pkg-info extension)
-  "Upload a package whose contents are in the current buffer.
-PKG-INFO is the package info, see `package-buffer-info'.
-EXTENSION is the file extension, a string.  It can be either
-\"el\" or \"tar\"."
-  (save-excursion
-    (save-restriction
-      (let* ((file-type (cond
-			 ((equal extension "el") 'single)
-			 ((equal extension "tar") 'tar)
-			 (t (error "Unknown extension `%s'" extension))))
-	     (file-name (aref pkg-info 0))
-	     (pkg-name (intern file-name))
-	     (requires (aref pkg-info 1))
-	     (desc (if (string= (aref pkg-info 2) "")
-		       (read-string "Description of package: ")
-		     (aref pkg-info 2)))
-	     (pkg-version (aref pkg-info 3))
-	     (commentary (aref pkg-info 4))
-	     (split-version (package-version-split pkg-version))
-	     (pkg-buffer (current-buffer))
-
-	     ;; Download latest archive-contents.
-	     (buffer (url-retrieve-synchronously
-		      (concat package-archive-base "archive-contents"))))
-
-	;; Parse archive-contents.
-	(set-buffer buffer)
-	(package-handle-response)
-	(re-search-forward "^$" nil 'move)
-	(forward-char)
-	(delete-region (point-min) (point))
-	(let ((contents (package-read-from-string
-			 (buffer-substring-no-properties (point-min)
-							 (point-max))))
-	      (new-desc (vector split-version requires desc file-type)))
-	  (if (> (car contents) package-archive-version)
-	      (error "Unrecognized archive version %d" (car contents)))
-	  (let ((elt (assq pkg-name (cdr contents))))
-	    (if elt
-		(if (package-version-compare split-version
-					     (package-desc-vers (cdr elt))
-					     '<=)
-		    (error "New package has smaller version: %s" pkg-version)
-		  (setcdr elt new-desc))
-	      (setq contents (cons (car contents)
-				   (cons (cons pkg-name new-desc)
-					 (cdr contents))))))
-
-	  ;; Now CONTENTS is the updated archive contents.  Upload
-	  ;; this and the package itself.  For now we assume ELPA is
-	  ;; writable via file primitives.
-	  (let ((print-level nil)
-		(print-length nil))
-	    (write-region (concat (pp-to-string contents) "\n")
-			  nil
-			  (concat package-archive-upload-base
-				  "archive-contents")))
-
-	  ;; If there is a commentary section, write it.
-	  (when commentary
-	    (write-region commentary nil
-			  (concat package-archive-upload-base
-				  (symbol-name pkg-name) "-readme.txt")))
-
-	  (set-buffer pkg-buffer)
-	  (kill-buffer buffer)
-	  (write-region (point-min) (point-max)
-			(concat package-archive-upload-base
-				file-name "-" pkg-version
-				"." extension)
-			nil nil nil 'excl)
-
-	  ;; Write a news entry.
-	  (package--update-news (concat file-name "." extension)
-				pkg-version desc)
-
-	  ;; special-case "package": write a second copy so that the
-	  ;; installer can easily find the latest version.
-	  (if (string= file-name "package")
-	      (write-region (point-min) (point-max)
-			    (concat package-archive-upload-base
-				    file-name "." extension)
-			    nil nil nil 'ask)))))))
-
-(defun package-upload-buffer ()
-  "Upload a single .el file to ELPA from the current buffer."
-  (interactive)
-  (save-excursion
-    (save-restriction
-      ;; Find the package in this buffer.
-      (let ((pkg-info (package-buffer-info)))
-	(package-upload-buffer-internal pkg-info "el")))))
-
-(defun package-upload-file (file)
-  (interactive "fPackage file name: ")
-  (with-temp-buffer
-    (insert-file-contents-literally file)
-    (let ((info (cond
-		 ((string-match "\\.tar$" file) (package-tar-file-info file))
-		 ((string-match "\\.el$" file) (package-buffer-info))
-		 (t (error "Unrecognized extension `%s'"
-			   (file-name-extension file))))))
-      (package-upload-buffer-internal info (file-name-extension file)))))
-
-(defun package-gnus-summary-upload ()
-  "Upload a package contained in the current *Article* buffer.
-This should be invoked from the gnus *Summary* buffer."
-  (interactive)
-  (save-excursion
-    (set-buffer gnus-article-buffer)
-    (package-upload-buffer)))
 
 (defun package--download-one-archive (file)
   "Download a single archive file and cache it locally."
@@ -1152,8 +989,7 @@ download."
     'package-menu-mark-obsolete-for-deletion)
   (define-key package-menu-mode-map "x" 'package-menu-execute)
   (define-key package-menu-mode-map "h" 'package-menu-quick-help)
-  (define-key package-menu-mode-map "?" 'package-menu-view-commentary)
-  )
+  (define-key package-menu-mode-map "?" 'package-menu-view-commentary))
 
 (defvar package-menu-sort-button-map
   (let ((map (make-sparse-keymap)))
@@ -1484,27 +1320,6 @@ The list is displayed in a buffer named `*Packages*'."
 (define-key-after menu-bar-options-menu [package]
   '(menu-item "Manage Packages" package-list-packages
 	      :help "Install or uninstall additional Emacs packages"))
-
-
-
-(eval-when-compile
-  (require 'reporter))
-
-(defun package-report-bug ()
-  "Submit a bug report for package.el via email."
-  (interactive)
-  (require 'reporter)
-  (reporter-submit-bug-report
-   package-el-maintainer
-   (concat "package.el " package-el-version)
-   '(package-archive-base
-     package-archive-version
-     package-archive-contents
-     package-user-dir
-     package-directory-list
-     package-alist
-     package-activated-list
-     package-obsolete-alist)))
 
 (provide 'package)
 

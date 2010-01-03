@@ -7,6 +7,9 @@ Emacs proper.
 
 ## TODO
 
+* Mechanism for allowing users to upload new versions of packages they
+  have created. This may tie in with the Savannah project hosting site.
+
 * Setting the default Emacs load-path based on package.el.  This is
   tricky because we may want to let the user set package-user-dir.
   But the user may also want to refer to packages from .emacs.
@@ -24,7 +27,6 @@ Emacs proper.
 * Incorporate a menu into package.el.  I have a patch from a user but I
   don't know if he has a copyright assignment.
 
-* Mechanism for allowing users to upload new versions of packages they
-  have created. This may tie in with the Savannah project hosting site.
+* Prerelease version numbers.
 
-* Remove uploading code once the above is implemented.
+* Add command to perform installation without marking.
