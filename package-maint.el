@@ -34,6 +34,8 @@
 ;; "package" here is used to mean a specific version of a project that
 ;; is prepared for download and installation.
 
+;; Currently only supports single-file projects stored in git.
+
 ;;; Code:
 
 (require 'cl) ; Since this library is not meant to be loaded by users
@@ -82,8 +84,28 @@ repositories (strings).")
   "Given a project version, create a package for it."
   (shell-command (format "git checkout v%s" version))
   (find-file (format "%s/%s.el" (package-local-checkout name) name))
-  (let ((pkg-info (package-buffer-info)))
-    ))
+  (package-write-buffer)
+  (kill-buffer))
+
+(defun package-write-buffer ()
+  "Write a package whose contents are in the current buffer."
+  (save-excursion
+    (save-restriction
+      (let* ((pkg-info (package-buffer-info))
+             (pkg-version (aref pkg-info 3))
+             (file-name (aref pkg-info 0)))
+        (write-region (point-min) (point-max)
+                      (concat package-archive-public-dir
+                              file-name "-" pkg-version
+                              ".el")
+                      nil nil nil 'excl)
+        ;; special-case "package": write a second copy so that the
+        ;; installer can easily find the latest version.
+        (if (string= file-name "package")
+            (write-region (point-min) (point-max)
+                          (concat package-archive-public-dir
+                                  file-name ".el")
+                          nil nil nil 'ask))))))
 
 (defun package-init (project)
   "Create a new checkout of a project if necessary."
