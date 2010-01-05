@@ -38,8 +38,9 @@
 
 ;;; Code:
 
-(require 'cl) ; Since this library is not meant to be loaded by users
-              ; at runtime, use of cl functions should not be a problem.
+;; Since this library is not meant to be loaded by users
+;; at runtime, use of cl functions should not be a problem.
+(require 'cl)                                        
 
 (require 'package)
 
@@ -66,7 +67,7 @@ repositories (strings).")
                                                      (point-max)))))
       (dolist (project projects)
         (package-build-packages project))
-      (package-build-archive-contents))))
+      (package-build-archive-contents projects))))
 
 (defun package-build-packages (project)
   "Given a project, create packages for each version that exists."
@@ -117,6 +118,7 @@ repositories (strings).")
   (format package-working-dir name))
 
 (defun package-list-versions ()
+  "List all versions of a project. Must run in project checkout."
   (mapcar (lambda (v) (substring v 1))
           (remove-if-not (lambda (v) (string-match package-version-format v))
                          (split-string (shell-command-to-string "git tag")
@@ -128,8 +130,34 @@ repositories (strings).")
 (defun package-built? (name version)
   (file-exists-p (package-directory name version)))
 
-(defun package-build-archive-contents ()
-  "Update the list of packages.")
+(defun package-build-archive-contents (contents)
+  "Update the list of packages."
+  (let ((print-level nil)
+        (print-length nil))
+    (write-region (concat (pp-to-string contents) "\n") nil
+                  (concat package-public-dir
+                          "archive-contents"))))
+
+(defun package-get-archive-contents (projects)
+  (cons package-archive-version
+        (mapcar 'package-contents-for-project projects)))
+
+(defun package-contents-for-project (project)
+  (find-file (package-latest-for-project project))
+  (let* ((pkg-info (package-buffer-info))
+         (pkg-version (aref pkg-info 3))
+         (split-version (package-version-split pkg-version))
+         (requires (aref pkg-info 1))
+         (desc (if (string= (aref pkg-info 2) "")
+                   (read-string "Description of package: ")
+                 (aref pkg-info 2)))
+         ;; TODO: support tar
+         (file-type 'single))
+    (vector split-version requires desc file-type)))
+
+(defun package-latest-for-project (project)
+  ;; TODO: write
+  )
 
 (provide 'package-maint)
 ;;; package-maint.el ends here
