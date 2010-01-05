@@ -7,8 +7,12 @@ Emacs proper.
 
 ## TODO
 
-* Mechanism for allowing users to upload new versions of packages they
-  have created. This may tie in with the Savannah project hosting site.
+* Mechanism for allowing package authors to upload new versions.
+
+* Allow the user to specify multiple archive sources.
+
+* Lock the archive while it's being rebuilt to avoid stomping on
+  another process.
 
 * Setting the default Emacs load-path based on package.el.  This is
   tricky because we may want to let the user set package-user-dir.
