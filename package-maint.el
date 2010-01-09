@@ -150,7 +150,8 @@ the project name followed by the DVCS repository URL.")
 
 (defun package-get-archive-contents (projects)
   (cons package-archive-version
-        (mapcar 'package-archive-contents-for-project projects)))
+        (remove-if
+         'null (mapcar 'package-archive-contents-for-project projects))))
 
 (defun package-archive-contents-for-project (project)
   (when (file-exists-p (package-latest-for-project project))
@@ -170,7 +171,7 @@ the project name followed by the DVCS repository URL.")
   (cd (package-local-checkout-dir (car project)))
   (let* ((name (car project))
          (versions (package-list-versions))
-         (latest-version (last (package-sort-versions versions))))
+         (latest-version (car (last (package-sort-versions versions)))))
     (format "%s/%s.el" (package-dir name latest-version) name)))
 
 (defun package-sort-versions (versions)
