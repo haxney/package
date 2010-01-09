@@ -122,7 +122,7 @@ the project name followed by the DVCS repository URL.")
   "Create a new checkout of a project if necessary."
   (when (not (file-exists-p (package-local-checkout-dir (car project))))
     (cd (format package-working-dir ""))
-    (shell-command (format "git clone %s" (cadr project)))))
+    (shell-command (format "git clone %s %s" (cadr project) (car project)))))
 
 (defun package-local-checkout-dir (name)
   (format package-working-dir name))
