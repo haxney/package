@@ -61,7 +61,7 @@ the project name followed by the DVCS repository URL.")
 (defun package-build-archive ()
   "Build packages for every version of every project in the index."
   (interactive)
-  (save-excursion
+  (save-window-excursion
     (find-file package-index)
     (let ((original-dir default-directory)
           (projects (package-read-from-string
@@ -84,10 +84,17 @@ the project name followed by the DVCS repository URL.")
 
 (defun package-build-package (name version)
   "Given a project version, create a package for it."
-  (shell-command (format "git checkout %s" version))
-  (find-file (format "%s/%s.el" (package-local-checkout-dir name) name))
-  (package-write-buffer)
-  (kill-buffer))
+  (message "Building %s v%s" name version)
+  (let ((package-source (format "%s/%s.el"
+                                (package-local-checkout-dir name) name)))
+    (cd (package-local-checkout-dir name))
+    (shell-command (format "git checkout %s" version))
+    (if (not (file-exists-p package-source))
+        (message "Skipping %s since %s was not found." name package-source)
+      (find-file package-source)
+      (package-write-buffer)
+      (message "Built %s version %s." name version)
+      (kill-buffer))))
 
 (defun package-write-buffer ()
   "Write a package whose contents are in the current buffer."
