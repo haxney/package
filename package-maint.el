@@ -165,7 +165,8 @@ the project name followed by the DVCS repository URL.")
                    (aref pkg-info 2)))
            ;; TODO: support tar
            (file-type 'single))
-      (vector split-version requires desc file-type))))
+      (cons (intern (car project))
+            (vector split-version requires desc file-type)))))
 
 (defun package-latest-for-project (project)
   (cd (package-local-checkout-dir (car project)))
