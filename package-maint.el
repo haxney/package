@@ -54,7 +54,7 @@ repositories (strings).")
 (defvar package-public-dir "~/src/package.el/public"
   "Directory in which to place packages created.")
 
-(defvar package-version-format "^v\\([0-9\\.]+[0-9]\\)*$"
+(defvar package-version-format "^\\([0-9\\.]+[0-9]\\)*$"
   "A regex that will only match tags which indicate versions.")
 
 (defun package-build-archive ()
@@ -71,19 +71,17 @@ repositories (strings).")
 
 (defun package-build-packages (project)
   "Given a project, create packages for each version that exists."
-  (let ((name (car project))
-        (dir default-directory))
+  (let ((name (car project)))
     (package-init project)
     (cd (package-local-checkout name))
-    (shell-command "git pull --tags")
+    (shell-command "git fetch --tags")
     (dolist (version (package-list-versions))
       (when (not (package-built? name version))
-        (package-build-package name version)))
-    (cd dir)))
+        (package-build-package name version)))))
 
 (defun package-build-package (name version)
   "Given a project version, create a package for it."
-  (shell-command (format "git checkout v%s" version))
+  (shell-command (format "git checkout %s" version))
   (find-file (format "%s/%s.el" (package-local-checkout name) name))
   (package-write-buffer)
   (kill-buffer))
@@ -95,23 +93,25 @@ repositories (strings).")
       (let* ((pkg-info (package-buffer-info))
              (pkg-version (aref pkg-info 3))
              (file-name (aref pkg-info 0)))
+        (make-directory (concat package-public-dir "/"
+                                file-name "-" pkg-version "/") t)
         (write-region (point-min) (point-max)
-                      (concat package-archive-public-dir
-                              file-name "-" pkg-version
-                              ".el")
+                      (concat package-public-dir "/"
+                              file-name "-" pkg-version "/"
+                              file-name ".el")
                       nil nil nil 'excl)
         ;; special-case "package": write a second copy so that the
         ;; installer can easily find the latest version.
         (if (string= file-name "package")
             (write-region (point-min) (point-max)
-                          (concat package-archive-public-dir
+                          (concat package-public-dir "/"
                                   file-name ".el")
                           nil nil nil 'ask))))))
 
 (defun package-init (project)
   "Create a new checkout of a project if necessary."
-  (when (not (file-exists-p (package-local-checkout project)))
-    (cd package-working-dir)
+  (when (not (file-exists-p (package-local-checkout (car project))))
+    (cd (format package-working-dir ""))
     (shell-command (format "git clone %s" (cadr project)))))
 
 (defun package-local-checkout (name)
@@ -119,10 +119,9 @@ repositories (strings).")
 
 (defun package-list-versions ()
   "List all versions of a project. Must run in project checkout."
-  (mapcar (lambda (v) (substring v 1))
-          (remove-if-not (lambda (v) (string-match package-version-format v))
-                         (split-string (shell-command-to-string "git tag")
-                                       "\n" t))))
+  (remove-if-not (lambda (v) (string-match package-version-format v))
+                 (split-string (shell-command-to-string "git tag")
+                               "\n" t)))
 
 (defun package-directory (name version)
   (format "%s/%s-%s" package-public-dir name version))
@@ -130,13 +129,14 @@ repositories (strings).")
 (defun package-built? (name version)
   (file-exists-p (package-directory name version)))
 
-(defun package-build-archive-contents (contents)
+(defun package-build-archive-contents (projects)
   "Update the list of packages."
   (let ((print-level nil)
-        (print-length nil))
+        (print-length nil)
+        (contents (package-get-archive-contents projects)))
     (write-region (concat (pp-to-string contents) "\n") nil
                   (concat package-public-dir
-                          "archive-contents"))))
+                          "/archive-contents"))))
 
 (defun package-get-archive-contents (projects)
   (cons package-archive-version
@@ -156,8 +156,20 @@ repositories (strings).")
     (vector split-version requires desc file-type)))
 
 (defun package-latest-for-project (project)
-  ;; TODO: write
-  )
+  (cd (package-local-checkout (car project)))
+  (let* ((name (car project))
+         (versions (package-list-versions))
+         (latest-version (last (package-sort-versions versions))))
+    (format "%s/%s.el"
+            (package-directory name latest-version) name)))
+
+(defun package-sort-versions (versions)
+  ;; destructive list functions! you gotta be kidding me.
+  (let ((versions (copy-list versions)))
+    (sort versions (lambda (a b)
+                     (package-version-compare
+                      (package-version-split a)
+                      (package-version-split b) '<)))))
 
 (provide 'package-maint)
 ;;; package-maint.el ends here
