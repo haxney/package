@@ -40,16 +40,17 @@
 
 ;; Since this library is not meant to be loaded by users
 ;; at runtime, use of cl functions should not be a problem.
-(require 'cl)                                        
+(require 'cl)
 
 (require 'package)
 
 (defvar package-index "~/src/package.el/index.el"
   "The listing of all projects and repositories to get them from.
-Should contain an alist of project names (symbols) to DVCS
-repositories (strings).")
+Should contain an list of projects, each formatted as a list with
+the project name followed by the DVCS repository URL.")
 
-(defvar package-working-dir "~/src/package.el/working/%s")
+(defvar package-working-dir "~/src/package.el/working/%s"
+  "Directory in which to keep project checkouts.")
 
 (defvar package-public-dir "~/src/package.el/public"
   "Directory in which to place packages created.")
@@ -62,18 +63,20 @@ repositories (strings).")
   (interactive)
   (save-excursion
     (find-file package-index)
-    (let ((projects (package-read-from-string
+    (let ((original-dir default-directory)
+          (projects (package-read-from-string
                      (buffer-substring-no-properties (point-min)
                                                      (point-max)))))
       (dolist (project projects)
         (package-build-packages project))
-      (package-build-archive-contents projects))))
+      (package-build-archive-contents projects)
+      (cd original-dir))))
 
 (defun package-build-packages (project)
-  "Given a project, create packages for each version that exists."
+  "Given a project, create packages for each version needs building."
   (let ((name (car project)))
     (package-init project)
-    (cd (package-local-checkout name))
+    (cd (package-local-checkout-dir name))
     (shell-command "git fetch --tags")
     (dolist (version (package-list-versions))
       (when (not (package-built? name version))
@@ -82,7 +85,7 @@ repositories (strings).")
 (defun package-build-package (name version)
   "Given a project version, create a package for it."
   (shell-command (format "git checkout %s" version))
-  (find-file (format "%s/%s.el" (package-local-checkout name) name))
+  (find-file (format "%s/%s.el" (package-local-checkout-dir name) name))
   (package-write-buffer)
   (kill-buffer))
 
@@ -110,11 +113,11 @@ repositories (strings).")
 
 (defun package-init (project)
   "Create a new checkout of a project if necessary."
-  (when (not (file-exists-p (package-local-checkout (car project))))
+  (when (not (file-exists-p (package-local-checkout-dir (car project))))
     (cd (format package-working-dir ""))
     (shell-command (format "git clone %s" (cadr project)))))
 
-(defun package-local-checkout (name)
+(defun package-local-checkout-dir (name)
   (format package-working-dir name))
 
 (defun package-list-versions ()
@@ -123,11 +126,11 @@ repositories (strings).")
                  (split-string (shell-command-to-string "git tag")
                                "\n" t)))
 
-(defun package-directory (name version)
+(defun package-dir (name version)
   (format "%s/%s-%s" package-public-dir name version))
 
 (defun package-built? (name version)
-  (file-exists-p (package-directory name version)))
+  (file-exists-p (package-dir name version)))
 
 (defun package-build-archive-contents (projects)
   "Update the list of packages."
@@ -140,9 +143,9 @@ repositories (strings).")
 
 (defun package-get-archive-contents (projects)
   (cons package-archive-version
-        (mapcar 'package-contents-for-project projects)))
+        (mapcar 'package-archive-contents-for-project projects)))
 
-(defun package-contents-for-project (project)
+(defun package-archive-contents-for-project (project)
   (find-file (package-latest-for-project project))
   (let* ((pkg-info (package-buffer-info))
          (pkg-version (aref pkg-info 3))
@@ -156,12 +159,11 @@ repositories (strings).")
     (vector split-version requires desc file-type)))
 
 (defun package-latest-for-project (project)
-  (cd (package-local-checkout (car project)))
+  (cd (package-local-checkout-dir (car project)))
   (let* ((name (car project))
          (versions (package-list-versions))
          (latest-version (last (package-sort-versions versions))))
-    (format "%s/%s.el"
-            (package-directory name latest-version) name)))
+    (format "%s/%s.el" (package-dir name latest-version) name)))
 
 (defun package-sort-versions (versions)
   ;; destructive list functions! you gotta be kidding me.
