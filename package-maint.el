@@ -103,6 +103,7 @@ the project name followed by the DVCS repository URL.")
       (let* ((pkg-info (package-buffer-info))
              (pkg-version (aref pkg-info 3))
              (file-name (aref pkg-info 0)))
+        (make-directory package-public-dir t)
         (write-region (point-min) (point-max)
                       (concat package-public-dir "/"
                               file-name "-" pkg-version ".el")
@@ -118,6 +119,7 @@ the project name followed by the DVCS repository URL.")
 (defun package-init (project)
   "Create a new checkout of a project if necessary."
   (when (not (file-exists-p (package-local-checkout-dir (car project))))
+    (make-directory package-working-dir t)
     (cd (format package-working-dir ""))
     (shell-command (format "git clone %s %s" (cadr project) (car project)))))
 
