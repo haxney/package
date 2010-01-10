@@ -103,12 +103,9 @@ the project name followed by the DVCS repository URL.")
       (let* ((pkg-info (package-buffer-info))
              (pkg-version (aref pkg-info 3))
              (file-name (aref pkg-info 0)))
-        (make-directory (concat package-public-dir "/"
-                                file-name "-" pkg-version "/") t)
         (write-region (point-min) (point-max)
                       (concat package-public-dir "/"
-                              file-name "-" pkg-version "/"
-                              file-name ".el")
+                              file-name "-" pkg-version ".el")
                       nil nil nil 'excl)
         ;; special-case "package": write a second copy so that the
         ;; installer can easily find the latest version.
