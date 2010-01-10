@@ -614,19 +614,19 @@ It will move point to somewhere in the headers."
       (package-unpack name version)
       (kill-buffer tar-buffer))))
 
-(defun package-installed-p (package version)
+(defun package-installed? (package &optional min-version)
   (let ((pkg-desc (assq package package-alist)))
     (and pkg-desc
-	 (package-version-compare version
+         (package-version-compare min-version
 				  (package-desc-vers (cdr pkg-desc))
-				  '>=))))
+				  '<=))))
 
 (defun package-compute-transaction (result requirements)
   (while requirements
     (let* ((elt (car requirements))
 	   (next-pkg (car elt))
 	   (next-version (car (cdr elt))))
-      (unless (package-installed-p next-pkg next-version)
+      (unless (package-installed? next-pkg next-version)
 	(let ((pkg-desc (assq next-pkg package-archive-contents)))
 	  (unless pkg-desc
 	    (error "Package '%s' not available for installation"
