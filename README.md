@@ -14,6 +14,10 @@ Emacs proper.
 * Lock the archive while it's being rebuilt to avoid stomping on
   another process.
 
+* Allow system-level packages to co-exist with user-level ones. User's
+  packages should override system ones, but users should be able to
+  disable system ones as well.
+
 * Setting the default Emacs load-path based on package.el.  This is
   tricky because we may want to let the user set package-user-dir.
   But the user may also want to refer to packages from .emacs.
@@ -26,11 +30,6 @@ Emacs proper.
   separately distributed, like gnus.
 
 * Integrating into the Emacs build system so that the metadata for
-  package.el is properly made.
-
-* Incorporate a menu into package.el.  I have a patch from a user but I
-  don't know if he has a copyright assignment.
+  built-in packages is extracted correctly.
 
 * Prerelease version numbers.
-
-* Add command to perform installation without marking.
