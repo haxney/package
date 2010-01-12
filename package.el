@@ -590,7 +590,7 @@ It will move point to somewhere in the headers."
 (defun package-download-single (name version desc requires)
   "Download and install a single-file package."
   (let ((buffer (url-retrieve-synchronously
-                 (concat package-archive-base
+                 (concat (package-archive-for name)
                          (symbol-name name) "-" version ".el"))))
     (save-excursion
       (set-buffer buffer)
@@ -604,7 +604,7 @@ It will move point to somewhere in the headers."
 (defun package-download-tar (name version)
   "Download and install a tar package."
   (let ((tar-buffer (url-retrieve-synchronously
-                     (concat package-archive-base
+                     (concat (package-archive-for name)
                              (symbol-name name) "-" version ".tar"))))
     (save-excursion
       (set-buffer tar-buffer)
@@ -720,8 +720,7 @@ Will throw an error if the archive version is too new."
 
 (defun package-install (name)
   "Install the package named NAME.
-Interactively, prompts for the package name.
-The package is found on the archive site, see `package-archive-base'."
+Interactively, prompts for the package name."
   (interactive
    (list (progn
            ;; Make sure we're using the most recent download of the
@@ -930,10 +929,13 @@ The file can either be a tar file or an Emacs Lisp file."
         (unless old-buffer
           (kill-buffer (current-buffer)))))))
 
+(defun package-archive-for (name)
+  package-archive-base)
+
 (defun package--download-one-archive (file)
   "Download a single archive file and cache it locally."
   (let ((buffer (url-retrieve-synchronously
-                 (concat package-archive-base file))))
+                 (concat (package-archive-for file) file))))
     (save-excursion
       (set-buffer buffer)
       (package-handle-response)
@@ -1085,9 +1087,9 @@ For larger packages, shows the README file."
   (interactive)
   (let* (start-point ok
                      (pkg-name (package-menu-get-package))
-                     (buffer (url-retrieve-synchronously (concat package-archive-base
-                                                                 pkg-name
-                                                                 "-readme.txt"))))
+                     (buffer (url-retrieve-synchronously
+                              (concat (package-archive-for pkg-name)
+                                      pkg-name "-readme.txt"))))
     (with-current-buffer buffer
       ;; FIXME: it would be nice to work with any URL type.
       (setq start-point url-http-end-of-headers)
