@@ -136,7 +136,7 @@
 
 ;;; Code:
 
-(defcustom package-archives '((elpa . "http://tromey.com/elpa/"))
+(defcustom package-archives '(("elpa" . "http://tromey.com/elpa/"))
   "An alist of archives (names and URLs) from which to fetch.
 The default points to ELPA, the Emacs Lisp Package Archive.
 Note that some code in package.el assumes that this is an http: URL.")
@@ -154,8 +154,9 @@ Lower version numbers than this will probably be understood as well.")
   "A representation of the contents of the ELPA archive.
 This is an alist mapping package names (symbols) to package
 descriptor vectors.  These are like the vectors for `package-alist'
-but have an extra entry which is 'tar for tar packages and
-'single for single-file packages.")
+but have extra entries: one which is 'tar for tar packages and
+'single for single-file packages, and one which is the name of
+the archive from which it came.")
 
 (defvar package-user-dir
   (expand-file-name (convert-standard-filename "~/.emacs.d/elpa"))
@@ -873,20 +874,23 @@ The file can either be a tar file or an Emacs Lisp file."
           (kill-buffer (current-buffer)))))))
 
 (defun package-archive-for (name)
-  package-archive-base)
+  (cdar package-archives))
 
-(defun package--download-one-archive (file)
+(defun package--download-one-archive (archive file)
   "Download a single archive file and cache it locally."
-  (let ((buffer (url-retrieve-synchronously
-                 (concat (package-archive-for file) file))))
+  (let* ((archive-name (car archive))
+         (archive-url (cdr archive))
+         (buffer (url-retrieve-synchronously (concat archive-url file))))
     (save-excursion
       (set-buffer buffer)
       (package-handle-response)
       (re-search-forward "^$" nil 'move)
       (forward-char)
       (delete-region (point-min) (point))
+      (make-directory (concat (file-name-as-directory package-user-dir)
+                              "archives/" archive-name) t)
       (setq buffer-file-name (concat (file-name-as-directory package-user-dir)
-                                     file))
+                                     "archives/" archive-name "/" file))
       (let ((version-control 'never))
         (save-buffer))
       (kill-buffer buffer))))
@@ -897,15 +901,16 @@ Invoking this will ensure that Emacs knows about the latest versions
 of all packages.  This will let Emacs make them available for
 download."
   (interactive)
-  (package--download-one-archive "archive-contents")
-  (package--download-one-archive "builtin-packages")
-  (package-read-archive-contents))
+  (dolist (archive package-archives)
+    (package--download-one-archive archive "archive-contents")
+    (package--download-one-archive archive "builtin-packages"))
+  (package-read-all-archive-contents))
 
 (defun package-initialize ()
   "Load all packages and activate as many as possible."
   (setq package-obsolete-alist nil)
   (package-load-all-descriptors)
-  (package-read-archive-contents)
+  (package-read-all-archive-contents)
   ;; Try to activate all our packages.
   (mapc (lambda (elt)
           (package-activate (car elt) (package-desc-vers (cdr elt))))
