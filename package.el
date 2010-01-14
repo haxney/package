@@ -258,11 +258,12 @@ E.g., if given \"quux-23.0\", will return \"quux\""
 (defun package-load-descriptor (dir package)
   "Load the description file for a package.
 Return nil if the package could not be found."
-  (let ((pkg-dir (expand-file-name package dir)))
-    (if (file-directory-p pkg-dir)
-        (load (expand-file-name (concat (package-strip-version package) "-pkg")
-                                pkg-dir)
-              nil t))))
+  (let* ((pkg-dir (expand-file-name package dir))
+         (pkg-file (expand-file-name
+                    (concat (package-strip-version package) "-pkg") pkg-dir)))
+    (when (and (file-directory-p pkg-dir)
+               (file-exists-p (concat pkg-file ".el")))
+        (load pkg-file nil t))))
 
 (defun package-load-all-descriptors ()
   "Load descriptors of all packages.
@@ -624,16 +625,12 @@ Will throw an error if the archive version is too new."
                        (car contents) package-archive-version))
             (cdr contents))))))
 
-(defun package-read-archive-contents ()
-  "Re-read `archive-contents' and `builtin-packages', if they exist.
-Will set `package-archive-contents' and `package--builtins' if successful.
-Will throw an error if the archive version is too new."
-  (let ((archive-contents (package--read-archive-file "archive-contents"))
-        (builtins (package--read-archive-file "builtin-packages")))
-    (if archive-contents
-        ;; Version 1 of 'archive-contents' is identical to our
-        ;; internal representation.
-        (setq package-archive-contents archive-contents))
+(defun package-read-all-archive-contents ()
+  (dolist (archive package-archives)
+    (package-read-archive-contents (car archive)))
+  (let ((builtins (package--read-archive-file
+                   (concat "archives/" (caar package-archives)
+                           "/builtin-packages"))))
     (if builtins
         ;; Version 1 of 'builtin-packages' is a list where the car is
         ;; a split emacs version and the cdr is an alist suitable for
@@ -644,6 +641,33 @@ Will throw an error if the archive version is too new."
                 (dolist (elt builtins result)
                   (if (package-version-compare our-version (car elt) '>=)
                       (setq result (append (cdr elt) result)))))))))
+
+(defun package-read-archive-contents (archive)
+  "Re-read `archive-contents' and `builtin-packages', if they exist.
+Will set `package-archive-contents' and `package--builtins' if successful.
+Will throw an error if the archive version is too new."
+  (let ((archive-contents (package--read-archive-file
+                           (concat "archives/" archive
+                                   "/archive-contents"))))
+    (if archive-contents
+        ;; Version 1 of 'archive-contents' is identical to our
+        ;; internal representation.
+        ;; TODO: merge archive lists
+        (dolist (package (cdr archive-contents))
+          (package--add-to-archive-contents package archive)))))
+
+(defun package--add-to-archive-contents (package archive)
+  "Add the package from the given archive if needed.
+Adds the archive from which it came to the end of the package vector."
+  (let* ((package-name (car package))
+         (package-version (aref (cdr package) 0))
+         (package-with-archive (cons (car package)
+                                     (vconcat (cdr package) [archive])))
+         (existing-package (cdr (assq package-name package-archive-contents))))
+    (when (or (not existing-package)
+              (package-version-compare package-version
+                                       (aref existing-package 0) '>))
+      (add-to-list 'package-archive-contents package-with-archive))))
 
 (defun package-download-transaction (transaction)
   "Download and install all the packages in the given transaction."
@@ -667,9 +691,6 @@ Will throw an error if the archive version is too new."
 Interactively, prompts for the package name."
   (interactive
    (list (progn
-           ;; Make sure we're using the most recent download of the
-           ;; archive.  Maybe we should be updating the archive first?
-           (package-read-archive-contents)
            (intern (completing-read "Install package: "
                                     (mapcar (lambda (elt)
                                               (cons (symbol-name (car elt))
