@@ -923,8 +923,7 @@ of all packages.  This will let Emacs make them available for
 download."
   (interactive)
   (dolist (archive package-archives)
-    (package--download-one-archive archive "archive-contents")
-    (package--download-one-archive archive "builtin-packages"))
+    (package--download-one-archive archive "archive-contents"))
   (package-read-all-archive-contents))
 
 (defun package-initialize ()
