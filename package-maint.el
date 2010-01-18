@@ -107,7 +107,7 @@ the project name followed by the DVCS repository URL.")
         (write-region (point-min) (point-max)
                       (concat package-public-dir "/"
                               file-name "-" pkg-version ".el")
-                      nil nil nil 'excl)
+                      nil nil nil)
         ;; special-case "package": write a second copy so that the
         ;; installer can easily find the latest version.
         (if (string= file-name "package")
