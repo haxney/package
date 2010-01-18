@@ -132,11 +132,11 @@ the project name followed by the DVCS repository URL.")
                  (split-string (shell-command-to-string "git tag")
                                "\n" t)))
 
-(defun package-dir (name version)
-  (format "%s/%s-%s" package-public-dir name version))
+(defun package-public-file (name version)
+  (format "%s/%s-%s.el" package-public-dir name version))
 
 (defun package-built? (name version)
-  (file-exists-p (package-dir name version)))
+  (file-exists-p (package-public-file name version)))
 
 (defun package-build-archive-contents (projects)
   "Update the list of packages."
@@ -172,7 +172,7 @@ the project name followed by the DVCS repository URL.")
   (let* ((name (car project))
          (versions (package-list-versions))
          (latest-version (car (last (package-sort-versions versions)))))
-    (format "%s/%s.el" (package-dir name latest-version) name)))
+    (package-public-file name latest-version)))
 
 (defun package-sort-versions (versions)
   ;; destructive list functions! you gotta be kidding me.
