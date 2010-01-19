@@ -662,7 +662,7 @@ Adds the archive from which it came to the end of the package vector."
   (let* ((package-name (car package))
          (package-version (aref (cdr package) 0))
          (package-with-archive (cons (car package)
-                                     (vconcat (cdr package) [archive])))
+                                     (vconcat (cdr package) (vector archive))))
          (existing-package (cdr (assq package-name package-archive-contents))))
     (when (or (not existing-package)
               (package-version-compare package-version
@@ -895,7 +895,8 @@ The file can either be a tar file or an Emacs Lisp file."
           (kill-buffer (current-buffer)))))))
 
 (defun package-archive-for (name)
-  (cdar package-archives))
+  (let ((desc (cdr (assq name package-archive-contents))))
+    (cdr (assq (aref desc (- (length desc) 1)) package-archives))))
 
 (defun package--download-one-archive (archive file)
   "Download a single archive file and cache it locally."
