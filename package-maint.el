@@ -285,8 +285,8 @@ names for a package named NAME with version VERSION."
   "Finds which (if any) of the possible file names exists.
 
 CANDIDATES is a list of file names which might exist. They will
-  be checked, and if one of the specified files does exist, its
-  name will be returned."
+be checked, and if one of the specified files does exist, its
+name will be returned."
   (dolist (file candidates)
     (when (file-exists-p file)
       (return-from package-file-exists file)))
@@ -310,20 +310,33 @@ CANDIDATES is a list of file names which might exist. They will
         (remove-if
          'null (mapcar 'package-archive-contents-for-project projects))))
 
+(defun* package-get-type (file)
+  "Returns the package type of the given FILE.
+
+Checks FILE's extension against `package-file-types'."
+  (dolist (type package-file-types)
+    (when (string-match (concat "\\." (cdr type) "$") file)
+      (return-from package-get-type (car type))))
+  nil)
+
 (defun package-archive-contents-for-project (project)
   "Build a package structure for the latest version of PROJECT."
   (let ((pkg-file (package-file-exists (package-latest-for-project project))))
     (when pkg-file
-      (find-file pkg-file)
-      (let ((info (package-buffer-info)))
+      (let* ((type (package-get-type pkg-file))
+             (info (cond
+                   ((eq type 'single)
+                    (find-file pkg-file)
+                    (package-buffer-info))
+                   ((eq type 'tar)
+                    (package-tar-file-info pkg-file)))))
         (cons (intern (project-name project))
               (make-pkg-info :version (package-version-split (pkg-buf-info-version info))
                              :requires (pkg-buf-info-requires info)
                              :desc (if (string= (pkg-buf-info-desc info) "")
                                        (read-string "Description of package: ")
                                      (pkg-buf-info-desc info))
-                             ;; TODO: support 'tar
-                             :type 'single))))))
+                             :type type))))))
 
 (defun package-latest-for-project (project)
   "Return a list of the latest candidate files for PROJECT.
