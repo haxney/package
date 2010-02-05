@@ -112,7 +112,24 @@ here."
     (shell-command "git fetch --tags")
     (dolist (version (package-list-versions))
       (when (not (package-built? name version))
-        (package-build-package name version)))))
+        (package-build-package name version (package-build-type version))))))
+
+(defun package-build-type (version)
+  "Determines whether to build a single- or multi-file package.
+
+A version is deemed worthy of a multi-file package if it contains
+more than one elisp file.
+
+Returns a type from `package-file-types'."
+  (let ((command (concat "git ls-tree --name-only -r " version)))
+    (with-temp-buffer
+      (shell-command command (current-buffer))
+      (goto-char (point-min))
+      (re-search-forward "^.*\\.el$" nil t)
+      ;; If a second elisp file is found, use a multi-file package.
+      (if (re-search-forward "^.*\\.el$" nil t)
+          'tar
+        'single))))
 
 (defun* package-build-package (name version &optional (type 'single))
   "Given a project version, create a package for it.
