@@ -165,7 +165,12 @@ default."
                           nil nil nil 'ask))))))
 
 (defun package-build-tar (name version)
-  "Build a package from a multi-file repository."
+  "Build a package from a multi-file repository.
+
+Returns a cons-cell containing the exit code and the process's
+stderr. When successful, the stderr will contain a
+newline-delimited list of files and directories added to the
+archive."
   (make-directory package-public-dir t)
   (let* ((extension (cdr (assq 'tar package-file-types)))
          (dir (concat "--git-dir="
@@ -175,15 +180,20 @@ default."
          (output-file (concat package-public-dir "/"
                               name "-" version "." extension))
          (output (concat "--output=" (file-truename output-file)))
+         (verbose "--verbose")
          (command (mapconcat 'identity (list "git"
                                              dir
                                              "archive"
                                              format
                                              prefix
                                              output
+                                             verbose
                                              version)
-                             " ")))
-    (shell-command command)))
+                             " "))
+         retval)
+    (with-temp-buffer
+      (setq retval (shell-command command nil (current-buffer)))
+      (cons retval (buffer-substring-no-properties (point-min) (point-max))))))
 
 (defun package-init (project)
   "Create a new checkout of a project if necessary."
