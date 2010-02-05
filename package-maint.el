@@ -194,6 +194,7 @@ archive."
          retval
          result
          files)
+
     (with-temp-buffer
       (setq retval (shell-command command nil (current-buffer))
             result (buffer-substring-no-properties (point-min) (point-max))))
@@ -201,7 +202,7 @@ archive."
     (when (eq retval 0)
       (setq files (split-string result))
       (unless (member manifest files)
-        (package-append-manifest name version output-file)))
+        (package-append-manifest output-file name version)))
 
     (cons retval result)))
 
@@ -212,22 +213,26 @@ Multi-file packages must have have a simple file which contains a
 call to `define-package'. The required arguments NAME and VERSION
 are appended to ARCHIVE, while DESC and REQUIREMENTS are added if
 available."
-  (let* ((manifest (concat name "-pkg.el"))
+  (let* ((manifest-dir (concat name "-" version "/"))
+         (manifest (concat manifest-dir name "-pkg.el"))
          (append "--append")
-         (file (concat "--file=" archive))
+         (file (concat "--file=" (file-truename archive)))
          (command (mapconcat 'identity
                              (list "tar"
                                    append
                                    file
                                    manifest)
                              " ")))
+    (make-directory manifest-dir)
     (with-temp-file manifest
       (insert (pp-to-string (list 'define-package
                                   name
                                   version
                                   desc
                                   requirements))))
-    (shell-command command)))
+    (shell-command command)
+    (delete-file manifest)
+    (delete-directory manifest-dir)))
 
 (defun package-init (project)
   "Create a new checkout of a project if necessary."
