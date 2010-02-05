@@ -895,7 +895,8 @@ The file can either be a tar file or an Emacs Lisp file."
           (kill-buffer (current-buffer)))))))
 
 (defun package-archive-for (name)
-  (let ((desc (cdr (assq name package-archive-contents))))
+  "Returns the archive containing the package NAME."
+  (let ((desc (cdr (assq (intern name) package-archive-contents))))
     (cdr (assoc (aref desc (- (length desc) 1)) package-archives))))
 
 (defun package--download-one-archive (archive file)
@@ -1080,7 +1081,7 @@ For larger packages, shows the README file."
   (save-excursion
     (beginning-of-line)
     (if (looking-at ". \\([^ \t]*\\)")
-        (match-string 1))))
+        (match-string-no-properties 1))))
 
 ;; Return the version of the package on the current line.
 (defun package-menu-get-version ()
