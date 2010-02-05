@@ -896,7 +896,7 @@ The file can either be a tar file or an Emacs Lisp file."
 
 (defun package-archive-for (name)
   "Returns the archive containing the package NAME."
-  (let ((desc (cdr (assq (intern name) package-archive-contents))))
+  (let ((desc (cdr (assq (intern-soft name) package-archive-contents))))
     (cdr (assoc (aref desc (- (length desc) 1)) package-archives))))
 
 (defun package--download-one-archive (archive file)
