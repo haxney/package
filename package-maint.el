@@ -61,8 +61,11 @@ the project name followed by the DVCS repository URL.")
 (defvar package-version-format "^\\([0-9\\.]+[0-9]\\)*$"
   "A regex that will only match tags which indicate versions.")
 
-(defvar package-file-extensions '("el" "tar")
-  "Allowed file extensions for package files.")
+(defvar package-file-types '((single . "el")
+                             (tar . "tar"))
+  "Allowed file types for package files.
+
+A list of (TYPE-NAME . EXTENSION).")
 
 (defstruct (pkg-info (:type vector))
   "Info structure which will be dumped to an 'archive-contents' file."
@@ -111,11 +114,17 @@ here."
       (when (not (package-built? name version))
         (package-build-package name version)))))
 
-(defun package-build-package (name version)
-  "Given a project version, create a package for it."
+(defun* package-build-package (name version &optional (type 'single))
+  "Given a project version, create a package for it.
+
+TYPE may be one of the keys of `package-file-types', `single' by
+default."
   (message "Building %s v%s" name version)
-  (let ((package-source (format "%s/%s.el"
-                                (package-local-checkout-dir name) name)))
+  (assert (assq type package-file-types))
+  (let ((package-source (format "%s/%s.%s"
+                                (package-local-checkout-dir name)
+                                name
+                                (cdr (assq type package-file-types)))))
     (cd (package-local-checkout-dir name))
     (shell-command (format "git checkout %s" version))
     (if (not (file-exists-p package-source))
@@ -164,12 +173,12 @@ here."
 (defun package-public-file-candidates (name version)
   "Return a list of possible names for the specified package.
 
-Use `package-file-extensions' to build a list of potential file
+Use `package-file-types' to build a list of potential file
 names for a package named NAME with version VERSION."
   (mapcar
-   '(lambda (pkg)
-      (format "%s/%s-%s.%s" package-public-dir name version pkg))
-   package-file-extensions))
+   '(lambda (type)
+      (format "%s/%s-%s.%s" package-public-dir name version (cdr type)))
+   package-file-types))
 
 (defun* package-file-exists (candidates)
   "Finds which (if any) of the possible file names exists.
