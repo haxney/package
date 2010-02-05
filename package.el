@@ -653,7 +653,7 @@ Will throw an error if the archive version is too new."
         ;; Version 1 of 'archive-contents' is identical to our
         ;; internal representation.
         ;; TODO: merge archive lists
-        (dolist (package (cdr archive-contents))
+        (dolist (package archive-contents)
           (package--add-to-archive-contents package archive)))))
 
 (defun package--add-to-archive-contents (package archive)
