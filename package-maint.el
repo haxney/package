@@ -138,7 +138,7 @@ the project name followed by the DVCS repository URL.")
                  (split-string (shell-command-to-string "git tag")
                                "\n" t)))
 
-(defun package-public-files (name version)
+(defun package-public-file-candidates (name version)
   "Return a list of possible names for the specified package.
 
 Use `package-file-extensions' to build a list of potential file
@@ -148,12 +148,20 @@ names for a package named NAME with version VERSION."
       (format "%s/%s-%s.%s" package-public-dir name version pkg))
    package-file-extensions))
 
-(defun* package-built? (name version)
-  "Checks whether there is a package file matching NAME and VERSION."
-  (dolist (file (package-public-files name version))
+(defun* package-file-exists (candidates)
+  "Finds which (if any) of the possible file names exists.
+
+CANDIDATES is a list of file names which might exist. They will
+  be checked, and if one of the specified files does exist, its
+  name will be returned."
+  (dolist (file candidates)
     (when (file-exists-p file)
-      (return-from package-built? t)))
+      (return-from package-file-exists t)))
   nil)
+
+(defun package-built? (name version)
+  "Checks whether there is a package file matching NAME and VERSION."
+  (package-file-exists (package-public-files name version)))
 
 (defun package-build-archive-contents (projects)
   "Update the list of packages."
@@ -170,26 +178,31 @@ names for a package named NAME with version VERSION."
          'null (mapcar 'package-archive-contents-for-project projects))))
 
 (defun package-archive-contents-for-project (project)
-  (when (file-exists-p (package-latest-for-project project))
-    (find-file (package-latest-for-project project))
-    (let* ((pkg-info (package-buffer-info))
-           (pkg-version (aref pkg-info 3))
-           (split-version (package-version-split pkg-version))
-           (requires (aref pkg-info 1))
-           (desc (if (string= (aref pkg-info 2) "")
-                     (read-string "Description of package: ")
-                   (aref pkg-info 2)))
-           ;; TODO: support tar
-           (file-type 'single))
-      (cons (intern (car project))
-            (vector split-version requires desc file-type)))))
+  (let (pkg-file (package-file-exists (package-latest-for-project project)))
+    (when pkg-file
+      (find-file pkg-file)
+      (let* ((pkg-info (package-buffer-info))
+             (pkg-version (aref pkg-info 3))
+             (split-version (package-version-split pkg-version))
+             (requires (aref pkg-info 1))
+             (desc (if (string= (aref pkg-info 2) "")
+                       (read-string "Description of package: ")
+                     (aref pkg-info 2)))
+             ;; TODO: support tar
+             (file-type 'single))
+        (cons (intern (car project))
+              (vector split-version requires desc file-type))))))
 
 (defun package-latest-for-project (project)
+  "Return a list of the latest candidate files for PROJECT.
+
+Calls `package-public-file-candidates' to get a list of candidate
+files of the most recent version of PROJECT."
   (cd (package-local-checkout-dir (car project)))
   (let* ((name (car project))
          (versions (package-list-versions))
          (latest-version (car (last (package-sort-versions versions)))))
-    (package-public-file name latest-version)))
+    (package-public-file-candidates name latest-version)))
 
 (defun package-sort-versions (versions)
   ;; destructive list functions! you gotta be kidding me.
