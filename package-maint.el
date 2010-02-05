@@ -61,6 +61,9 @@ the project name followed by the DVCS repository URL.")
 (defvar package-version-format "^\\([0-9\\.]+[0-9]\\)*$"
   "A regex that will only match tags which indicate versions.")
 
+(defvar package-file-extensions '("el" "tar")
+  "Allowed file extensions for package files.")
+
 (defun package-build-archive ()
   "Build packages for every version of every project in the index."
   (interactive)
@@ -135,11 +138,22 @@ the project name followed by the DVCS repository URL.")
                  (split-string (shell-command-to-string "git tag")
                                "\n" t)))
 
-(defun package-public-file (name version)
-  (format "%s/%s-%s.el" package-public-dir name version))
+(defun package-public-files (name version)
+  "Return a list of possible names for the specified package.
 
-(defun package-built? (name version)
-  (file-exists-p (package-public-file name version)))
+Use `package-file-extensions' to build a list of potential file
+names for a package named NAME with version VERSION."
+  (mapcar
+   '(lambda (pkg)
+      (format "%s/%s-%s.%s" package-public-dir name version pkg))
+   package-file-extensions))
+
+(defun* package-built? (name version)
+  "Checks whether there is a package file matching NAME and VERSION."
+  (dolist (file (package-public-files name version))
+    (when (file-exists-p file)
+      (return-from package-built? t)))
+  nil)
 
 (defun package-build-archive-contents (projects)
   "Update the list of packages."
