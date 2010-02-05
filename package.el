@@ -523,14 +523,18 @@ Parse the HTTP response and throw if an error occurred.
 The url package seems to require extra processing for this.
 This should be called in a `save-excursion', in the download buffer.
 It will move point to somewhere in the headers."
-  ;; We assume HTTP here.
-  (let ((response (url-http-parse-response)))
-    (when (or (< response 200) (>= response 300))
-      (display-buffer (current-buffer))
-      (error "Error during download request:%s"
-             (buffer-substring-no-properties (point) (progn
-                                                       (end-of-line)
-                                                       (point)))))))
+  (let ((type (url-type url-current-object)))
+    (cond
+     ((equal type "http")
+      (let ((response (url-http-parse-response)))
+        (when (or (< response 200) (>= response 300))
+          (display-buffer (current-buffer))
+          (error "Error during download request:%s"
+                 (buffer-substring-no-properties (point) (progn
+                                                           (end-of-line)
+                                                           (point)))))))
+     ((equal type "file")
+      nil))))
 
 (defun package-download-single (name version desc requires)
   "Download and install a single-file package."
