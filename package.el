@@ -554,8 +554,13 @@ It will move point to somewhere in the headers."
     (save-excursion
       (set-buffer tar-buffer)
       (package-handle-response)
+
+      ;; Skip past url-retrieve headers, which would otherwise confuse poor
+      ;; tar-mode.
+      (goto-char (point-min))
       (re-search-forward "^$" nil 'move)
       (forward-char)
+
       (package-unpack name version)
       (kill-buffer tar-buffer))))
 
