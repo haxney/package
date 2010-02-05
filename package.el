@@ -713,7 +713,7 @@ Interactively, prompts for the package name."
 If the result looks like a dotted numeric version, return it.
 Otherwise return nil."
   (if v-str
-      (if (string-match "^[ \t]*[$]Revision:[ \t]\([0-9.]+\)[ \t]*[$]$" v-str)
+      (if (string-match "[ \t]*\\$\\(?:Revision\\|Id\\):[ \t]\\(?:[^ \t]+,v[ \t]+\\)?\\([0-9.]+\\).*\\$$" v-str)
           (match-string 1 v-str)
         (if (string-match "^[0-9.]*$" v-str)
             v-str))))
