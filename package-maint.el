@@ -64,6 +64,13 @@ the project name followed by the DVCS repository URL.")
 (defvar package-file-extensions '("el" "tar")
   "Allowed file extensions for package files.")
 
+(defstruct (pkg-info (:type vector))
+  "Info structure which will be dumped to an 'archive-contents' file."
+  version
+  requires
+  desc
+  type)
+
 (defun package-build-archive ()
   "Build packages for every version of every project in the index."
   (interactive)
@@ -156,7 +163,7 @@ CANDIDATES is a list of file names which might exist. They will
   name will be returned."
   (dolist (file candidates)
     (when (file-exists-p file)
-      (return-from package-file-exists t)))
+      (return-from package-file-exists file)))
   nil)
 
 (defun package-built? (name version)
@@ -178,20 +185,19 @@ CANDIDATES is a list of file names which might exist. They will
          'null (mapcar 'package-archive-contents-for-project projects))))
 
 (defun package-archive-contents-for-project (project)
-  (let (pkg-file (package-file-exists (package-latest-for-project project)))
+  "Build a package structure for the latest version of PROJECT."
+  (let ((pkg-file (package-file-exists (package-latest-for-project project))))
     (when pkg-file
       (find-file pkg-file)
-      (let* ((pkg-info (package-buffer-info))
-             (pkg-version (aref pkg-info 3))
-             (split-version (package-version-split pkg-version))
-             (requires (aref pkg-info 1))
-             (desc (if (string= (aref pkg-info 2) "")
-                       (read-string "Description of package: ")
-                     (aref pkg-info 2)))
-             ;; TODO: support tar
-             (file-type 'single))
+      (let ((pkg-info (package-buffer-info)))
         (cons (intern (car project))
-              (vector split-version requires desc file-type))))))
+              (make-pkg-info :version (package-version-split (aref pkg-info 3))
+                             :requires (aref pkg-info 1)
+                             :desc (if (string= (aref pkg-info 2) "")
+                                       (read-string "Description of package: ")
+                                     (aref pkg-info 2))
+                             ;; TODO: support 'tar
+                             :type 'single))))))
 
 (defun package-latest-for-project (project)
   "Return a list of the latest candidate files for PROJECT.
