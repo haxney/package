@@ -896,7 +896,7 @@ The file can either be a tar file or an Emacs Lisp file."
 
 (defun package-archive-for (name)
   (let ((desc (cdr (assq name package-archive-contents))))
-    (cdr (assq (aref desc (- (length desc) 1)) package-archives))))
+    (cdr (assoc (aref desc (- (length desc) 1)) package-archives))))
 
 (defun package--download-one-archive (archive file)
   "Download a single archive file and cache it locally."
