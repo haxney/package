@@ -173,6 +173,7 @@ newline-delimited list of files and directories added to the
 archive."
   (make-directory package-public-dir t)
   (let* ((extension (cdr (assq 'tar package-file-types)))
+         (manifest (concat name "-pkg.el"))
          (dir (concat "--git-dir="
                       (file-truename (package-local-repo-dir name))))
          (format (concat "--format=" extension))
@@ -190,10 +191,43 @@ archive."
                                              verbose
                                              version)
                              " "))
-         retval)
+         retval
+         result
+         files)
     (with-temp-buffer
-      (setq retval (shell-command command nil (current-buffer)))
-      (cons retval (buffer-substring-no-properties (point-min) (point-max))))))
+      (setq retval (shell-command command nil (current-buffer))
+            result (buffer-substring-no-properties (point-min) (point-max))))
+    ;; Generate a simple manifest if the package did not already include one.
+    (when (eq retval 0)
+      (setq files (split-string result))
+      (unless (member manifest files)
+        (package-append-manifest name version output-file)))
+
+    (cons retval result)))
+
+(defun package-append-manifest (archive name version &optional desc requirements)
+  "Generate and append a simple manifest file.
+
+Multi-file packages must have have a simple file which contains a
+call to `define-package'. The required arguments NAME and VERSION
+are appended to ARCHIVE, while DESC and REQUIREMENTS are added if
+available."
+  (let* ((manifest (concat name "-pkg.el"))
+         (append "--append")
+         (file (concat "--file=" archive))
+         (command (mapconcat 'identity
+                             (list "tar"
+                                   append
+                                   file
+                                   manifest)
+                             " ")))
+    (with-temp-file manifest
+      (insert (pp-to-string (list 'define-package
+                                  name
+                                  version
+                                  desc
+                                  requirements))))
+    (shell-command command)))
 
 (defun package-init (project)
   "Create a new checkout of a project if necessary."
