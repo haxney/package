@@ -294,7 +294,7 @@ CANDIDATES is a list of file names which might exist. They will
 
 (defun package-built? (name version)
   "Checks whether there is a package file matching NAME and VERSION."
-  (package-file-exists (package-public-files name version)))
+  (package-file-exists (package-public-file-candidates name version)))
 
 (defun package-build-archive-contents (projects)
   "Update the list of packages."
