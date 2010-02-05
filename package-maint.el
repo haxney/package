@@ -44,15 +44,18 @@
 
 (require 'package)
 
-(defvar package-index "~/src/package.el/index.el"
+(defvar package-base "~/src/package.el/"
+  "The directory in which to store package-maint files.")
+
+(defvar package-index (concat package-base "index.el")
   "The listing of all projects and repositories to get them from.
 Should contain an list of projects, each formatted as a list with
 the project name followed by the DVCS repository URL.")
 
-(defvar package-working-dir "~/src/package.el/working/%s"
+(defvar package-working-dir (concat package-base "working/%s")
   "Directory in which to keep project checkouts.")
 
-(defvar package-public-dir "~/src/package.el/public"
+(defvar package-public-dir (concat package-base "public")
   "Directory in which to place packages created.")
 
 (defvar package-version-format "^\\([0-9\\.]+[0-9]\\)*$"
