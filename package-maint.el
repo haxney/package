@@ -82,6 +82,11 @@ here."
   version
   commentary)
 
+(defstruct (project (:type list))
+  "A project structure, read from the package index file."
+  name
+  url)
+
 (defun package-build-archive ()
   "Build packages for every version of every project in the index."
   (interactive)
@@ -98,7 +103,7 @@ here."
 
 (defun package-build-packages (project)
   "Given a project, create packages for each version needs building."
-  (let ((name (car project)))
+  (let ((name (project-name project)))
     (package-init project)
     (cd (package-local-checkout-dir name))
     (shell-command "git fetch --tags")
@@ -142,10 +147,10 @@ here."
 
 (defun package-init (project)
   "Create a new checkout of a project if necessary."
-  (when (not (file-exists-p (package-local-checkout-dir (car project))))
+  (when (not (file-exists-p (package-local-checkout-dir (project-name project))))
     (make-directory package-working-dir t)
     (cd (format package-working-dir ""))
-    (shell-command (format "git clone %s %s" (cadr project) (car project)))))
+    (shell-command (format "git clone %s %s" (project-url project) (project-name project)))))
 
 (defun package-local-checkout-dir (name)
   (format package-working-dir name))
@@ -201,7 +206,7 @@ CANDIDATES is a list of file names which might exist. They will
     (when pkg-file
       (find-file pkg-file)
       (let ((info (package-buffer-info)))
-        (cons (intern (car project))
+        (cons (intern (project-name project))
               (make-pkg-info :version (package-version-split (pkg-buf-info-version info))
                              :requires (pkg-buf-info-requires info)
                              :desc (if (string= (pkg-buf-info-desc info) "")
@@ -215,11 +220,10 @@ CANDIDATES is a list of file names which might exist. They will
 
 Calls `package-public-file-candidates' to get a list of candidate
 files of the most recent version of PROJECT."
-  (cd (package-local-checkout-dir (car project)))
-  (let* ((name (car project))
-         (versions (package-list-versions))
+  (cd (package-local-checkout-dir (project-name project)))
+  (let* ((versions (package-list-versions))
          (latest-version (car (last (package-sort-versions versions)))))
-    (package-public-file-candidates name latest-version)))
+    (package-public-file-candidates (project-name project) latest-version)))
 
 (defun package-sort-versions (versions)
   ;; destructive list functions! you gotta be kidding me.
