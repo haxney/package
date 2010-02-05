@@ -120,21 +120,31 @@ here."
 TYPE may be one of the keys of `package-file-types', `single' by
 default."
   (message "Building %s v%s" name version)
-  (assert (assq type package-file-types))
-  (let ((package-source (format "%s/%s.%s"
-                                (package-local-checkout-dir name)
-                                name
-                                (cdr (assq type package-file-types)))))
+  (cond
+   ((eq type 'single)
+    (package-build-single name version))
+   ((eq type 'tar)
+    (package-build-tar name version))
+   (t
+    (error "Unknown package type `%s'" type))))
+
+(defun package-build-single (name version)
+  "Create a package from a single file."
+  (let* ((extension (cdr (assq 'single package-file-types)))
+         (package-source (format "%s/%s.%s"
+                                 (package-local-checkout-dir name)
+                                 name
+                                 extension)))
     (cd (package-local-checkout-dir name))
     (shell-command (format "git checkout %s" version))
     (if (not (file-exists-p package-source))
         (message "Skipping %s since %s was not found." name package-source)
       (find-file package-source)
-      (package-write-buffer)
+      (package-write-buffer extension)
       (message "Built %s version %s." name version)
       (kill-buffer))))
 
-(defun package-write-buffer ()
+(defun package-write-buffer (extension)
   "Write a package whose contents are in the current buffer."
   (save-excursion
     (save-restriction
@@ -144,7 +154,7 @@ default."
         (make-directory package-public-dir t)
         (write-region (point-min) (point-max)
                       (concat package-public-dir "/"
-                              file-name "-" pkg-version ".el")
+                              file-name "-" pkg-version "." extension)
                       nil nil nil)
         ;; special-case "package": write a second copy so that the
         ;; installer can easily find the latest version.
@@ -153,6 +163,27 @@ default."
                           (concat package-public-dir "/"
                                   file-name ".el")
                           nil nil nil 'ask))))))
+
+(defun package-build-tar (name version)
+  "Build a package from a multi-file repository."
+  (make-directory package-public-dir t)
+  (let* ((extension (cdr (assq 'tar package-file-types)))
+         (dir (concat "--git-dir="
+                      (file-truename (package-local-repo-dir name))))
+         (format (concat "--format=" extension))
+         (prefix (concat "--prefix=" name "-" version "/"))
+         (output-file (concat package-public-dir "/"
+                              name "-" version "." extension))
+         (output (concat "--output=" (file-truename output-file)))
+         (command (mapconcat 'identity (list "git"
+                                             dir
+                                             "archive"
+                                             format
+                                             prefix
+                                             output
+                                             version)
+                             " ")))
+    (shell-command command)))
 
 (defun package-init (project)
   "Create a new checkout of a project if necessary."
@@ -163,6 +194,10 @@ default."
 
 (defun package-local-checkout-dir (name)
   (format package-working-dir name))
+
+(defun package-local-repo-dir (name)
+  "Return the repository directory for package NAME."
+  (concat (package-local-checkout-dir name) "/.git"))
 
 (defun package-list-versions ()
   "List all versions of a project. Must run in project checkout."
