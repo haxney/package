@@ -71,6 +71,17 @@ the project name followed by the DVCS repository URL.")
   desc
   type)
 
+(defstruct (pkg-buf-info (:type vector))
+  "The package info returned by `package-buffer-info'.
+
+\"package.el\" does not use the CL library, so this type is defined
+here."
+  filename
+  requires
+  desc
+  version
+  commentary)
+
 (defun package-build-archive ()
   "Build packages for every version of every project in the index."
   (interactive)
@@ -113,9 +124,9 @@ the project name followed by the DVCS repository URL.")
   "Write a package whose contents are in the current buffer."
   (save-excursion
     (save-restriction
-      (let* ((pkg-info (package-buffer-info))
-             (pkg-version (aref pkg-info 3))
-             (file-name (aref pkg-info 0)))
+      (let* ((info (package-buffer-info))
+             (pkg-version (pkg-buf-info-version info))
+             (file-name (pkg-buf-info-filename info)))
         (make-directory package-public-dir t)
         (write-region (point-min) (point-max)
                       (concat package-public-dir "/"
@@ -189,13 +200,13 @@ CANDIDATES is a list of file names which might exist. They will
   (let ((pkg-file (package-file-exists (package-latest-for-project project))))
     (when pkg-file
       (find-file pkg-file)
-      (let ((pkg-info (package-buffer-info)))
+      (let ((info (package-buffer-info)))
         (cons (intern (car project))
-              (make-pkg-info :version (package-version-split (aref pkg-info 3))
-                             :requires (aref pkg-info 1)
-                             :desc (if (string= (aref pkg-info 2) "")
+              (make-pkg-info :version (package-version-split (pkg-buf-info-version info))
+                             :requires (pkg-buf-info-requires info)
+                             :desc (if (string= (pkg-buf-info-desc info) "")
                                        (read-string "Description of package: ")
-                                     (aref pkg-info 2))
+                                     (pkg-buf-info-desc info))
                              ;; TODO: support 'tar
                              :type 'single))))))
 
