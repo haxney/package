@@ -260,7 +260,7 @@ available."
 (defun package-init (project)
   "Create a new checkout of a project if necessary."
   (when (not (file-exists-p (package-local-checkout-dir (project-name project))))
-    (make-directory package-working-dir t)
+    (make-directory (format package-working-dir (project-name project)) t)
     (cd (format package-working-dir ""))
     (shell-command (format "git clone %s %s" (project-url project) (project-name project)))))
 
