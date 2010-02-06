@@ -44,8 +44,11 @@
 
 (require 'package)
 
-(defvar package-base "~/src/package.el/"
-  "The directory in which to store package-maint files.")
+;;;###autoload
+(defcustom package-base "~/src/package.el/"
+  "The directory in which to store package-maint files."
+  :type 'directory
+  :group 'package-maint)
 
 (defvar package-index (concat package-base "index.el")
   "The listing of all projects and repositories to get them from.
