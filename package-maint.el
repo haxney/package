@@ -90,6 +90,7 @@ here."
   name
   url)
 
+;;;###autoload
 (defun package-build-archive ()
   "Build packages for every version of every project in the index."
   (interactive)
