@@ -98,7 +98,8 @@ here."
   "Build packages for every version of every project in the index."
   (interactive)
   (save-window-excursion
-    (with-current-buffer (find-file-noselect package-index t t)
+    (with-temp-buffer
+      (insert-file-contents-literally package-index)
      (let ((original-dir default-directory)
            (projects (package-read-from-string
                       (buffer-substring-no-properties (point-min)
@@ -106,8 +107,7 @@ here."
        (dolist (project projects)
          (package-build-packages project))
        (package-build-archive-contents projects)
-       (cd original-dir)
-       (kill-buffer)))))
+       (cd original-dir)))))
 
 (defun package-build-packages (project)
   "Given a project, create packages for each version needs building."
