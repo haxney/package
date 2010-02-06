@@ -190,11 +190,12 @@ newline-delimited list of files and directories added to the
 archive."
   (make-directory package-public-dir t)
   (let* ((extension (cdr (assq 'tar package-file-types)))
-         (manifest (concat name "-pkg.el"))
+         (prefix (concat name "-" version "/"))
+         (manifest (concat prefix name "-pkg.el"))
          (dir (concat "--git-dir="
                       (file-truename (package-local-repo-dir name))))
          (format (concat "--format=" extension))
-         (prefix (concat "--prefix=" name "-" version "/"))
+         (prefix-arg (concat "--prefix=" prefix))
          (output-file (concat package-public-dir "/"
                               name "-" version "." extension))
          (output (concat "--output=" (file-truename output-file)))
@@ -203,7 +204,7 @@ archive."
                                              dir
                                              "archive"
                                              format
-                                             prefix
+                                             prefix-arg
                                              output
                                              verbose
                                              version)
