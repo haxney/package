@@ -139,7 +139,11 @@
 (defcustom package-archives '(("elpa" . "http://tromey.com/elpa/"))
   "An alist of archives (names and URLs) from which to fetch.
 The default points to ELPA, the Emacs Lisp Package Archive.
-Note that some code in package.el assumes that this is an http: URL.")
+Note that some code in package.el assumes that this is an http: URL."
+  :type '(alist :key-type (string :tag "Archive name")
+                :value-type (string :tag "Archive URL"))
+  :group 'package
+  :package-version '("package.el" . "0.9.3"))
 
 (defconst package-archive-version 1
   "Version number of the package archive understood by this file.
