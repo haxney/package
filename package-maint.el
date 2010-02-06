@@ -4,7 +4,7 @@
 
 ;; Author: Phil Hagelberg <technomancy@gmail.com>
 ;; Created: 2 Jan 2009
-;; Version: 0.9.2
+;; Version: 0.9.3
 ;; Keywords: tools
 
 ;; This file is not (yet) part of GNU Emacs.
