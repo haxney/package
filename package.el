@@ -4,7 +4,7 @@
 
 ;; Author: Tom Tromey <tromey@redhat.com>
 ;; Created: 10 Mar 2007
-;; Version: 0.9.1
+;; Version: 0.9.2
 ;; Keywords: tools
 
 ;; This file is not (yet) part of GNU Emacs.
@@ -145,7 +145,7 @@ Note that some code in package.el assumes that this is an http: URL.")
   "Version number of the package archive understood by this file.
 Lower version numbers than this will probably be understood as well.")
 
-(defconst package-el-version "0.9"
+(defconst package-el-version "0.9.2"
   "Version of package.el.")
 
 ;; We don't prime the cache since it tends to get out of date.
