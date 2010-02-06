@@ -441,12 +441,12 @@ Each requirement is of the form (OTHER-PACKAGE \"VERSION\")."
          (ignore-name (concat name "-pkg.el"))
          (generated-autoload-file (concat pkg-dir auto-name))
          (version-control 'never))
-    ;; In Emacs 22 'update-autoloads-from-directories' does not seem
+    ;; In Emacs 22 `update-directory-autoloads' does not seem
     ;; to be autoloaded...
     (require 'autoload)
     (unless (fboundp 'autoload-ensure-default-file)
       (package-autoload-ensure-default-file generated-autoload-file))
-    (update-autoloads-from-directories pkg-dir)))
+    (update-directory-autoloads pkg-dir)))
 
 (defun package-untar-buffer ()
   "Untar the current buffer.
