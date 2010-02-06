@@ -193,12 +193,12 @@ archive."
          (prefix (concat name "-" version "/"))
          (manifest (concat prefix name "-pkg.el"))
          (dir (concat "--git-dir="
-                      (file-truename (package-local-repo-dir name))))
+                      (expand-file-name (package-local-repo-dir name))))
          (format (concat "--format=" extension))
          (prefix-arg (concat "--prefix=" prefix))
          (output-file (concat package-public-dir "/"
                               name "-" version "." extension))
-         (output (concat "--output=" (file-truename output-file)))
+         (output (concat "--output=" (expand-file-name output-file)))
          (verbose "--verbose")
          (command (mapconcat 'identity (list "git"
                                              dir
@@ -234,7 +234,7 @@ available."
   (let* ((manifest-dir (concat name "-" version "/"))
          (manifest (concat manifest-dir name "-pkg.el"))
          (append "--append")
-         (file (concat "--file=" (file-truename archive)))
+         (file (concat "--file=" (expand-file-name archive)))
          (command (mapconcat 'identity
                              (list "tar"
                                    append
