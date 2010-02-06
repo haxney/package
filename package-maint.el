@@ -98,15 +98,16 @@ here."
   "Build packages for every version of every project in the index."
   (interactive)
   (save-window-excursion
-    (find-file package-index)
-    (let ((original-dir default-directory)
-          (projects (package-read-from-string
-                     (buffer-substring-no-properties (point-min)
-                                                     (point-max)))))
-      (dolist (project projects)
-        (package-build-packages project))
-      (package-build-archive-contents projects)
-      (cd original-dir))))
+    (with-current-buffer (find-file-noselect package-index t t)
+     (let ((original-dir default-directory)
+           (projects (package-read-from-string
+                      (buffer-substring-no-properties (point-min)
+                                                      (point-max)))))
+       (dolist (project projects)
+         (package-build-packages project))
+       (package-build-archive-contents projects)
+       (cd original-dir)
+       (kill-buffer)))))
 
 (defun package-build-packages (project)
   "Given a project, create packages for each version needs building."
