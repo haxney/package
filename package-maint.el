@@ -1,6 +1,6 @@
 ;;; package-maint.el --- Tools for curating the package archive
 
-;; Copyright (C) 2009 Phil Hagelberg <technomancy@gmail.com>
+;; Copyright (C) 2010 Phil Hagelberg <technomancy@gmail.com>
 
 ;; Author: Phil Hagelberg <technomancy@gmail.com>
 ;; Created: 2 Jan 2009
@@ -34,7 +34,10 @@
 ;; "package" here is used to mean a specific version of a project that
 ;; is prepared for download and installation.
 
-;; Currently only supports single-file projects stored in git.
+;;; History:
+;;
+;; Initial code written by Phil Hagelberg, multi-file package support added by
+;; Dan Hackney.
 
 ;;; Code:
 
@@ -110,7 +113,7 @@ here."
        (cd original-dir)))))
 
 (defun package-build-packages (project)
-  "Given a project, create packages for each version needs building."
+  "Given a PROJECT, create packages for each version needs building."
   (let ((name (project-name project)))
     (package-init project)
     (cd (package-local-checkout-dir name))
@@ -122,7 +125,7 @@ here."
 (defun package-build-type (version)
   "Determines whether to build a single- or multi-file package.
 
-A version is deemed worthy of a multi-file package if it contains
+A VERSION is deemed worthy of a multi-file package if it contains
 more than one elisp file.
 
 Returns a type from `package-file-types'."
@@ -151,7 +154,9 @@ default."
     (error "Unknown package type `%s'" type))))
 
 (defun package-build-single (name version)
-  "Create a package from a single file."
+  "Create a package from a single file.
+
+Create a package for project NAME and VERSION."
   (let* ((extension (cdr (assq 'single package-file-types)))
          (package-source (format "%s/%s.%s"
                                  (package-local-checkout-dir name)
@@ -167,7 +172,11 @@ default."
       (kill-buffer))))
 
 (defun package-write-buffer (extension)
-  "Write a package whose contents are in the current buffer."
+  "Write a package whose contents are in the current buffer.
+
+EXTENSION is the file extension to append to the end of the file
+name. Currently, there is only \"el\" for single files and
+\"tar\" for multi-file packages."
   (save-excursion
     (save-restriction
       (let* ((info (package-buffer-info))
@@ -187,7 +196,7 @@ default."
                           nil nil nil 'ask))))))
 
 (defun package-build-tar (name version)
-  "Build a package from a multi-file repository.
+  "Build package NAME for VERSION from a multi-file repository.
 
 Returns a cons-cell containing the exit code and the process's
 stderr. When successful, the stderr will contain a
@@ -233,9 +242,11 @@ archive."
   "Generate and append a simple manifest file.
 
 Multi-file packages must have have a simple file which contains a
-call to `define-package'. The required arguments NAME and VERSION
-are appended to ARCHIVE, while DESC and REQUIREMENTS are added if
-available."
+call to `define-package'. ARCHIVE is the path to the package
+archive to modify. The required arguments NAME and VERSION are
+included in the manifest file (and are used to determine the file
+path within the archive), while DESC and REQUIREMENTS are added
+if available."
   (let* ((manifest-dir (concat name "-" version "/"))
          (manifest (concat manifest-dir name "-pkg.el"))
          (append "--append")
@@ -258,13 +269,14 @@ available."
     (delete-directory manifest-dir)))
 
 (defun package-init (project)
-  "Create a new checkout of a project if necessary."
+  "Create a new checkout of a PROJECT if necessary."
   (when (not (file-exists-p (package-local-checkout-dir (project-name project))))
     (make-directory (format package-working-dir (project-name project)) t)
     (cd (format package-working-dir ""))
     (shell-command (format "git clone %s %s" (project-url project) (project-name project)))))
 
 (defun package-local-checkout-dir (name)
+  "Return the working directory for project NAME."
   (format package-working-dir name))
 
 (defun package-local-repo-dir (name)
@@ -299,11 +311,13 @@ name will be returned."
   nil)
 
 (defun package-built? (name version)
-  "Checks whether there is a package file matching NAME and VERSION."
+  "Check whether there is a package file matching NAME and VERSION."
   (package-file-exists (package-public-file-candidates name version)))
 
 (defun package-build-archive-contents (projects)
-  "Update the list of packages."
+  "Update the list of packages.
+
+PROJECTS is a list of package descriptions."
   (let ((print-level nil)
         (print-length nil)
         (contents (package-get-archive-contents projects)))
@@ -312,6 +326,7 @@ name will be returned."
                           "/archive-contents"))))
 
 (defun package-get-archive-contents (projects)
+  "Build the package index array for PROJECTS."
   (cons package-archive-version
         (remove-if
          'null (mapcar 'package-archive-contents-for-project projects))))
@@ -355,6 +370,7 @@ files of the most recent version of PROJECT."
     (package-public-file-candidates (project-name project) latest-version)))
 
 (defun package-sort-versions (versions)
+  "Sort the list of VERSIONS using `package-version-compare'."
   ;; destructive list functions! you gotta be kidding me.
   (let ((versions (copy-list versions)))
     (sort versions (lambda (a b)
@@ -363,4 +379,5 @@ files of the most recent version of PROJECT."
                       (package-version-split b) '<)))))
 
 (provide 'package-maint)
+
 ;;; package-maint.el ends here
