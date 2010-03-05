@@ -96,7 +96,7 @@
 ;; A tar file should be named "NAME-VERSION.tar".  The tar file must
 ;; unpack into a directory named after the package and version:
 ;; "NAME-VERSION".  It must contain a file named "PACKAGE-pkg.el"
-;; which consists of a call to define-package.  It may also contain a
+;; which consists of a call to `package-register'.  It may also contain a
 ;; "dir" file and the info files it references.
 
 ;; A .el file will be named "NAME-VERSION.el" in ELPA, but will be
@@ -141,6 +141,7 @@
 
 ;;; Code:
 
+(require 'assoc)
 (require 'elm)
 (eval-when-compile (require 'cl))
 
@@ -401,49 +402,29 @@ PKG-VEC describes the version of PACKAGE to mark obsolete."
                                             pkg-vec)))
                   package-obsolete-alist)))))
 
-;; (define-package "emacs" "21.4.1" "GNU Emacs core package.")
-;; (define-package "erc" "5.1" "ERC - irc client" '((emacs "21.0")))
-(defun define-package (name-str version-string
-                                &optional docstring requirements)
-  "Define a new package.
-NAME-STR is the name of the package, a string.
-VERSION-STRING is the version of the package, a dotted sequence
-of integers.
-DOCSTRING is the optional description.
-REQUIREMENTS is a list of requirements on other packages.
-Each requirement is of the form (OTHER-PACKAGE \"VERSION\")."
-  (let* ((name (intern name-str))
-         (pkg-desc (assq name package-alist))
-         (new-version (package-version-split version-string))
-         (new-pkg-desc
-          (cons name
-                (vector new-version
-                        (mapcar
-                         (lambda (elt)
-                           (list (car elt)
-                                 (package-version-split (car (cdr elt)))))
-                         requirements)
-                        docstring))))
-    ;; Only redefine a package if the redefinition is newer.
-    (if (or (not pkg-desc)
-            (package-version-compare new-version
-                                     (package-desc-vers (cdr pkg-desc))
-                                     '>))
-        (progn
-          (when pkg-desc
-            ;; Remove old package and declare it obsolete.
-            (setq package-alist (delq pkg-desc package-alist))
-            (package-mark-obsolete (car pkg-desc) (cdr pkg-desc)))
-          ;; Add package to the alist.
-          (setq package-alist (cons new-pkg-desc package-alist)))
-      ;; You can have two packages with the same version, for instance
-      ;; one in the system package directory and one in your private
-      ;; directory.  We just let the first one win.
-      (unless (package-version-compare new-version
-                                       (package-desc-vers (cdr pkg-desc))
-                                       '=)
-        ;; The package is born obsolete.
-        (package-mark-obsolete (car new-pkg-desc) (cdr new-pkg-desc))))))
+(defun package-versions (pkg-name)
+  "Return a list of registered versions of PKG-NAME."
+  (let ((pkg-versions (cdr-safe (assq pkg-name package-alist))))
+    (when (consp pkg-versions)
+        (mapcar 'car pkg-versions))))
+
+(defun package-register (pkg)
+  "Register package PKG if its version isn't already in `package-alist'.
+
+Return nil if PKG was already in the list"
+  (let ((pkg-name (package-name pkg))
+        (pkg-version (package-version pkg))
+        (existing-pkg (cdr-safe (assq pkg-name package-alist))))
+    (if existing-pkg
+        (unless (member pkg-version (package-versions pkg-name))
+          (setcdr (last existing) (list (cons pkg-version pkg))))
+      (aput 'package-alist pkg-name (cons pkg-version pkg)))))
+
+(defun package-registered-p (name version)
+  "Check whether package NAME at VERSION is in `package-alist'.
+
+Returns t if the package version exists, nil if not."
+  (consp (assoc version (cdr-safe (assq pkg-name package-alist)))))
 
 ;; From Emacs 22.
 (defun package-autoload-ensure-default-file (file)
