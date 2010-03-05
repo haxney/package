@@ -475,7 +475,7 @@ Otherwise it uses an external `tar' program.
     (call-process-region (point) (point-max) "tar" nil '(nil nil) nil
                          "xf" "-")))
 
-(defun package-unpack (name version)
+(defun package-unpack-tar (name version)
   "Unpack a package tar from the current buffer.
 
 Unpack the package, using NAME and VERSION to determine the
@@ -593,7 +593,7 @@ info."
       (re-search-forward "^$" nil 'move)
       (forward-char)
 
-      (package-unpack name version)
+      (package-unpack-tar name version)
       (kill-buffer tar-buffer))))
 
 (defun package-installed? (package &optional min-version)
@@ -886,7 +886,7 @@ TYPE is either `single' or `tar'."
          ((eq type 'single)
           (package-unpack-single file-name pkg-version desc requires))
          ((eq type 'tar)
-          (package-unpack (intern file-name) pkg-version))
+          (package-unpack-tar (intern file-name) pkg-version))
          (t
           (error "Unknown type: %s" (symbol-name type))))
         ;; Try to activate it.
