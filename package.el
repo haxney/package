@@ -320,7 +320,7 @@ Modifies `load-path' to include the package directory and loads
 the `autoload' file for the package. PKG-VEC is the package info
 as retrieved from the package mirror."
   (let* ((pkg-name (symbol-name package))
-         (pkg-ver-str (package-version-join (package-desc-vers pkg-vec)))
+         (pkg-ver-str (package-version-join (package-version pkg-vec)))
          (dir-list package-directory-list)
          (pkg-dir))
     (while dir-list
@@ -351,7 +351,7 @@ as retrieved from the package mirror."
   "Return true if PACKAGE at VERSION is built-in to Emacs."
   (let ((elt (assq package package--builtins)))
     (and elt
-         (package-version-compare (package-desc-vers (cdr elt)) version '=))))
+         (package-version-compare (package-version (cdr elt)) version '=))))
 
 ;; FIXME: return a reason instead?
 (defun package-activate (package version)
@@ -366,8 +366,8 @@ Recursively activates all dependencies of the named package."
   ;; no sense.
   (unless (eq package 'emacs)
     (let* ((pkg-desc (assq package package-alist))
-           (this-version (package-desc-vers (cdr pkg-desc)))
-           (req-list (package-desc-reqs (cdr pkg-desc)))
+           (this-version (package-version (cdr pkg-desc)))
+           (req-list (package-requires-hard (cdr pkg-desc)))
            ;; If the package was never activated, we want to do it
            ;; now.
            (keep-going (or (not (memq package package-activated-list))
@@ -393,12 +393,12 @@ PKG-VEC describes the version of PACKAGE to mark obsolete."
     (if elt
         ;; If this obsolete version does not exist in the list, update
         ;; it the list.
-        (unless (assoc (package-desc-vers pkg-vec) (cdr elt))
-          (setcdr elt (cons (cons (package-desc-vers pkg-vec) pkg-vec)
+        (unless (assoc (package-version pkg-vec) (cdr elt))
+          (setcdr elt (cons (cons (package-version pkg-vec) pkg-vec)
                             (cdr elt))))
       ;; Make a new association.
       (setq package-obsolete-alist
-            (cons (cons package (list (cons (package-desc-vers pkg-vec)
+            (cons (cons package (list (cons (package-version pkg-vec)
                                             pkg-vec)))
                   package-obsolete-alist)))))
 
@@ -581,7 +581,7 @@ info."
   (let ((pkg-desc (assq package package-alist)))
     (and pkg-desc
          (package-version-compare min-version
-                                  (package-desc-vers (cdr pkg-desc))
+                                  (package-version (cdr pkg-desc))
                                   '<=))))
 
 (defun package-compute-transaction (result requirements)
@@ -602,19 +602,19 @@ processed to resolve all dependencies (if possible)."
           (unless pkg-desc
             (error "Package '%s' not available for installation"
                    (symbol-name next-pkg)))
-          (unless (package-version-compare (package-desc-vers (cdr pkg-desc))
+          (unless (package-version-compare (package-version (cdr pkg-desc))
                                            next-version
                                            '>=)
             (error
              "Need package '%s' with version %s, but only %s is available"
              (symbol-name next-pkg) (package-version-join next-version)
-             (package-version-join (package-desc-vers (cdr pkg-desc)))))
+             (package-version-join (package-version (cdr pkg-desc)))))
           ;; Only add to the transaction if we don't already have it.
           (unless (memq next-pkg result)
             (setq result (cons next-pkg result)))
           (setq result
                 (package-compute-transaction result
-                                             (package-desc-reqs
+                                             (package-requires-hard
                                               (cdr pkg-desc)))))))
     (setq requirements (cdr requirements)))
   result)
@@ -703,15 +703,15 @@ Adds the archive from which it came to the end of the package vector."
   "Download and install all the packages in the given TRANSACTION."
   (mapc (lambda (elt)
           (let* ((desc (cdr (assq elt package-archive-contents)))
-                 (v-string (package-version-join (package-desc-vers desc)))
-                 (kind (package-desc-kind desc)))
+                 (v-string (package-version-join (package-version desc)))
+                 (kind (package-type desc)))
             (cond
              ((eq kind 'tar)
               (package-download-tar elt v-string))
              ((eq kind 'single)
               (package-download-single elt v-string
-                                       (package-desc-doc desc)
-                                       (package-desc-reqs desc)))
+                                       (package-summary desc)
+                                       (package-requires-hard desc)))
              (t
               (error "Unknown package kind: " (symbol-name kind))))))
         transaction))
@@ -733,7 +733,7 @@ Interactively, prompts for the package name."
              (symbol-name name)))
     (let ((transaction
            (package-compute-transaction (list name)
-                                        (package-desc-reqs (cdr pkg-desc)))))
+                                        (package-requires-hard (cdr pkg-desc)))))
       (package-download-transaction transaction)))
   ;; Try to activate it.
   (package-initialize))
@@ -974,7 +974,7 @@ download."
   (package-read-all-archive-contents)
   ;; Try to activate all our packages.
   (mapc (lambda (elt)
-          (package-activate (car elt) (package-desc-vers (cdr elt))))
+          (package-activate (car elt) (package-version (cdr elt))))
         package-alist))
 
 
@@ -1281,32 +1281,32 @@ RESULT is the list to which to add the package."
       (mapc (lambda (elt)
               (setq info-list
                     (package-list-maybe-add (car elt)
-                                            (package-desc-vers (cdr elt))
+                                            (package-version (cdr elt))
                                             ;; FIXME: it turns out to
                                             ;; be tricky to see if
                                             ;; this package is
                                             ;; presently activated.
                                             ;; That is lame!
                                             "installed"
-                                            (package-desc-doc (cdr elt))
+                                            (package-summary (cdr elt))
                                             info-list)))
             package-alist)
       (mapc (lambda (elt)
               (setq info-list
                     (package-list-maybe-add (car elt)
-                                            (package-desc-vers (cdr elt))
+                                            (package-version (cdr elt))
                                             "available"
-                                            (package-desc-doc (cdr elt))
+                                            (package-summary (cdr elt))
                                             info-list)))
             package-archive-contents)
       (mapc (lambda (elt)
               (mapc (lambda (inner-elt)
                       (setq info-list
                             (package-list-maybe-add (car elt)
-                                                    (package-desc-vers
+                                                    (package-version
                                                      (cdr inner-elt))
                                                     "obsolete"
-                                                    (package-desc-doc
+                                                    (package-summary
                                                      (cdr inner-elt))
                                                     info-list)))
                     (cdr elt)))
