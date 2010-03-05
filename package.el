@@ -141,12 +141,16 @@
 
 ;;; Code:
 
-(defcustom package-archives '(("elpa" . "http://tromey.com/elpa/"))
 (eval-when-compile (require 'cl))
+
+(defcustom package-archives '((elpa . "http://tromey.com/elpa/"))
   "An alist of archives (names and URLs) from which to fetch.
-The default points to ELPA, the Emacs Lisp Package Archive.
-Note that some code in package.el assumes that this is an http: URL."
-  :type '(alist :key-type (string :tag "Archive name")
+
+The archive name must be a symbol, while the repository URL is a
+string.
+
+The default points to ELPA, the Emacs Lisp Package Archive."
+  :type '(alist :key-type (symbol :tag "Archive name")
                 :value-type (string :tag "Archive URL"))
   :group 'package
   :package-version '("package.el" . "0.9.3"))
@@ -183,6 +187,7 @@ the archive index. The fields are:
 (defvar package-archive-contents
   nil
   "A representation of the contents of the ELPA archive.
+
 This is an alist mapping package names (symbols) to package
 descriptor vectors.  These are like the vectors for `package-alist'
 but have extra entries: one which is 'tar for tar packages and
