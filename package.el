@@ -189,10 +189,10 @@ the archive index. The fields are:
   "A representation of the contents of the ELPA archive.
 
 This is an alist mapping package names (symbols) to package
-descriptor vectors.  These are like the vectors for `package-alist'
-but have extra entries: one which is 'tar for tar packages and
-'single for single-file packages, and one which is the name of
-the archive from which it came.")
+descriptor vectors.  These are like the vectors for
+`package-alist' but have extra entries: one which is 'tar for tar
+packages and 'single for single-file packages, and one which is
+the name of the archive from which it came.")
 
 (defvar package-user-dir
   (expand-file-name (convert-standard-filename "~/.emacs.d/elpa"))
@@ -203,17 +203,21 @@ the archive from which it came.")
         "/usr/share/emacs/site-lisp/elpa/")
   "List of directories to search for packages.")
 
-(defun package-version-split (string)
-  "Split a package STRING into a version list."
-  (mapcar 'string-to-int (split-string string "[.]")))
-
 (defconst package--builtins-base
-  ;; We use package-version split here to make sure to pick up the
-  ;; minor version.
-  `((emacs . [,(package-version-split emacs-version) nil
-              "GNU Emacs"])
-    (package . [,(package-version-split package-el-version)
-                nil "Simple package system for GNU Emacs"]))
+  (list (cons 'emacs (make-package
+                      :name 'emacs
+                      :version (version-to-list emacs-version)
+                      :reqs nil
+                      :desc "GNU Emacs"
+                      :archive nil
+                      :type 'builtin))
+        (cons 'package (make-package
+                        :name 'package
+                        :version (version-to-list package-version)
+                        :reqs nil
+                        :desc "GNU Emacs"
+                        :archive nil
+                        :type 'builtin)))
   "Packages which are always built-in.")
 
 (defvar package--builtins
@@ -223,15 +227,39 @@ the archive from which it came.")
          (if (>= emacs-major-version 22)
              ;; FIXME: emacs 22 includes tramp, rcirc, maybe
              ;; other things...
-             '((erc . [(5 2) nil "An Emacs Internet Relay Chat client"])
-               ;; The external URL is version 1.15, so make sure the
-               ;; built-in one looks newer.
-               (url . [(1 16) nil "URL handling libary"])))
+             (list (cons 'erc (make-package
+                               :name 'emacs
+                               :version (version-to-list (if (>= emacs-major-version 23)
+                                                             "5.3"
+                                                           "5.2"))
+                               :reqs nil
+                               :desc "An Emacs Internet Relay Chat client"
+                               :archive nil
+                               :type 'builtin))
+                   (cons 'url (make-package
+                               :name 'url
+                               ;; The external URL is version 1.15, so make sure the
+                               ;; built-in one looks newer.
+                               :version (version-to-list "1.16")
+                               :reqs nil
+                               :desc "URL handling libary"
+                               :archive nil
+                               :type 'builtin))))
          (if (>= emacs-major-version 23)
-             '(;; Strangely, nxml-version is missing in Emacs 23.
-               ;; We pick the merge date as the version.
-               (nxml . [(20071123) nil "Major mode for editing XML documents."])
-               (bubbles . [(0 5) nil "Puzzle game for Emacs."])))))
+             (list (cons 'nxml (make-package
+                                :name 'nxml
+                               :version (version-to-list "20071123")
+                               :reqs nil
+                               :desc "Major mode for editing XML documents."
+                               :archive nil
+                               :type 'builtin))
+                   (cons 'bubbles (make-package
+                                   :name 'bubbles
+                               :version (version-to-list "0.5")
+                               :reqs nil
+                               :desc "Puzzle game for Emacs."
+                               :archive nil
+                               :type 'builtin))))))
   "Alist of all built-in packages.
 Maps the package name to a vector [VERSION REQS DOCSTRING].")
 
