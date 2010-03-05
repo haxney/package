@@ -155,11 +155,11 @@ The default points to ELPA, the Emacs Lisp Package Archive."
   :group 'package
   :package-version '("package.el" . "0.9.3"))
 
-(defconst package-archive-version 1
+(defconst package-archive-version 2
   "Version number of the package archive understood by this file.
 Lower version numbers than this will probably be understood as well.")
 
-(defconst package-el-version "0.9.4"
+(defconst package-version "0.9.5pre"
   "Version of package.el.")
 
 (defstruct package
