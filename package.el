@@ -141,6 +141,7 @@
 
 ;;; Code:
 
+(require 'elm)
 (eval-when-compile (require 'cl))
 
 (defcustom package-archives '((elpa . "http://tromey.com/elpa/"))
