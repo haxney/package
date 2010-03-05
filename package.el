@@ -142,6 +142,7 @@
 ;;; Code:
 
 (defcustom package-archives '(("elpa" . "http://tromey.com/elpa/"))
+(eval-when-compile (require 'cl))
   "An alist of archives (names and URLs) from which to fetch.
 The default points to ELPA, the Emacs Lisp Package Archive.
 Note that some code in package.el assumes that this is an http: URL."
@@ -156,6 +157,27 @@ Lower version numbers than this will probably be understood as well.")
 
 (defconst package-el-version "0.9.4"
   "Version of package.el.")
+
+(defstruct package
+  "A structure containing information about a single package.
+
+This contains the complete info about a package as contained in
+the archive index. The fields are:
+
+ - NAME: The name of the package, as a symbol.
+ - VERSION: The parsed version of the package.
+ - REQS: The packages required by this package, as an list
+   of (REQ-NAME . REQ-VERSION) cons cells.
+ - DOCSTRING: The brief description of the package.
+ - ARCHIVE: The archive from which this package comes, as a symbol.
+ - TYPE: The distribution type of the package, currently either
+   'single or 'tar."
+  name
+  version
+  reqs
+  docstring
+  archive
+  type)
 
 ;; We don't prime the cache since it tends to get out of date.
 (defvar package-archive-contents
