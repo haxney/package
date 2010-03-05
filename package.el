@@ -75,7 +75,7 @@
 ;; M-x package-install-file
 ;;    Install a package from the indicated file.  The package can be
 ;;    either a tar file or a .el file.  A tar file must contain an
-;;    appropriately-named "-pkg.el" file; a .el file must be properly
+;;    appropriately-named ".epkg" file; a .el file must be properly
 ;;    formatted as with package-install-from-buffer.
 
 ;; The idea behind package.el is to be able to download packages and
@@ -95,7 +95,7 @@
 
 ;; A tar file should be named "NAME-VERSION.tar".  The tar file must
 ;; unpack into a directory named after the package and version:
-;; "NAME-VERSION".  It must contain a file named "PACKAGE-pkg.el"
+;; "NAME-VERSION".  It must contain a file named "PACKAGE.epkg"
 ;; which consists of a call to `package-register'.  It may also contain a
 ;; "dir" file and the info files it references.
 
@@ -448,7 +448,7 @@ Returns t if the package version exists, nil if not."
 (defun package-generate-autoloads (name pkg-dir)
   "Generate autoload definitions for package NAME in PKG-DIR."
   (let* ((auto-name (concat name "-autoloads.el"))
-         (ignore-name (concat name "-pkg.el"))
+         (ignore-name (concat name ".epkg"))
          (generated-autoload-file (concat pkg-dir auto-name))
          (version-control 'never))
     ;; In Emacs 22 `update-directory-autoloads' does not seem
@@ -813,10 +813,9 @@ The return result is a vector like `package-buffer-info'."
                             ;; Requires GNU tar.
                             (concat "tar -xOf " file " "
                                     pkg-name "-" pkg-version "/"
-                                    pkg-name "-pkg.el")))
+                                    pkg-name ".epkg")))
          (pkg-def-parsed (package-read-from-string pkg-def-contents)))
-    (unless (eq (car pkg-def-parsed) 'define-package)
-      (error "%s-pkg.el doesn't contain `define-package' sexp" pkg-name))
+    ;; TODO: Handle `pkg-def-parsed' better.
     (let ((name-str (nth 1 pkg-def-parsed))
           (version-string (nth 2 pkg-def-parsed))
           (docstring (nth 3 pkg-def-parsed))
