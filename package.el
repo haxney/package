@@ -312,22 +312,6 @@ Uses `package-directory-list' to find packages."
                     (directory-files dir nil "^[^.]"))))
         package-directory-list))
 
-(defsubst package-desc-vers (desc)
-  "Extract version from a package description vector DESC."
-  (aref desc 0))
-
-(defsubst package-desc-reqs (desc)
-  "Extract requirements from a package description vector DESC."
-  (aref desc 1))
-
-(defsubst package-desc-doc (desc)
-  "Extract doc string from a package description vector DESC."
-  (aref desc 2))
-
-(defsubst package-desc-kind (desc)
-  "Extract the kind of download from an archive package description vector DESC."
-  (aref desc 3))
-
 (defun package-do-activate (package pkg-vec)
   "Set up a single PACKAGE.
 
