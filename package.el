@@ -219,69 +219,20 @@ the name of the archive from which it came.")
         "/usr/share/emacs/site-lisp/elpa/")
   "List of directories to search for packages.")
 
-(defconst package--builtins-base
-  (list (cons 'emacs (make-package
-                      :name 'emacs
-                      :version (version-to-list emacs-version)
-                      :reqs nil
-                      :desc "GNU Emacs"
-                      :archive nil
-                      :type 'builtin))
-        (cons 'package (make-package
-                        :name 'package
-                        :version (version-to-list package-version)
-                        :reqs nil
-                        :desc "GNU Emacs"
-                        :archive nil
-                        :type 'builtin)))
+(defconst package--builtins-base nil
+
   "Packages which are always built-in.")
 
 (defvar package--builtins
   (delq nil
         (append
-         package--builtins-base
-         (if (>= emacs-major-version 22)
-             ;; FIXME: emacs 22 includes tramp, rcirc, maybe
-             ;; other things...
-             (list (cons 'erc (make-package
-                               :name 'emacs
-                               :version (version-to-list (if (>= emacs-major-version 23)
-                                                             "5.3"
-                                                           "5.2"))
-                               :reqs nil
-                               :desc "An Emacs Internet Relay Chat client"
-                               :archive nil
-                               :type 'builtin))
-                   (cons 'url (make-package
-                               :name 'url
-                               ;; The external URL is version 1.15, so make sure the
-                               ;; built-in one looks newer.
-                               :version (version-to-list "1.16")
-                               :reqs nil
-                               :desc "URL handling libary"
-                               :archive nil
-                               :type 'builtin))))
-         (if (>= emacs-major-version 23)
-             (list (cons 'nxml (make-package
-                                :name 'nxml
-                               :version (version-to-list "20071123")
-                               :reqs nil
-                               :desc "Major mode for editing XML documents."
-                               :archive nil
-                               :type 'builtin))
-                   (cons 'bubbles (make-package
-                                   :name 'bubbles
-                               :version (version-to-list "0.5")
-                               :reqs nil
-                               :desc "Puzzle game for Emacs."
-                               :archive nil
-                               :type 'builtin))))))
+         package--builtins-base))
   "Alist of all built-in packages.
 Maps the package name to a vector [VERSION REQS DOCSTRING].")
 
 (defvar package-alist package--builtins
   "Alist of all packages available for activation.
-Maps the package name to a vector [VERSION REQS DOCSTRING].")
+Maps the package name to a list of `package' structs.")
 
 (defvar package-activated-list
   (mapcar #'car package-alist)
