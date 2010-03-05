@@ -695,7 +695,7 @@ Will throw an error if the archive version is too new."
   (dolist (archive package-archives)
     (package-read-archive-contents (car archive)))
   (let ((builtins (package--read-archive-file
-                   (concat "archives/" (caar package-archives)
+                   (concat "archives/" (symbol-name (caar package-archives))
                            "/builtin-packages"))))
     (if builtins
         ;; Version 1 of 'builtin-packages' is a list where the car is
@@ -715,7 +715,7 @@ Will set `package-archive-contents' and `package--builtins' if
 successful. Will throw an error if the archive version is too
 new."
   (let ((archive-contents (package--read-archive-file
-                           (concat "archives/" archive
+                           (concat "archives/" (symbol-name archive)
                                    "/archive-contents"))))
     (if archive-contents
         ;; Version 1 of 'archive-contents' is identical to our
@@ -980,7 +980,7 @@ The file can either be a tar file or an Emacs Lisp file."
   "Download a single archive file and cache it locally.
 
 Downloads the archive index from ARCHIVE and stores it in FILE."
-  (let* ((archive-name (car archive))
+  (let* ((archive-name (symbol-name (car archive)))
          (archive-url (cdr archive))
          (buffer (url-retrieve-synchronously (concat archive-url file))))
     (save-excursion
