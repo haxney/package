@@ -1014,26 +1014,70 @@ download."
 
 ;;;; Package menu mode.
 
-(defvar package-menu-mode-map nil
-  "Local keymap for `package-menu-mode' buffers.")
-
-(unless package-menu-mode-map
-  (setq package-menu-mode-map (make-keymap))
-  (suppress-keymap package-menu-mode-map)
-  (define-key package-menu-mode-map "q" 'quit-window)
-  (define-key package-menu-mode-map "n" 'next-line)
-  (define-key package-menu-mode-map "p" 'previous-line)
-  (define-key package-menu-mode-map "u" 'package-menu-mark-unmark)
-  (define-key package-menu-mode-map "\177" 'package-menu-backup-unmark)
-  (define-key package-menu-mode-map "d" 'package-menu-mark-delete)
-  (define-key package-menu-mode-map "i" 'package-menu-mark-install)
-  (define-key package-menu-mode-map "g" 'package-menu-revert)
-  (define-key package-menu-mode-map "r" 'package-menu-refresh)
-  (define-key package-menu-mode-map "~"
-    'package-menu-mark-obsolete-for-deletion)
-  (define-key package-menu-mode-map "x" 'package-menu-execute)
-  (define-key package-menu-mode-map "h" 'package-menu-quick-help)
-  (define-key package-menu-mode-map "?" 'package-menu-view-commentary))
+(defvar package-menu-mode-map
+  (let ((map (make-keymap))
+	(menu-map (make-sparse-keymap "Package")))
+    (suppress-keymap map)
+    (define-key map "q" 'quit-window)
+    (define-key map "n" 'next-line)
+    (define-key map "p" 'previous-line)
+    (define-key map "u" 'package-menu-mark-unmark)
+    (define-key map "\177" 'package-menu-backup-unmark)
+    (define-key map "d" 'package-menu-mark-delete)
+    (define-key map "i" 'package-menu-mark-install)
+    (define-key map "g" 'package-menu-revert)
+    (define-key map "r" 'package-menu-refresh)
+    (define-key map "~" 'package-menu-mark-obsolete-for-deletion)
+    (define-key map "x" 'package-menu-execute)
+    (define-key map "h" 'package-menu-quick-help)
+    (define-key map "?" 'package-menu-view-commentary)
+    (define-key map [menu-bar package-menu] (cons "Package" menu-map))
+    (define-key menu-map [mq]
+      '(menu-item "Quit" quit-window
+		  :help "Quit package selection"))
+    (define-key menu-map [s1] '("--"))
+    (define-key menu-map [mn]
+      '(menu-item "Next" next-line
+		  :help "Next Line"))
+    (define-key menu-map [mp]
+      '(menu-item "Previous" previous-line
+		  :help "Previous Line"))
+    (define-key menu-map [s2] '("--"))
+    (define-key menu-map [mu]
+      '(menu-item "Unmark" package-menu-mark-unmark
+		  :help "Clear any marks on a package and move to the next line"))
+    (define-key menu-map [munm]
+      '(menu-item "Unmark backwards" package-menu-backup-unmark
+		  :help "Back up one line and clear any marks on that package"))
+    (define-key menu-map [md]
+      '(menu-item "Mark for deletion" package-menu-mark-delete
+		  :help "Mark a package for deletion and move to the next line"))
+    (define-key menu-map [mi]
+      '(menu-item "Mark for install" package-menu-mark-install
+		  :help "Mark a package for installation and move to the next line"))
+    (define-key menu-map [s3] '("--"))
+    (define-key menu-map [mg]
+      '(menu-item "Update package list" package-menu-revert
+		  :help "Update the list of packages"))
+    (define-key menu-map [mr]
+      '(menu-item "Refresh package list" package-menu-refresh
+		  :help "Download the ELPA archive"))
+    (define-key menu-map [s4] '("--"))
+    (define-key menu-map [mt]
+      '(menu-item "Mark obsolete packages" package-menu-mark-obsolete-for-deletion
+		  :help "Mark all obsolete packages for deletion"))
+    (define-key menu-map [mx]
+      '(menu-item "Execute actions" package-menu-execute
+		  :help "Perform all the marked actions"))
+    (define-key menu-map [s5] '("--"))
+    (define-key menu-map [mh]
+      '(menu-item "Help" package-menu-quick-help
+		  :help "Show short key binding help for package-menu-mode"))
+    (define-key menu-map [mc]
+      '(menu-item "View Commentary" package-menu-view-commentary
+		  :help "Display information about this package"))
+    map)
+   "Local keymap for `package-menu-mode' buffers.")
 
 (defvar package-menu-sort-button-map
   (let ((map (make-sparse-keymap)))
