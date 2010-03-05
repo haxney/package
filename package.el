@@ -172,14 +172,14 @@ the archive index. The fields are:
  - VERSION: The parsed version of the package.
  - REQS: The packages required by this package, as an list
    of (REQ-NAME . REQ-VERSION) cons cells.
- - DOCSTRING: The brief description of the package.
+ - DESC: The brief description of the package.
  - ARCHIVE: The archive from which this package comes, as a symbol.
  - TYPE: The distribution type of the package, currently either
    'single or 'tar."
   name
   version
   reqs
-  docstring
+  desc
   archive
   type)
 
