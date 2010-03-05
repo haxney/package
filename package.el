@@ -162,24 +162,40 @@ Lower version numbers than this will probably be understood as well.")
 (defconst package-version "0.9.5pre"
   "Version of package.el.")
 
-(defstruct package
-  "A structure containing information about a single package.
+(defstruct (package (:include elx-pkg)
+                         (:constructor inherit-package
+                                       (pkg
+                                        &key name archive type
+                                        &aux (version (elx-pkg-version pkg))
+                                        (version-raw (elx-pkg-version-raw pkg))
+                                        (summary (elx-pkg-summary pkg))
+                                        (created (elx-pkg-created pkg))
+                                        (updated (elx-pkg-updated pkg))
+                                        (license (elx-pkg-license pkg))
+                                        (authors (elx-pkg-authors pkg))
+                                        (maintainer (elx-pkg-maintainer pkg))
+                                        (provides (elx-pkg-provides pkg))
+                                        (requires-hard (elx-pkg-requires-hard pkg))
+                                        (requires-soft (elx-pkg-requires-soft pkg))
+                                        (keywords (elx-pkg-keywords pkg))
+                                        (homepage (elx-pkg-homepage pkg))
+                                        (wikipage (elx-pkg-wikipage pkg)))))
+  "Extends the `elx-pkg' structure with archive-specific information.
 
 This contains the complete info about a package as contained in
 the archive index. The fields are:
 
  - NAME: The name of the package, as a symbol.
- - VERSION: The parsed version of the package.
- - REQS: The packages required by this package, as an list
-   of (REQ-NAME . REQ-VERSION) cons cells.
- - DESC: The brief description of the package.
+
  - ARCHIVE: The archive from which this package comes, as a symbol.
- - TYPE: The distribution type of the package, currently either
-   'single or 'tar."
+
+ - TYPE: The distribution type of the package, currently
+   'single, 'tar, or 'builtin.
+
+The special constructor, `inherit-package' allows
+constructing a `package' struct from an existing `elx-pkg'
+struct. Extra arguments are supported by keys."
   name
-  version
-  reqs
-  desc
   archive
   type)
 
