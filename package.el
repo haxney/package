@@ -518,26 +518,6 @@ REQUIRES is a list of symbols which this package needs to run."
         (write-region (point-min) (point-max)
                       (concat pkg-dir file-name ".el")
                       nil nil nil 'excl)
-        (let ((print-level nil)
-              (print-length nil))
-          (write-region
-           (concat
-            (prin1-to-string
-             (list 'define-package
-                   file-name
-                   version
-                   desc
-                   (list 'quote
-                         ;; Turn version lists into string form.
-                         (mapcar
-                          (lambda (elt)
-                            (list (car elt)
-                                  (package-version-join (car (cdr elt)))))
-                          requires))))
-            "\n")
-           nil
-           (concat pkg-dir file-name "-pkg.el")
-           nil nil nil 'excl))
         (package-generate-autoloads file-name pkg-dir)
         (let ((load-path (cons pkg-dir load-path)))
           (byte-recompile-directory pkg-dir 0 t))))))
