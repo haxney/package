@@ -167,8 +167,9 @@ Lower version numbers than this will probably be understood as well.")
 (defstruct (package (:include elx-pkg)
                          (:constructor inherit-package
                                        (pkg
-                                        &key name archive type
-                                        &aux (version (elx-pkg-version pkg))
+                                        &key archive type
+                                        &aux (name (elx-pkg-name pkg))
+                                        (version (elx-pkg-version pkg))
                                         (version-raw (elx-pkg-version-raw pkg))
                                         (summary (elx-pkg-summary pkg))
                                         (created (elx-pkg-created pkg))
@@ -181,23 +182,21 @@ Lower version numbers than this will probably be understood as well.")
                                         (requires-soft (elx-pkg-requires-soft pkg))
                                         (keywords (elx-pkg-keywords pkg))
                                         (homepage (elx-pkg-homepage pkg))
-                                        (wikipage (elx-pkg-wikipage pkg)))))
+                                        (wikipage (elx-pkg-wikipage pkg))
+                                        (commentary (elx-pkg-commentary pkg)))))
   "Extends the `elx-pkg' structure with archive-specific information.
 
 This contains the complete info about a package as contained in
 the archive index. The fields are:
-
- - NAME: The name of the package, as a symbol.
 
  - ARCHIVE: The archive from which this package comes, as a symbol.
 
  - TYPE: The distribution type of the package, currently
    'single, 'tar, or 'builtin.
 
-The special constructor, `inherit-package' allows
-constructing a `package' struct from an existing `elx-pkg'
-struct. Extra arguments are supported by keys."
-  name
+The special constructor, `inherit-package' allows constructing a
+`package' struct from an existing `elx-pkg' struct. Extra
+arguments are supported by keys."
   archive
   type)
 
