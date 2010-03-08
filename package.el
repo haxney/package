@@ -1248,22 +1248,21 @@ DESC is the short description of the package."
       (insert (propertize desc 'font-lock-face face)))
     (insert "\n")))
 
-(defun package-list-maybe-add (package version status description result)
+(defun package-list-maybe-add (package status result)
   "Add PACKAGE to the list if it is not already there.
 
-PACKAGE is the package name as a symbol.
-
-VERSION is the package version, as an integer vector.
+PACKAGE is the package structure.
 
 STATUS is the installation status of the package, either
 \"available\" or \"installed\".
 
-DESCRIPTION is the short description of the package.
-
 RESULT is the list to which to add the package."
-  (let ((elt (assoc (cons package version) result)))
+  (let* ((pkg-name (package-name package))
+         (pkg-version (package-version package))
+         (pkg-summary (package-summary package))
+         (elt (assoc (cons pkg-name pkg-version) result)))
     (unless elt
-      (setq result (cons (list (cons package version) status description)
+      (setq result (cons (list (cons pkg-name pkg-version) status pkg-summary)
                          result))))
   result)
 
@@ -1279,34 +1278,26 @@ RESULT is the list to which to add the package."
     (let ((info-list))
       (mapc (lambda (elt)
               (setq info-list
-                    (package-list-maybe-add (car elt)
-                                            (package-version (cdr elt))
+                    (package-list-maybe-add (cdr elt)
                                             ;; FIXME: it turns out to
                                             ;; be tricky to see if
                                             ;; this package is
                                             ;; presently activated.
                                             ;; That is lame!
                                             "installed"
-                                            (package-summary (cdr elt))
                                             info-list)))
             package-active-alist)
       (mapc (lambda (elt)
               (setq info-list
-                    (package-list-maybe-add (car elt)
-                                            (package-version (cdr elt))
+                    (package-list-maybe-add (cdr elt)
                                             "available"
-                                            (package-summary (cdr elt))
                                             info-list)))
             package-archive-contents)
       (mapc (lambda (elt)
               (mapc (lambda (inner-elt)
                       (setq info-list
-                            (package-list-maybe-add (car elt)
-                                                    (package-version
-                                                     (cdr inner-elt))
+                            (package-list-maybe-add (cdr inner-elt)
                                                     "obsolete"
-                                                    (package-summary
-                                                     (cdr inner-elt))
                                                     info-list)))
                     (cdr elt)))
             package-obsolete-alist)
