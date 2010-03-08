@@ -232,17 +232,17 @@ the name of the archive from which it came.")
   "Alist of all built-in packages.
 Maps the package name to a vector [VERSION REQS DOCSTRING].")
 
-(defvar package-alist package--builtins
+(defvar package-active-alist package--builtins
   "Alist of all packages available for activation.
 Maps the package name to a list of `package' structs.")
 
 (defvar package-activated-list
-  (mapcar #'car package-alist)
+  (mapcar #'car package-active-alist)
   "List of the names of all activated packages.")
 
 (defvar package-obsolete-alist nil
   "Representation of obsolete packages.
-Like `package-alist', but maps package name to a second alist.
+Like `package-active-alist', but maps package name to a second alist.
 The inner alist is keyed by version.")
 
 (defun package-version-join (l)
@@ -365,7 +365,7 @@ Recursively activates all dependencies of the named package."
   ;; activated.  However, don't try to activate 'emacs', as that makes
   ;; no sense.
   (unless (eq package 'emacs)
-    (let* ((pkg-desc (assq package package-alist))
+    (let* ((pkg-desc (assq package package-active-alist))
            (this-version (package-version (cdr pkg-desc)))
            (req-list (package-requires-hard (cdr pkg-desc)))
            ;; If the package was never activated, we want to do it
@@ -404,27 +404,27 @@ PKG-VEC describes the version of PACKAGE to mark obsolete."
 
 (defun package-versions (pkg-name)
   "Return a list of registered versions of PKG-NAME."
-  (let ((pkg-versions (cdr-safe (assq pkg-name package-alist))))
+  (let ((pkg-versions (cdr-safe (assq pkg-name package-active-alist))))
     (when (consp pkg-versions)
         (mapcar 'car pkg-versions))))
 
 (defun package-register (pkg)
-  "Register package PKG if its version isn't already in `package-alist'.
+  "Register package PKG if its version isn't already in `package-active-alist'.
 
 Return nil if PKG was already in the list"
   (let ((pkg-name (package-name pkg))
         (pkg-version (package-version pkg))
-        (existing-pkg (cdr-safe (assq pkg-name package-alist))))
+        (existing-pkg (cdr-safe (assq pkg-name package-active-alist))))
     (if existing-pkg
         (unless (member pkg-version (package-versions pkg-name))
           (setcdr (last existing) (list (cons pkg-version pkg))))
-      (aput 'package-alist pkg-name (cons pkg-version pkg)))))
+      (aput 'package-active-alist pkg-name (cons pkg-version pkg)))))
 
 (defun package-registered-p (name version)
-  "Check whether package NAME at VERSION is in `package-alist'.
+  "Check whether package NAME at VERSION is in `package-active-alist'.
 
 Returns t if the package version exists, nil if not."
-  (consp (assoc version (cdr-safe (assq pkg-name package-alist)))))
+  (consp (assoc version (cdr-safe (assq pkg-name package-active-alist)))))
 
 ;; From Emacs 22.
 (defun package-autoload-ensure-default-file (file)
@@ -578,7 +578,7 @@ info."
 
 (defun package-installed? (package &optional min-version)
   "Check whether PACKAGE is installed and at least MIN-VERSION."
-  (let ((pkg-desc (assq package package-alist)))
+  (let ((pkg-desc (assq package package-active-alist)))
     (and pkg-desc
          (package-version-compare min-version
                                   (package-version (cdr pkg-desc))
@@ -975,7 +975,7 @@ download."
   ;; Try to activate all our packages.
   (mapc (lambda (elt)
           (package-activate (car elt) (package-version (cdr elt))))
-        package-alist))
+        package-active-alist))
 
 
 
@@ -1290,7 +1290,7 @@ RESULT is the list to which to add the package."
                                             "installed"
                                             (package-summary (cdr elt))
                                             info-list)))
-            package-alist)
+            package-active-alist)
       (mapc (lambda (elt)
               (setq info-list
                     (package-list-maybe-add (car elt)
