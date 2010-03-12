@@ -205,11 +205,8 @@ arguments are supported by keys."
   nil
   "A representation of the contents of the ELPA archive.
 
-This is an alist mapping package names (symbols) to package
-descriptor vectors.  These are like the vectors for
-`package-alist' but have extra entries: one which is 'tar for tar
-packages and 'single for single-file packages, and one which is
-the name of the archive from which it came.")
+This is an alist mapping package names (symbols) to a list of
+`package' structures.")
 
 (defvar package-user-dir
   (expand-file-name (convert-standard-filename "~/.emacs.d/elpa"))
@@ -232,8 +229,8 @@ the name of the archive from which it came.")
 Maps the package name to a vector [VERSION REQS DOCSTRING].")
 
 (defvar package-active-alist package--builtins
-  "Alist of all packages available for activation.
-Maps the package name to a list of `package' structs.")
+  "Alist of all packages activated.
+Maps the package name to a `package' struct.")
 
 (defvar package-activated-list
   (mapcar #'car package-active-alist)
