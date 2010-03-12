@@ -4,7 +4,7 @@
 
 ;; Author: Phil Hagelberg <technomancy@gmail.com>
 ;; Created: 2 Jan 2009
-;; Version: 0.9.4
+;; Version: 0.9.5pre
 ;; Keywords: tools
 
 ;; This file is not (yet) part of GNU Emacs.
@@ -112,6 +112,7 @@ here."
        (package-build-archive-contents projects)
        (cd original-dir)))))
 
+;; TODO: CL-CHECK
 (defun package-build-packages (project)
   "Given a PROJECT, create packages for each version needs building."
   (let ((name (project-name project)))
@@ -122,6 +123,7 @@ here."
       (when (not (package-built? name version))
         (package-build-package name version (package-build-type version))))))
 
+;; TODO: CL-CHECK
 (defun package-build-type (version)
   "Determines whether to build a single- or multi-file package.
 
@@ -139,6 +141,7 @@ Returns a type from `package-file-types'."
           'tar
         'single))))
 
+;; TODO: CL-CHECK
 (defun* package-build-package (name version &optional (type 'single))
   "Given a project version, create a package for it.
 
@@ -153,6 +156,7 @@ default."
    (t
     (error "Unknown package type `%s'" type))))
 
+;; TODO: CL-CHECK
 (defun package-build-single (name version)
   "Create a package from a single file.
 
@@ -171,6 +175,7 @@ Create a package for project NAME and VERSION."
       (message "Built %s version %s." name version)
       (kill-buffer))))
 
+;; TODO: CL-CHECK
 (defun package-write-buffer (extension)
   "Write a package whose contents are in the current buffer.
 
@@ -195,6 +200,7 @@ name. Currently, there is only \"el\" for single files and
                                   file-name ".el")
                           nil nil nil 'ask))))))
 
+;; TODO: CL-CHECK
 (defun package-build-tar (name version)
   "Build package NAME for VERSION from a multi-file repository.
 
@@ -238,6 +244,7 @@ archive."
 
     (cons retval result)))
 
+;; TODO: CL-CHECK
 (defun package-append-manifest (archive name version &optional desc requirements)
   "Generate and append a simple manifest file.
 
@@ -268,6 +275,7 @@ if available."
     (delete-file manifest)
     (delete-directory manifest-dir)))
 
+;; TODO: CL-CHECK
 (defun package-init (project)
   "Create a new checkout of a PROJECT if necessary."
   (when (not (file-exists-p (package-local-checkout-dir (project-name project))))
@@ -275,20 +283,24 @@ if available."
     (cd (format package-working-dir ""))
     (shell-command (format "git clone %s %s" (project-url project) (project-name project)))))
 
+;; TODO: CL-CHECK
 (defun package-local-checkout-dir (name)
   "Return the working directory for project NAME."
   (format package-working-dir name))
 
+;; TODO: CL-CHECK
 (defun package-local-repo-dir (name)
   "Return the repository directory for package NAME."
   (concat (package-local-checkout-dir name) "/.git"))
 
+;; TODO: CL-CHECK
 (defun package-list-versions ()
   "List all versions of a project. Must run in project checkout."
   (remove-if-not (lambda (v) (string-match package-version-format v))
                  (split-string (shell-command-to-string "git tag")
                                "\n" t)))
 
+;; TODO: CL-CHECK
 (defun package-public-file-candidates (name version)
   "Return a list of possible names for the specified package.
 
@@ -299,6 +311,7 @@ names for a package named NAME with version VERSION."
       (format "%s/%s-%s.%s" package-public-dir name version (cdr type)))
    package-file-types))
 
+;; TODO: CL-CHECK
 (defun* package-file-exists (candidates)
   "Finds which (if any) of the possible file names exists.
 
@@ -310,10 +323,12 @@ name will be returned."
       (return-from package-file-exists file)))
   nil)
 
+;; TODO: CL-CHECK
 (defun package-built? (name version)
   "Check whether there is a package file matching NAME and VERSION."
   (package-file-exists (package-public-file-candidates name version)))
 
+;; TODO: CL-CHECK
 (defun package-build-archive-contents (projects)
   "Update the list of packages.
 
@@ -325,12 +340,14 @@ PROJECTS is a list of package descriptions."
                   (concat package-public-dir
                           "/archive-contents"))))
 
+;; TODO: CL-CHECK
 (defun package-get-archive-contents (projects)
   "Build the package index array for PROJECTS."
   (cons package-archive-version
         (remove-if
          'null (mapcar 'package-archive-contents-for-project projects))))
 
+;; TODO: CL-CHECK
 (defun* package-get-type (file)
   "Returns the package type of the given FILE.
 
@@ -340,6 +357,7 @@ Checks FILE's extension against `package-file-types'."
       (return-from package-get-type (car type))))
   nil)
 
+;; TODO: CL-CHECK
 (defun package-archive-contents-for-project (project)
   "Build a package structure for the latest version of PROJECT."
   (let ((pkg-file (package-file-exists (package-latest-for-project project))))
@@ -359,6 +377,7 @@ Checks FILE's extension against `package-file-types'."
                                      (pkg-buf-info-desc info))
                              :type type))))))
 
+;; TODO: CL-CHECK
 (defun package-latest-for-project (project)
   "Return a list of the latest candidate files for PROJECT.
 
@@ -369,6 +388,7 @@ files of the most recent version of PROJECT."
          (latest-version (car (last (package-sort-versions versions)))))
     (package-public-file-candidates (project-name project) latest-version)))
 
+;; TODO: CL-CHECK
 (defun package-sort-versions (versions)
   "Sort the list of VERSIONS using `package-version-compare'."
   ;; destructive list functions! you gotta be kidding me.

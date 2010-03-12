@@ -241,10 +241,12 @@ Maps the package name to a `package' struct.")
 Like `package-active-alist', but maps package name to a second alist.
 The inner alist is keyed by version.")
 
+;; TODO: CL-CHECK
 (defun package-version-join (l)
   "Turn a list L of version numbers into a version string."
   (mapconcat 'int-to-string l "."))
 
+;; TODO: CL-CHECK
 (defun package--version-first-nonzero (l)
   "Find the first non-zero number in the list L.
 
@@ -254,6 +256,7 @@ none is found."
     (setq l (cdr l)))
   (if l (car l) 0))
 
+;; TODO: CL-CHECK
 (defun package-version-compare (v1 v2 fun)
   "Compare two version V1 and V2 lists according to FUN.
 
@@ -273,6 +276,7 @@ FUN can be <, <=, =, >, >=, or /=."
       ;; Both null.
       (funcall fun 0 0))))
 
+;; TODO: CL-CHECK
 (defun package--test-version-compare ()
   "Test suite for `package-version-compare'."
   (unless (and (package-version-compare '(0) '(0) '=)
@@ -283,6 +287,7 @@ FUN can be <, <=, =, >, >=, or /=."
     (error "Failed"))
   t)
 
+;; TODO: CL-CHECK
 (defun package-strip-version (dirname)
   "Strip the version from a combined package name and version.
 E.g., if DIRNAME is \"quux-23.0\", will return \"quux\""
@@ -352,6 +357,7 @@ will be."
       (when (version-list-< (package-version result) (package-version pkg))
         (setq result pkg)))))
 
+;; TODO: CL-CHECK
 ;; TODO: Make package descriptor an .epkg file.
 (defun package-load-descriptor (dir package)
   "Load the description file in directory DIR for a PACKAGE.
@@ -363,6 +369,7 @@ Return nil if the package could not be found."
                (file-exists-p (concat pkg-file ".el")))
         (load pkg-file nil t))))
 
+;; TODO: CL-CHECK
 (defun package-load-all-descriptors ()
   "Load descriptors of all packages.
 Uses `package-directory-list' to find packages."
@@ -373,6 +380,7 @@ Uses `package-directory-list' to find packages."
                     (directory-files dir nil "^[^.]"))))
         package-directory-list))
 
+;; TODO: CL-CHECK
 (defun package-do-activate (package pkg-vec)
   "Set up a single PACKAGE.
 
@@ -407,12 +415,14 @@ as retrieved from the package mirror."
     ;; Don't return nil.
     t))
 
+;; TODO: CL-CHECK
 (defun package--built-in (package version)
   "Return true if PACKAGE at VERSION is built-in to Emacs."
   (let ((elt (assq package package--builtins)))
     (and elt
          (package-version-compare (package-version (cdr elt)) version '=))))
 
+;; TODO: CL-CHECK
 ;; FIXME: return a reason instead?
 (defun package-activate (package version)
   "Try to activate PACKAGE at version VERSION.
@@ -445,6 +455,7 @@ Recursively activates all dependencies of the named package."
         (and (memq package package-activated-list)
              (package-version-compare this-version version '>=))))))
 
+;; TODO: CL-CHECK
 (defun package-mark-obsolete (package pkg-vec)
   "Put PACKAGE on the obsolete list, if not already there.
 
@@ -462,12 +473,14 @@ PKG-VEC describes the version of PACKAGE to mark obsolete."
                                             pkg-vec)))
                   package-obsolete-alist)))))
 
+;; TODO: CL-CHECK
 (defun package-versions (pkg-name)
   "Return a list of registered versions of PKG-NAME."
   (let ((pkg-versions (cdr-safe (assq pkg-name package-active-alist))))
     (when (consp pkg-versions)
         (mapcar 'car pkg-versions))))
 
+;; TODO: CL-CHECK
 (defun package-register (pkg)
   "Register package PKG if its version isn't already in `package-active-alist'.
 
@@ -480,12 +493,14 @@ Return nil if PKG was already in the list"
           (setcdr (last existing) (list (cons pkg-version pkg))))
       (aput 'package-active-alist pkg-name (cons pkg-version pkg)))))
 
+;; TODO: CL-CHECK
 (defun package-registered-p (name version)
   "Check whether package NAME at VERSION is in `package-active-alist'.
 
 Returns t if the package version exists, nil if not."
   (consp (assoc version (cdr-safe (assq pkg-name package-active-alist)))))
 
+;; TODO: CL-CHECK
 ;; From Emacs 22.
 (defun package-autoload-ensure-default-file (file)
   "Make sure that the autoload file FILE exists and if not create it."
@@ -505,6 +520,7 @@ Returns t if the package version exists, nil if not."
      nil file))
   file)
 
+;; TODO: CL-CHECK
 (defun package-generate-autoloads (name pkg-dir)
   "Generate autoload definitions for package NAME in PKG-DIR."
   (let* ((auto-name (concat name "-autoloads.el"))
@@ -518,6 +534,7 @@ Returns t if the package version exists, nil if not."
       (package-autoload-ensure-default-file generated-autoload-file))
     (update-directory-autoloads pkg-dir)))
 
+;; TODO: CL-CHECK
 (defun package-untar-buffer ()
   "Untar the current buffer.
 This uses `tar-untar-buffer' if it is available.
@@ -535,6 +552,7 @@ Otherwise it uses an external `tar' program.
     (call-process-region (point) (point-max) "tar" nil '(nil nil) nil
                          "xf" "-")))
 
+;; TODO: CL-CHECK
 (defun package-unpack-tar (name version)
   "Unpack a package tar from the current buffer.
 
@@ -555,6 +573,7 @@ package archive."
       (let ((load-path (cons pkg-dir load-path)))
         (byte-recompile-directory pkg-dir 0 t)))))
 
+;; TODO: CL-CHECK
 (defun package-unpack-single (file-name version desc requires)
   "Install the contents of the current buffer as a package.
 
@@ -582,6 +601,7 @@ REQUIRES is a list of symbols which this package needs to run."
         (let ((load-path (cons pkg-dir load-path)))
           (byte-recompile-directory pkg-dir 0 t))))))
 
+;; TODO: CL-CHECK
 (defun package-handle-response ()
   "Handle the response from the server.
 Parse the HTTP response and throw if an error occurred.
@@ -601,6 +621,7 @@ It will move point to somewhere in the headers."
      ((equal type "file")
       nil))))
 
+;; TODO: CL-CHECK
 (defun package-download-single (name version desc requires)
   "Download and install a single-file package.
 
@@ -618,6 +639,7 @@ info."
       (package-unpack-single (symbol-name name) version desc requires)
       (kill-buffer buffer))))
 
+;; TODO: CL-CHECK
 (defun package-download-tar (name version)
   "Download and install a tar package NAME at VERSION."
   (let ((tar-buffer (url-retrieve-synchronously
@@ -636,6 +658,7 @@ info."
       (package-unpack-tar name version)
       (kill-buffer tar-buffer))))
 
+;; TODO: CL-CHECK
 (defun package-installed? (package &optional min-version)
   "Check whether PACKAGE is installed and at least MIN-VERSION."
   (let ((pkg-desc (assq package package-active-alist)))
@@ -644,6 +667,7 @@ info."
                                   (package-version (cdr pkg-desc))
                                   '<=))))
 
+;; TODO: CL-CHECK
 (defun package-compute-transaction (result requirements)
   "Recursively prepare a transaction, resolving dependencies.
 
@@ -679,6 +703,7 @@ processed to resolve all dependencies (if possible)."
     (setq requirements (cdr requirements)))
   result)
 
+;; TODO: CL-CHECK
 (defun package-read-from-string (str)
   "Read a Lisp expression from STR.
 Signal an error if the entire string was not used."
@@ -694,6 +719,7 @@ Signal an error if the entire string was not used."
         (error "Can't read whole string")
       (car read-data))))
 
+;; TODO: CL-CHECK
 (defun package--read-archive-file (file)
   "Re-read archive file FILE, if it exists.
 Will return the data from the file, or nil if the file does not exist.
@@ -711,6 +737,7 @@ Will throw an error if the archive version is too new."
                        (car contents) package-archive-version))
             (cdr contents))))))
 
+;; TODO: CL-CHECK
 (defun package-read-all-archive-contents ()
   "Read the archive description of each of the archives in `package-archives'."
   (dolist (archive package-archives)
@@ -729,6 +756,7 @@ Will throw an error if the archive version is too new."
                   (if (package-version-compare our-version (car elt) '>=)
                       (setq result (append (cdr elt) result)))))))))
 
+;; TODO: CL-CHECK
 (defun package-read-archive-contents (archive)
   "Re-read `archive-contents' and `builtin-packages', for ARCHIVE if they exist.
 
@@ -745,6 +773,7 @@ new."
         (dolist (package archive-contents)
           (package--add-to-archive-contents package archive)))))
 
+;; TODO: CL-CHECK
 (defun package--add-to-archive-contents (package archive)
   "Add the PACKAGE from the given ARCHIVE if needed.
 
@@ -759,6 +788,7 @@ Adds the archive from which it came to the end of the package vector."
                                        (aref existing-package 0) '>))
       (add-to-list 'package-archive-contents package-with-archive))))
 
+;; TODO: CL-CHECK
 (defun package-download-transaction (transaction)
   "Download and install all the packages in the given TRANSACTION."
   (mapc (lambda (elt)
@@ -805,6 +835,7 @@ Interactively, prompts for the package name."
   ;; Try to activate it.
   (package-initialize))
 
+;; TODO: CL-CHECK
 (defun package-strip-rcs-id (v-str)
   "Strip RCS version ID from the version string V-STR.
 
@@ -816,6 +847,7 @@ Otherwise return nil."
         (if (string-match "^[0-9.]*$" v-str)
             v-str))))
 
+;; TODO: CL-CHECK
 (defun package-buffer-info ()
   "Return a vector of information about the package in the current buffer.
 The vector looks like [FILENAME REQUIRES DESCRIPTION VERSION COMMENTARY]
@@ -866,6 +898,7 @@ May narrow buffer or move point even on failure."
           (error "Package missing a terminating comment")))
     (error "No starting comment for package")))
 
+;; TODO: CL-CHECK
 (defun package-tar-file-info (file)
   "Find package information for a tar file.
 FILE is the name of the tar file to examine.
@@ -910,6 +943,7 @@ The return result is a vector like `package-buffer-info'."
              requires))
       (vector pkg-name requires docstring version-string readme))))
 
+;; TODO: CL-CHECK
 (defun package-install-buffer-internal (pkg-info type)
   "Download and install a single package.
 
@@ -938,6 +972,7 @@ TYPE is either `single' or `tar'."
         ;; Try to activate it.
         (package-initialize)))))
 
+;; TODO: CL-CHECK
 (defun package-install-from-buffer ()
   "Install a package from the current buffer.
 The package is assumed to be a single .el file which
@@ -946,6 +981,7 @@ info node `(elisp)Library Headers'."
   (interactive)
   (package-install-buffer-internal (package-buffer-info) 'single))
 
+;; TODO: CL-CHECK
 (defun package-install-file (file)
   "Install a package from a FILE.
 The file can either be a tar file or an Emacs Lisp file."
@@ -958,6 +994,7 @@ The file can either be a tar file or an Emacs Lisp file."
       (package-install-buffer-internal (package-tar-file-info file) 'tar))
      (t (error "Unrecognized extension `%s'" (file-name-extension file))))))
 
+;; TODO: CL-CHECK
 (defun package-delete (name version)
   "Delete package NAME at VERSION."
   (require 'dired)          ; for dired-delete-file
@@ -966,6 +1003,7 @@ The file can either be a tar file or an Emacs Lisp file."
                      ;; FIXME: query user?
                      'always))
 
+;; TODO: CL-CHECK
 (defun package--encode (string)
   "Encode a STRING by replacing some characters with XML entities."
   ;; We need a special case for translating "&" to "&amp;".
@@ -983,6 +1021,7 @@ The file can either be a tar file or an Emacs Lisp file."
     (setq string (replace-match "&quot;" t nil string)))
   string)
 
+;; TODO: CL-CHECK
 (defun package--update-file (file location text)
   "Update FILE by finding LOCATION and inserting TEXT."
   (save-excursion
@@ -998,11 +1037,13 @@ The file can either be a tar file or an Emacs Lisp file."
         (unless old-buffer
           (kill-buffer (current-buffer)))))))
 
+;; TODO: CL-CHECK
 (defun package-archive-for (name)
   "Return the archive containing the package NAME."
   (let ((desc (cdr (assq (intern-soft name) package-archive-contents))))
     (cdr (assoc (aref desc (- (length desc) 1)) package-archives))))
 
+;; TODO: CL-CHECK
 (defun package--download-one-archive (archive file)
   "Download a single archive file and cache it locally.
 
@@ -1024,6 +1065,7 @@ Downloads the archive index from ARCHIVE and stores it in FILE."
         (save-buffer))
       (kill-buffer buffer))))
 
+;; TODO: CL-CHECK
 (defun package-refresh-contents ()
   "Download the ELPA archive description if needed.
 Invoking this will ensure that Emacs knows about the latest versions
@@ -1034,6 +1076,7 @@ download."
     (package--download-one-archive archive "archive-contents"))
   (package-read-all-archive-contents))
 
+;; TODO: CL-CHECK
 (defun package-initialize ()
   "Load all packages and activate as many as possible."
   (setq package-obsolete-alist nil)
@@ -1122,6 +1165,7 @@ download."
 
 (put 'package-menu-mode 'mode-class 'special)
 
+;; TODO: CL-CHECK
 (defun package-menu-mode ()
   "Major mode for browsing a list of packages.
 Letters do not insert themselves; instead, they are commands.
@@ -1138,6 +1182,7 @@ Letters do not insert themselves; instead, they are commands.
       (run-mode-hooks 'package-menu-mode-hook)
     (run-hooks 'package-menu-mode-hook)))
 
+;; TODO: CL-CHECK
 (defun package-menu-refresh ()
   "Download the ELPA archive.
 This fetches the file describing the current contents of
@@ -1148,11 +1193,13 @@ available for download."
   (package-refresh-contents)
   (package-list-packages-internal))
 
+;; TODO: CL-CHECK
 (defun package-menu-revert ()
   "Update the list of packages."
   (interactive)
   (package-list-packages-internal))
 
+;; TODO: CL-CHECK
 (defun package-menu-mark-internal (what)
   "Internal function to mark a package.
 
@@ -1164,6 +1211,7 @@ WHAT is the character used to mark the line."
       (insert what)
       (forward-line))))
 
+;; TODO: CL-CHECK
 (defun package-menu-mark-delete (&optional arg)
   "Mark a package for deletion and move to the next line.
 
@@ -1171,6 +1219,7 @@ ARG is a (currently unused) numeric argument."
   (interactive "p")
   (package-menu-mark-internal "D"))
 
+;; TODO: CL-CHECK
 (defun package-menu-mark-install (&optional arg)
   "Mark a package for installation and move to the next line.
 
@@ -1178,6 +1227,7 @@ ARG is a (currently unused) numeric argument."
   (interactive "p")
   (package-menu-mark-internal "I"))
 
+;; TODO: CL-CHECK
 (defun package-menu-mark-unmark (&optional arg)
   "Clear any marks on a package and move to the next line.
 
@@ -1185,6 +1235,7 @@ ARG is a (currently unused) numeric argument."
   (interactive "p")
   (package-menu-mark-internal " "))
 
+;; TODO: CL-CHECK
 (defun package-menu-backup-unmark ()
   "Back up one line and clear any marks on that package."
   (interactive)
@@ -1192,6 +1243,7 @@ ARG is a (currently unused) numeric argument."
   (package-menu-mark-internal " ")
   (forward-line -1))
 
+;; TODO: CL-CHECK
 (defun package-menu-mark-obsolete-for-deletion ()
   "Mark all obsolete packages for deletion."
   (interactive)
@@ -1203,11 +1255,13 @@ ARG is a (currently unused) numeric argument."
           (package-menu-mark-internal "D")
         (forward-line 1)))))
 
+;; TODO: CL-CHECK
 (defun package-menu-quick-help ()
   "Show short key binding help for `package-menu-mode'."
   (interactive)
   (message "n-ext, i-nstall, d-elete, u-nmark, x-ecute, r-efresh, h-elp ?-view commentary"))
 
+;; TODO: CL-CHECK
 (defun package-menu-view-commentary ()
   "Display information about this package.
 For single-file packages, shows the commentary section from the header.
@@ -1241,6 +1295,7 @@ For larger packages, shows the README file."
     (if (looking-at ". \\([^ \t]*\\)")
         (match-string-no-properties 1))))
 
+;; TODO: CL-CHECK
 (defun package-menu-get-version ()
   "Return the version of the package on the current line."
   (save-excursion
@@ -1248,6 +1303,7 @@ For larger packages, shows the README file."
     (if (looking-at ". [^ \t]*[ \t]*\\([0-9.]*\\)")
         (match-string 1))))
 
+;; TODO: CL-CHECK
 (defun package-menu-get-status ()
   "Get the status of the current line."
   (save-excursion
@@ -1255,6 +1311,7 @@ For larger packages, shows the README file."
         (match-string 1)
       "")))
 
+;; TODO: CL-CHECK
 (defun package-menu-execute ()
   "Perform all the marked actions.
 Packages marked for installation will be downloaded and
@@ -1286,6 +1343,7 @@ Emacs."
     (forward-line))
   (package-menu-revert))
 
+;; TODO: CL-CHECK
 (defun package-print-package (package version key desc)
   "Print out a single PACKAGE line for the menu buffer.
 
@@ -1316,6 +1374,7 @@ DESC is the short description of the package."
       (insert (propertize desc 'font-lock-face face)))
     (insert "\n")))
 
+;; TODO: CL-CHECK
 (defun package-list-maybe-add (package status result)
   "Add PACKAGE to the list if it is not already there.
 
@@ -1337,6 +1396,7 @@ RESULT is the list to which to add the package."
 ;; This decides how we should sort; nil means by package name.
 (defvar package-menu-sort-key nil)
 
+;; TODO: CL-CHECK
 (defun package-list-packages-internal ()
   "List the available and installed packages."
   (package-initialize)          ; FIXME: do this here?
@@ -1394,6 +1454,7 @@ RESULT is the list to which to add the package."
     (goto-char (point-min))
     (current-buffer)))
 
+;; TODO: CL-CHECK
 (defun package-menu-sort-by-column (&optional e)
   "Sort the package menu by the last column clicked, E."
   (interactive (list last-input-event))
@@ -1406,6 +1467,7 @@ RESULT is the list to which to add the package."
     (setq package-menu-sort-key col))
   (package-list-packages-internal))
 
+;; TODO: CL-CHECK
 (defun package--list-packages ()
   "Display a list of packages.
 Helper function that does all the work for the user-facing functions."
@@ -1446,6 +1508,7 @@ Helper function that does all the work for the user-facing functions."
     ;; them.
     (pop-to-buffer (current-buffer))))
 
+;; TODO: CL-CHECK
 (defun package-list-packages ()
   "Display a list of packages.
 Fetches the updated list of packages before displaying.
@@ -1454,6 +1517,7 @@ The list is displayed in a buffer named `*Packages*'."
   (package-refresh-contents)
   (package--list-packages))
 
+;; TODO: CL-CHECK
 (defun package-list-packages-no-fetch ()
   "Display a list of packages.
 Does not fetch the updated list of packages before displaying.
