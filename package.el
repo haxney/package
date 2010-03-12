@@ -290,15 +290,22 @@ E.g., if DIRNAME is \"quux-23.0\", will return \"quux\""
       (match-string 1 dirname)))
 
 (defun* package-find (name &key version
-                                    version-raw
-                                    created
-                                    updated
-                                    license
-                                    authors
-                                    maintainer
-                                    provides
-                                    keywords
-                                    homepage)
+                           version-raw
+                           summary
+                           created
+                           updated
+                           license
+                           authors
+                           maintainer
+                           provides
+                           requires-hard
+                           requires-soft
+                           keywords
+                           homepage
+                           wikipage
+                           commentary
+                           archive
+                           type)
   "Search `package-archive-contents' for a package named NAME.
 
 Returns a list of matches, since there may be more than one
@@ -312,22 +319,12 @@ supplied keywords. For example:
 
 Would return a list of packages called 'package with version
 number \"0.9.5\", if any exist."
-  (let ((pkgs (cdr (assq name package-archive-contents)))
-        results)
-    (dolist (slot '(version
-                    version-raw
-                    created
-                    updated
-                    license
-                    authors
-                    maintainer
-                    provides
-                    keywords
-                    homepage))
+  (let ((pkgs (cdr (assq name package-archive-contents))))
+    (dolist (slot (cddr (mapcar 'car (get 'package 'cl-struct-slots))))
       (when (symbol-value slot)
-       (add-to-list 'results (eval `(find ,slot pkgs :test 'equal :key ',(intern (concat "package-" (symbol-name slot)))))))
+        (setq pkgs (remove-if-not '(lambda (item) (equal item (symbol-value slot))) pkgs :key (intern (concat "package-" (symbol-name slot))))))
       )
-    results
+    pkgs
     )
   )
 
