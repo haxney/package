@@ -329,6 +329,29 @@ number \"0.9.5\", if any exist."
                             :test-not 'equal
                             :key (intern (concat "package-" (symbol-name slot)))))))))
 
+(defun package-find-latest (name &rest keys)
+  "Find the newest version of package NAME.
+
+KEYS is a set of keyword arguments to be passed to
+`package-find'. If the :version keyword is present, it is
+ignored.
+
+Uses `package-find' to search for packages named NAME matching
+KEYS and returns the one with the greatest version number.
+
+If there are multiple packages with the same name and version,
+only one is returned; there is no guarantee of which one that
+will be."
+  ;; Ignore the :version keyword; that is the entire point of this function.
+  (when (plist-get keys :version)
+    (setq keys (plist-put keys :version nil)))
+
+  (let* ((pkgs (apply 'package-find name keys))
+        (result (car pkgs)))
+    (dolist (pkg pkgs result)
+      (when (version-list-< (package-version result) (package-version pkg))
+        (setq result pkg)))))
+
 ;; TODO: Make package descriptor an .epkg file.
 (defun package-load-descriptor (dir package)
   "Load the description file in directory DIR for a PACKAGE.
