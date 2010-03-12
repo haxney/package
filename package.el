@@ -776,17 +776,21 @@ Adds the archive from which it came to the end of the package vector."
               (error "Unknown package kind: " (symbol-name kind))))))
         transaction))
 
-(defun package-install (name)
-  "Install the package named NAME.
+(defun package-install (name &optional version)
+  "Install the package named NAME at VERSION.
+
+If VERSION is not given, it defaults to the most recent version
+according to `package-find-latest'.
+
 Interactively, prompts for the package name."
   (interactive
-   (list (progn
-           (intern (completing-read "Install package: "
-                                    (mapcar (lambda (elt)
-                                              (cons (symbol-name (car elt))
-                                                    nil))
-                                            package-archive-contents)
-                                    nil t)))))
+   (list (intern (completing-read "Install package: "
+                                 (mapcar (lambda (elt)
+                                           (symbol-name (car elt)))
+                                         package-archive-contents)
+                                 nil t))))
+  (unless version
+    (setq version (package-find-latest name)))
   (let ((pkg-desc (assq name package-archive-contents)))
     (unless pkg-desc
       (error "Package '%s' not available for installation"
@@ -1275,7 +1279,7 @@ Emacs."
         (package-delete pkg-name pkg-vers)
         (message "Deleting %s-%s... done" pkg-name pkg-vers))
        ((eq cmd ?I)
-        (package-install (intern pkg-name)))))
+        (package-install (intern pkg-name) (version-to-list pkg-vers)))))
     (forward-line))
   (package-menu-revert))
 
