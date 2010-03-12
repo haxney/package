@@ -289,6 +289,49 @@ E.g., if DIRNAME is \"quux-23.0\", will return \"quux\""
   (if (string-match "^\\(.*\\)-[0-9]+\\([.][0-9]+\\)*$" dirname)
       (match-string 1 dirname)))
 
+(defun* package-find (name &key version
+                                    version-raw
+                                    created
+                                    updated
+                                    license
+                                    authors
+                                    maintainer
+                                    provides
+                                    keywords
+                                    homepage)
+  "Search `package-archive-contents' for a package named NAME.
+
+Returns a list of matches, since there may be more than one
+package with the same name (i.e. different versions).
+
+The optional keyword arguments allow the results to be narrowed
+down to return only those packages which match all of the
+supplied keywords. For example:
+
+    (package-find 'package :version '(0 9 5))
+
+Would return a list of packages called 'package with version
+number \"0.9.5\", if any exist."
+  (let ((pkgs (cdr (assq name package-archive-contents)))
+        results)
+    (dolist (slot '(version
+                    version-raw
+                    created
+                    updated
+                    license
+                    authors
+                    maintainer
+                    provides
+                    keywords
+                    homepage))
+      (when (symbol-value slot)
+       (add-to-list 'results (eval `(find ,slot pkgs :test 'equal :key ',(intern (concat "package-" (symbol-name slot)))))))
+      )
+    results
+    )
+  )
+
+;; TODO: Make package descriptor an .epkg file.
 (defun package-load-descriptor (dir package)
   "Load the description file in directory DIR for a PACKAGE.
 Return nil if the package could not be found."
