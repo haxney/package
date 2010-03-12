@@ -779,6 +779,8 @@ Adds the archive from which it came to the end of the package vector."
 (defun package-install (name &optional version)
   "Install the package named NAME at VERSION.
 
+NAME must be a symbol.
+
 If VERSION is not given, it defaults to the most recent version
 according to `package-find-latest'.
 
@@ -790,14 +792,15 @@ Interactively, prompts for the package name."
                                          package-archive-contents)
                                  nil t))))
   (unless version
-    (setq version (package-find-latest name)))
-  (let ((pkg-desc (assq name package-archive-contents)))
-    (unless pkg-desc
-      (error "Package '%s' not available for installation"
-             (symbol-name name)))
+    (setq version (package-version (package-find-latest name))))
+
+  (let ((pkg (package-find name :version version)))
+    (unless pkg
+      (error "Package '%s', version '%s' not available for installation"
+             name version))
     (let ((transaction
            (package-compute-transaction (list name)
-                                        (package-requires-hard (cdr pkg-desc)))))
+                                        (package-requires-hard pkg))))
       (package-download-transaction transaction)))
   ;; Try to activate it.
   (package-initialize))
