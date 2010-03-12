@@ -320,13 +320,14 @@ supplied keywords. For example:
 Would return a list of packages called 'package with version
 number \"0.9.5\", if any exist."
   (let ((pkgs (cdr (assq name package-archive-contents))))
-    (dolist (slot (cddr (mapcar 'car (get 'package 'cl-struct-slots))))
+    (dolist (slot
+             ;; This is `cddr' to skip the `name' slot, as well as the cl-tag.
+             (cddr (mapcar 'car (get 'package 'cl-struct-slots)))
+             pkgs)
       (when (symbol-value slot)
-        (setq pkgs (remove-if-not '(lambda (item) (equal item (symbol-value slot))) pkgs :key (intern (concat "package-" (symbol-name slot))))))
-      )
-    pkgs
-    )
-  )
+        (setq pkgs (remove* (symbol-value slot) pkgs
+                            :test-not 'equal
+                            :key (intern (concat "package-" (symbol-name slot)))))))))
 
 ;; TODO: Make package descriptor an .epkg file.
 (defun package-load-descriptor (dir package)
