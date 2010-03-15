@@ -552,6 +552,10 @@ file for either `tar' or `builtin' packages."
           "."
           (package-suffix pkg)))
 
+(defsubst package-info-file (pkg)
+  "Returns the info (.epkg) file for PKG."
+  (concat (package-install-directory pkg) package-info-filename))
+
 (defun package-download-url (pkg)
   "Return the download URL of PKG.
 
@@ -679,13 +683,18 @@ uses an external `tar' program."
 BUF is expected to contain a tarred package archive. If BUF is
 nil, the current buffer is used."
   (let ((buf (or buf (current-buffer)))
-        (pkg-dir (package-install-directory pkg)))
+        (pkg-dir (package-install-directory pkg))
+        (pkg-info-file (package-info-file pkg)))
 
     (make-directory pkg-dir t)
     (if (file-directory-p pkg-dir)
         (mapc (lambda (file) nil) ;; TODO: 'delete-file when we're more confident
               (directory-files pkg-dir t "^[^.]")))
     (package-untar-buffer buf (package-parent-directory pkg-dir))
+    ;; Write the "info.epkg" file.
+    (unless (file-exists-p pkg-info-file)
+     (with-temp-file pkg-info-file
+       (insert (cl-merge-pp pkg))))
     (package-generate-autoloads pkg)
     (let ((load-path (cons pkg-dir load-path)))
       (byte-recompile-directory pkg-dir 0 t))))
@@ -697,7 +706,8 @@ PKG is the package metadata and BUF is the buffer from which to
 install the package. If BUF is nil, then use the current buffer."
   (let ((buf (or buf (current-buffer)))
         (pkg-dir (package-install-directory pkg))
-        (pkg-file (package-install-file-path pkg)))
+        (pkg-file (package-install-file-path pkg))
+        (pkg-info-file (package-info-file pkg)))
     (when (and (not (eq (package-type pkg) 'package)) (file-exists-p pkg-file))
       (error "Destination file %s exists, refusing to overwrite" pkg-file))
 
@@ -705,6 +715,9 @@ install the package. If BUF is nil, then use the current buffer."
     (with-temp-file pkg-file
       (with-current-buffer buf
         (buffer-substring)))
+    ;; Write the "info.epkg" file.
+    (with-temp-file pkg-info-file
+      (insert (cl-merge-pp pkg)))
     (package-generate-autoloads file-name pkg-dir)
     (let ((load-path (cons pkg-dir load-path)))
       (byte-recompile-directory pkg-dir 0 t))))
