@@ -754,24 +754,21 @@ the buffer."
       ((equal type "file")
        nil)))))
 
-;; TODO: CL-CHECK
-(defun package-download-single (name version desc requires)
-  "Download and install a single-file package.
+(defun package-download (pkg)
+  "Download and install PKG.
 
-NAME, VERSION, DESC, and REQUIRES are used to build the package
-info."
-  (let ((buf (url-retrieve-synchronously (package-download-url pkg))))
-    (package-handle-response buf)
-    (package-unpack-single (symbol-name name) version desc requires)
-    (kill-buffer buf)))
+The particular handler is determined by the :type attribute of
+PKG.
 
-;; TODO: CL-CHECK
-(defun package-download-tar (pkg)
-  "Download and install a tar package PKG."
+Builtin packages cannot be downloaded (since they are already
+built in) and so signal an error if PKG has :type 'builtin."
+  (when (eq (package-type pkg) 'builtin)
+    (error "Attempted to download builtin package %s" (package-name pkg)))
   (let ((buf (url-retrieve-synchronously
-              (package-download-url pkg))))
+              (package-download-url pkg)))
+        (unpacker (intern (format "packge-unpack-%s" (package-type pkg)))))
     (package-handle-response buf)
-    (package-unpack-tar name version)
+    (apply unpacker (list pkg buf))
     (kill-buffer buf)))
 
 ;; TODO: CL-CHECK
@@ -908,18 +905,11 @@ Adds the archive from which it came to the end of the package vector."
 (defun package-download-transaction (transaction)
   "Download and install all the packages in the given TRANSACTION."
   (mapc (lambda (elt)
+          ;; TODO: bind a `pkg' variable from transaction.
           (let* ((desc (aget package-available-alist elt))
                  (v-string (package-version-join (package-version desc)))
                  (kind (package-type desc)))
-            (cond
-             ((eq kind 'tar)
-              (package-download-tar elt v-string))
-             ((eq kind 'single)
-              (package-download-single elt v-string
-                                       (package-summary desc)
-                                       (package-requires-hard desc)))
-             (t
-              (error "Unknown package kind: " (symbol-name kind))))))
+            (package-download pkg)))
         transaction))
 
 (defun package-install (name &optional version)
