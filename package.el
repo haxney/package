@@ -830,7 +830,9 @@ REQUIREMENTS is a list of required packages, to be recursively
 processed to resolve all dependencies (if possible)."
   (loop for req in requirements
         append (package-compute-transaction result
-                                            (package-required-packages req))))
+                                            (package-required-packages req))
+        into temp
+        finally return (append temp result)))
 
 ;; TODO: CL-CHECK
 (defun package-read-from-string (str)
