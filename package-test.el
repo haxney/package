@@ -69,9 +69,9 @@
                                      :homepage "deppy.example.com"
                                      :wikipage "deppy.el")
                                     ))
-          (package-archive-contents
-           '((test-pkg . (test-pkg1 test-pkg2))
-             (dep-pkg . (dep-pkg)))))
+          (package-available-alist
+           `((test-pkg . (,test-pkg1 ,test-pkg2))
+             (dep-pkg . (,dep-pkg)))))
      ,@body))
 
 (expectations
