@@ -457,18 +457,52 @@ Returns nil if PKG was already in the list or PKG if it was not."
        (nconc existing-pkgs (list pkg))
        pkg))))
 
-(defun package-load-descriptor (archive pkg-dir)
-  "Return information from a file in ARCHIVE for PKG-DIR.
+(defsubst package-load-descriptor (pkg)
+  "Return information the info file of PKG.
 
-PKG-DIR is the string name of a package directory, in the form
-\"NAME-VERSION\".
+PKG can be a minimal `package' structure; only
+the :name, :version, and :archive fields are needed.
 
 Return nil if the package could not be found."
-  (let* ((arch-dir (package-archive-localpath archive))
-         (pkg-file (expand-file-name
-                    (concat (file-name-as-directory pkg-dir) package-info-filename)
-                    arch-dir)))
-    (package-read-file pkg-file)))
+  (package-read-file (package-info-file pkg)))
+
+(defun package-split-dirname (dir)
+  "Split DIR into a name and version.
+
+DIR must be a directory of the form \"NAME-VERSION\" which will
+be split into a cons cell with the form (NAME . VERSION), where
+NAME is an interned symbol and VERSION is a list as returned by
+`version-to-list'. DIR can be either a relative or absolute
+filename, only the last element of the filename (which should be
+the directory to examine) will be considered."
+  (let* ((local-dir (file-name-nondirectory (directory-file-name dir)))
+         (parts (split-string local-dir "-" t)))
+    (cons (intern (nth 0 parts))
+          (version-to-list (nth 1 parts)))))
+
+(defun package-from-dirname (dir)
+  "Create a skeleton `package' structure from DIR.
+
+This is mainly used to create a package with enough information
+that `package-info-file' can find the info file for the package
+in DIR.
+
+Searches `package-archives' for a prefix which contains DIR and
+then uses the tail directory to determine the package name and
+version."
+  (let ((local-dir (file-name-nondirectory (directory-file-name dir)))
+        (dir-info (package-split-dirname dir))
+        archive)
+    (dolist (arch package-archives)
+      (when (locate-dominating-file
+                    (package-archive-localpath (cdr arch))
+                    local-dir)
+        (setq archive arch)))
+    (unless archive
+      (error "Could not find an archive containing dir: %s" dir))
+    (make-package :name (car dir-info)
+                  :version (cdr dir-info)
+                  :archive archive)))
 
 ;; TODO: Add special handling of builtin packages, so that directories don't
 ;; need to be created for each builtin package.
@@ -481,9 +515,10 @@ Uses `package-archives' to find packages."
                  (archive-dir (package-archive-localpath archive)))
             (when (and (file-readable-p archive-dir)
                      (file-directory-p archive-dir))
-              (mapc (lambda (pkg-name)
-                      (package-register (package-load-descriptor archive pkg-name)))
-                    (directory-files archive-dir nil "^[^.]")))))
+              (mapc (lambda (pkg-dirname)
+                      (package-register (package-load-descriptor
+                                         (package-from-dirname pkg-dirname))))
+                    (directory-files archive-dir t "^[^.]")))))
         package-archives))
 
 (defun package-install-directory (pkg)
