@@ -828,31 +828,9 @@ before passing it up to the caller.
 
 REQUIREMENTS is a list of required packages, to be recursively
 processed to resolve all dependencies (if possible)."
-  (while requirements
-    (let* ((elt (car requirements))
-           (next-pkg (car elt))
-           (next-version (car (cdr elt))))
-      (unless (package-find next-pkg :version next-version)
-        (let ((pkg-desc (assq next-pkg package-available-alist)))
-          (unless pkg-desc
-            (error "Package '%s' not available for installation"
-                   (symbol-name next-pkg)))
-          (unless (package-version-compare (package-version (cdr pkg-desc))
-                                           next-version
-                                           '>=)
-            (error
-             "Need package '%s' with version %s, but only %s is available"
-             (symbol-name next-pkg) (package-version-join next-version)
-             (package-version-join (package-version (cdr pkg-desc)))))
-          ;; Only add to the transaction if we don't already have it.
-          (unless (memq next-pkg result)
-            (setq result (cons next-pkg result)))
-          (setq result
-                (package-compute-transaction result
-                                             (package-requires-hard
-                                              (cdr pkg-desc)))))))
-    (setq requirements (cdr requirements)))
-  result)
+  (loop for req in requirements
+        append (package-compute-transaction result
+                                            (package-required-packages req))))
 
 ;; TODO: CL-CHECK
 (defun package-read-from-string (str)
