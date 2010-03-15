@@ -364,8 +364,8 @@ Return nil if the package could not be found."
                     arch-dir)))
     (package-read-file pkg-file)))
 
-(defun package-load-all-descriptors ()
-  "Load descriptors of all installed packages.
+(defun package-register-installed ()
+  "Register metadata of all installed packages.
 
 Uses `package-archives' to find packages."
   (mapc (lambda (archive-info)
@@ -373,8 +373,8 @@ Uses `package-archives' to find packages."
                  (archive-dir (package-archive-localpath archive)))
             (when (and (file-readable-p archive-dir)
                      (file-directory-p archive-dir))
-              (mapc (lambda (name)
-                      (package-load-descriptor archive name))
+              (mapc (lambda (pkg-name)
+                      (package-register (package-load-descriptor archive pkg-name)))
                     (directory-files archive-dir nil "^[^.]")))))
         package-archives))
 
@@ -1058,7 +1058,7 @@ download."
 (defun package-initialize ()
   "Load all packages and activate as many as possible."
   (setq package-obsolete-alist nil)
-  (package-load-all-descriptors)
+  (package-register-installed)
   (package-read-all-archive-contents)
   ;; Try to activate all our packages.
   (mapc (lambda (elt)
