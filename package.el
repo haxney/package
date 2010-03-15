@@ -834,7 +834,6 @@ processed to resolve all dependencies (if possible)."
         into temp
         finally return (append temp result)))
 
-;; TODO: CL-CHECK
 (defun package-read-from-string (str)
   "Read a Lisp expression from STR.
 
