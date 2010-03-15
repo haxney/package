@@ -505,6 +505,18 @@ VERSION is the version of the package after being processed by
     (convert-standard-filename (file-name-as-directory (expand-file-name
                                                         raw-name)))))
 
+(defun package-install-file-path (pkg)
+  "Returns the install file for PKG.
+
+PKG must have type `single', since there is not a single install
+file for either `tar' or `builtin' packages."
+  (unless (eq (package-type pkg) 'single)
+    (error "Package type must be `single' to get an install file; given: %s" (package-type pkg)))
+  (concat (package-install-directory pkg)
+          (symbol-name (package-name pkg))
+          "."
+          (package-suffix pkg)))
+
 (defun package-download-url (pkg)
   "Return the download URL of PKG.
 
@@ -643,33 +655,24 @@ nil, the current buffer is used."
     (let ((load-path (cons pkg-dir load-path)))
       (byte-recompile-directory pkg-dir 0 t))))
 
-;; TODO: CL-CHECK
-(defun package-unpack-single (file-name version desc requires)
-  "Install the contents of the current buffer as a package.
+(defun package-unpack-single (pkg &optional buf)
+  "Install PKG from contents of buf or the current buffer.
 
-FILE-NAME is the name of the current file being unpacked.
-package.el itself is handled specially, so this information is
-important.
+PKG is the package metadata and BUF is the buffer from which to
+install the package. If BUF is nil, then use the current buffer."
+  (let ((buf (or buf (current-buffer)))
+        (pkg-dir (package-install-directory pkg))
+        (pkg-file (package-install-file-path pkg)))
+    (when (and (not (eq (package-type pkg) 'package)) (file-exists-p pkg-file))
+      (error "Destination file %s exists, refusing to overwrite" pkg-file))
 
-VERSION is the version (as a string) of the file being unpacked.
-
-DESC is a brief description of the package.
-
-REQUIRES is a list of symbols which this package needs to run."
-  (let* ((dir (file-name-as-directory package-user-dir)))
-    ;; Special case "package".
-    (if (string= file-name "package")
-        (write-region (point-min) (point-max) (concat dir file-name ".el")
-                      nil nil nil nil)
-      (let ((pkg-dir (file-name-as-directory
-                      (concat dir file-name "-" version))))
-        (make-directory pkg-dir t)
-        (write-region (point-min) (point-max)
-                      (concat pkg-dir file-name ".el")
-                      nil nil nil 'excl)
-        (package-generate-autoloads file-name pkg-dir)
-        (let ((load-path (cons pkg-dir load-path)))
-          (byte-recompile-directory pkg-dir 0 t))))))
+    (make-directory pkg-dir t)
+    (with-temp-file pkg-file
+      (with-current-buffer buf
+        (buffer-substring)))
+    (package-generate-autoloads file-name pkg-dir)
+    (let ((load-path (cons pkg-dir load-path)))
+      (byte-recompile-directory pkg-dir 0 t))))
 
 (defun package-handle-response (&optional buf)
   "Handle the response from the server.
