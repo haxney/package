@@ -167,6 +167,13 @@ The default points to ELPA, the Emacs Lisp Package Archive."
   "Version number of the package archive understood by this file.
 Lower version numbers than this will probably be understood as well.")
 
+(defconst package-info-filename "info.epkg"
+  "The name of the package metadata file in each package directory.
+
+Each package directory will contain a file with this name which
+contains the metadata about the package. This can be loaded as a
+`package' structure.")
+
 (defconst package-version "0.9.5pre"
   "Version of package.el.")
 
@@ -300,10 +307,6 @@ will be."
       (when (version-list-< (package-version result) (package-version pkg))
         (setq result pkg)))))
 
-;; TODO: CL-CHECK
-;; TODO: Make package descriptor an .epkg file.
-(defun package-load-descriptor (dir package)
-  "Load the description file in directory DIR for a PACKAGE.
 (defun package-archive-url (archive)
   "Returns the Url containing information about ARCHIVE.
 
@@ -335,24 +338,32 @@ successful."
         (setq data (read str))))
     (apply 'make-package data)))
 
-Return nil if the package could not be found."
-  (let* ((pkg-dir (expand-file-name package dir))
-         (pkg-file (expand-file-name
-                    (concat (package-strip-version package) "-pkg") pkg-dir)))
-    (when (and (file-directory-p pkg-dir)
-               (file-exists-p (concat pkg-file ".el")))
-        (load pkg-file nil t))))
+(defun package-load-descriptor (archive pkg-dir)
+  "Return information from a file in ARCHIVE for PKG-DIR.
 
-;; TODO: CL-CHECK
+PKG-DIR is the string name of a package directory, in the form
+\"NAME-VERSION\".
+
+Return nil if the package could not be found."
+  (let* ((arch-dir (package-archive-localpath archive))
+         (pkg-file (expand-file-name
+                    (concat (file-name-as-directory pkg-dir) package-info-filename)
+                    arch-dir)))
+    (package-read-file pkg-file)))
+
 (defun package-load-all-descriptors ()
-  "Load descriptors of all packages.
-Uses `package-directory-list' to find packages."
-  (mapc (lambda (dir)
-          (if (file-directory-p dir)
+  "Load descriptors of all installed packages.
+
+Uses `package-archives' to find packages."
+  (mapc (lambda (archive-info)
+          (let* ((archive (car archive-info))
+                 (archive-dir (package-archive-localpath archive)))
+            (when (and (file-readable-p archive-dir)
+                     (file-directory-p archive-dir))
               (mapc (lambda (name)
-                      (package-load-descriptor dir name))
-                    (directory-files dir nil "^[^.]"))))
-        package-directory-list))
+                      (package-load-descriptor archive name))
+                    (directory-files archive-dir nil "^[^.]")))))
+        package-archives))
 
 ;; TODO: CL-CHECK
 (defun package-do-activate (package pkg-vec)
