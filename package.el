@@ -223,17 +223,7 @@ More than one package is allowed for each name, since there may
 be multiple versions of a package available or two archives
 may each have different versions of a package available.")
 
-(defconst package--builtins-base nil
-  "Packages which are always built-in.")
-
-(defvar package--builtins
-  (delq nil
-        (append
-         package--builtins-base))
-  "Alist of all built-in packages.
-Maps the package name to a vector [VERSION REQS DOCSTRING].")
-
-(defvar package-installed-alist package--builtins
+(defvar package-installed-alist nil
   "Alist of all installed packages activated.
 
 Maps the package name to a `package' struct.")
@@ -413,13 +403,6 @@ as retrieved from the package mirror."
     (setq package-activated-list (cons package package-activated-list))
     ;; Don't return nil.
     t))
-
-;; TODO: CL-CHECK
-(defun package--built-in (package version)
-  "Return true if PACKAGE at VERSION is built-in to Emacs."
-  (let ((elt (assq package package--builtins)))
-    (and elt
-         (package-version-compare (package-version (cdr elt)) version '=))))
 
 ;; TODO: CL-CHECK
 ;; FIXME: return a reason instead?
