@@ -213,13 +213,17 @@ arguments are supported by keys."
   archive
   type)
 
-;; We don't prime the cache since it tends to get out of date.
-(defvar package-archive-contents
+(defvar package-available-alist
   nil
-  "A representation of the contents of the ELPA archive.
+  "Alist of all packages available for installation.
 
-This is an alist mapping package names (symbols) to a list of
-`package' structures.")
+This is an alist of the form (NAME . (PACKAGE...)), where NAME is
+the symbol name of a package and PACKAGE is an individual
+`package' structure.
+
+More than one package is allowed for each name, since there may
+be multiple versions of a package available or two archives
+may each have different versions of a package available.")
 
 (defconst package--builtins-base nil
   "Packages which are always built-in.")
@@ -261,7 +265,7 @@ The inner alist is keyed by version.")
                            commentary
                            archive
                            type)
-  "Search `package-archive-contents' for a package named NAME.
+  "Search `package-available-alist' for a package named NAME.
 
 Returns a list of matches, since there may be more than one
 package with the same name (i.e. different versions).
@@ -274,7 +278,7 @@ supplied keywords. For example:
 
 Would return a list of packages called 'package with version
 number \"0.9.5\", if any exist."
-  (let ((pkgs (cdr (assq name package-archive-contents))))
+  (let ((pkgs (cdr (assq name package-available-alist))))
     (dolist (slot
              ;; This is `cddr' to skip the `name' slot, as well as the cl-tag.
              (cddr (mapcar 'car (get 'package 'cl-struct-slots)))
@@ -667,7 +671,7 @@ processed to resolve all dependencies (if possible)."
            (next-pkg (car elt))
            (next-version (car (cdr elt))))
       (unless (package-installed? next-pkg next-version)
-        (let ((pkg-desc (assq next-pkg package-archive-contents)))
+        (let ((pkg-desc (assq next-pkg package-available-alist)))
           (unless pkg-desc
             (error "Package '%s' not available for installation"
                    (symbol-name next-pkg)))
@@ -745,7 +749,7 @@ Will throw an error if the archive version is too new."
 (defun package-read-archive-contents (archive)
   "Re-read `archive-contents' and `builtin-packages', for ARCHIVE if they exist.
 
-Will set `package-archive-contents' and `package--builtins' if
+Will set `package-available-alist' and `package--builtins' if
 successful. Will throw an error if the archive version is too
 new."
   (let ((archive-contents (package--read-archive-file
@@ -767,17 +771,17 @@ Adds the archive from which it came to the end of the package vector."
          (package-version (aref (cdr package) 0))
          (package-with-archive (cons (car package)
                                      (vconcat (cdr package) (vector archive))))
-         (existing-package (cdr (assq package-name package-archive-contents))))
+         (existing-package (cdr (assq package-name package-available-alist))))
     (when (or (not existing-package)
               (package-version-compare package-version
                                        (aref existing-package 0) '>))
-      (add-to-list 'package-archive-contents package-with-archive))))
+      (add-to-list 'package-available-alist package-with-archive))))
 
 ;; TODO: CL-CHECK
 (defun package-download-transaction (transaction)
   "Download and install all the packages in the given TRANSACTION."
   (mapc (lambda (elt)
-          (let* ((desc (cdr (assq elt package-archive-contents)))
+          (let* ((desc (cdr (assq elt package-available-alist)))
                  (v-string (package-version-join (package-version desc)))
                  (kind (package-type desc)))
             (cond
@@ -804,7 +808,7 @@ Interactively, prompts for the package name."
    (list (intern (completing-read "Install package: "
                                  (mapcar (lambda (elt)
                                            (symbol-name (car elt)))
-                                         package-archive-contents)
+                                         package-available-alist)
                                  nil t))))
   (unless version
     (setq version (package-version (package-find-latest name))))
@@ -1025,7 +1029,7 @@ The file can either be a tar file or an Emacs Lisp file."
 ;; TODO: CL-CHECK
 (defun package-archive-for (name)
   "Return the archive containing the package NAME."
-  (let ((desc (cdr (assq (intern-soft name) package-archive-contents))))
+  (let ((desc (cdr (assq (intern-soft name) package-available-alist))))
     (cdr (assoc (aref desc (- (length desc) 1)) package-archives))))
 
 ;; TODO: CL-CHECK
@@ -1405,7 +1409,7 @@ RESULT is the list to which to add the package."
                     (package-list-maybe-add (cdr elt)
                                             "available"
                                             info-list)))
-            package-archive-contents)
+            package-available-alist)
       (mapc (lambda (elt)
               (mapc (lambda (inner-elt)
                       (setq info-list
