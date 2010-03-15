@@ -469,73 +469,56 @@ VERSION is the version of the package after being processed by
     (convert-standard-filename (file-name-as-directory (expand-file-name
                                                         raw-name)))))
 
-;; TODO: CL-CHECK
-(defun package-do-activate (package pkg-vec)
-  "Set up a single PACKAGE.
+(defun package-autoload-file (pkg)
+  "Return the full path of the autoload file for PKG."
+  (concat (package-install-directory pkg) "autoloads.el"))
+
+;; TODO: Re-add info handling, used to add `package-install-directory' to
+;; `Info-directory-list'.
+(defun package-do-activate (package)
+  "Set up a single PACKAGE after it has been installed.
 
 Modifies `load-path' to include the package directory and loads
-the `autoload' file for the package. PKG-VEC is the package info
-as retrieved from the package mirror."
-  (let* ((pkg-name (symbol-name package))
-         (pkg-ver-str (package-version-join (package-version pkg-vec)))
-         (dir-list package-directory-list)
-         (pkg-dir))
-    (while dir-list
-      (let ((subdir (concat (car dir-list) pkg-name "-" pkg-ver-str "/")))
-        (if (file-directory-p subdir)
-            (progn
-              (setq pkg-dir subdir)
-              (setq dir-list nil))
-          (setq dir-list (cdr dir-list)))))
-    (unless pkg-dir
-      (error "Internal error: could not find directory for %s-%s"
-             pkg-name pkg-ver-str))
-    (if (file-exists-p (concat pkg-dir "dir"))
-        (progn
-          ;; FIXME: not the friendliest, but simple.
-          (require 'info)
-          (info-initialize)
-          (setq Info-directory-list (cons pkg-dir Info-directory-list))))
-    (setq load-path (cons pkg-dir load-path))
+the `autoload' file for the package."
+  (let* ((pkg-name (package-name package))
+         (pkg-dir (package-install-directory package)))
+
+    (add-to-list 'load-path pkg-dir)
     ;; Load the autoloads and activate the package.
-    (load (concat pkg-dir (symbol-name package) "-autoloads")
-          nil t)
-    (setq package-activated-list (cons package package-activated-list))
+    (load (package-autoload-file package) nil t)
+    (add-to-list 'package-activated-list package)
     ;; Don't return nil.
     t))
 
-;; TODO: CL-CHECK
 ;; FIXME: return a reason instead?
-(defun package-activate (package version)
-  "Try to activate PACKAGE at version VERSION.
-Return nil if the package could not be activated.
-Recursively activates all dependencies of the named package."
+(defun package-activate (package)
+  "Try to activate PACKAGE.
+
+Signal an error if the package could not be activated.
+
+Recursively activates all dependencies of PACKAGE."
   ;; Assume the user knows what he is doing -- go ahead and activate a
   ;; newer version of a package if an older one has already been
   ;; activated.  This is not ideal; we'd at least need to check to see
   ;; if the package has actually been loaded, and not merely
-  ;; activated.  However, don't try to activate 'emacs', as that makes
-  ;; no sense.
-  (unless (eq package 'emacs)
-    (let* ((pkg-desc (assq package package-installed-alist))
-           (this-version (package-version (cdr pkg-desc)))
-           (req-list (package-requires-hard (cdr pkg-desc)))
-           ;; If the package was never activated, we want to do it
-           ;; now.
-           (keep-going (or (not (memq package package-activated-list))
-                           (package-version-compare this-version version '>))))
-      (while (and req-list keep-going)
-        (or (package-activate (car (car req-list))
-                              (car (cdr (car req-list))))
-            (setq keep-going nil))
-        (setq req-list (cdr req-list)))
-      (if keep-going
-          (package-do-activate package (cdr pkg-desc))
-        ;; We get here if a dependency failed to activate -- but we
-        ;; can also get here if the requested package was already
-        ;; activated.  Return non-nil in the latter case.
-        (and (memq package package-activated-list)
-             (package-version-compare this-version version '>=))))))
+  ;; activated.
+  (let ((name (package-name package))
+        (hard-reqs (package-required-packages package 'hard))
+        (soft-reqs (package-required-packages package 'soft)))
+    (cond
+     ;; Don't try to activate 'emacs', that's just silly.
+     ((eq name 'emacs))
+     ;; If this package is already the most recently installed version, no
+     ;; further action is needed.
+     ((equal package (package-find-latest name t)))
+     ((member package package-activated-list))
+     (t
+      ;; Signal an error if a hard requirement cannot be found, but not for a
+      ;; soft requirement.
+      (dolist (req hard-reqs)
+        (package-activate (package-find-latest req nil)))
+      (dolist (req soft-reqs)
+        (package-activate (package-find-latest req t)))))))
 
 ;; TODO: CL-CHECK
 (defun package-mark-obsolete (package pkg-vec)
