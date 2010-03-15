@@ -480,19 +480,29 @@ the :name, :version, and :archive fields are needed.
 Return nil if the package could not be found."
   (package-read-file (package-info-file pkg)))
 
-(defun package-split-dirname (dir)
-  "Split DIR into a name and version.
+(defun package-split-filename (file &optional suffix)
+  "Split FILE into a name and version.
 
-DIR must be a directory of the form \"NAME-VERSION\" which will
+FILE must be a directory of the form \"NAME-VERSION\" which will
 be split into a cons cell with the form (NAME . VERSION), where
 NAME is an interned symbol and VERSION is a list as returned by
-`version-to-list'. DIR can be either a relative or absolute
+`version-to-list'. FILE can be either a relative or absolute
 filename, only the last element of the filename (which should be
-the directory to examine) will be considered."
-  (let* ((local-dir (file-name-nondirectory (directory-file-name dir)))
-         (parts (split-string local-dir "-" t)))
-    (cons (intern (nth 0 parts))
-          (version-to-list (nth 1 parts)))))
+the directory to examine) will be considered.
+
+If optional argument SUFFIX is provided, strip the suffix from
+FILE before processing the name."
+  (when suffix
+    (setq file (replace-regexp-in-string
+                (format "\\.%s$" suffix)
+                ""
+                file)))
+  (let* ((local-dir (file-name-nondirectory (directory-file-name file)))
+         (parts (split-string local-dir "-" t))
+         (version (car (last parts)))
+         (name (combine-and-quote-strings (butlast parts 1) "-")))
+    (cons (intern name)
+          (version-to-list version))))
 
 (defun package-from-dirname (dir)
   "Create a skeleton `package' structure from DIR.
@@ -505,7 +515,7 @@ Searches `package-archives' for a prefix which contains DIR and
 then uses the tail directory to determine the package name and
 version."
   (let ((local-dir (file-name-nondirectory (directory-file-name dir)))
-        (dir-info (package-split-dirname dir))
+        (dir-info (package-split-filename dir))
         archive)
     (dolist (arch package-archives)
       (when (locate-dominating-file
