@@ -437,7 +437,7 @@ Each archive in `package-archives' is checked."
 ARCHIVE must be the symbol name of an archive.
 
 Each archive in `package-archives' is checked."
-  (file-name-expand (file-name-as-directory (nth 1 (aget package-archives archive)))))
+  (expand-file-name (file-name-as-directory (nth 1 (aget package-archives archive)))))
 
 (defun package-archive-content-file (archive)
   "Returns the path of the content file of ARCHIVE.
@@ -512,29 +512,37 @@ when FILE cannot be resolved to a name and version."
                  nil
                (signal (car err) (cdr err)))))))
 
-(defun package-from-dirname (dir)
-  "Create a skeleton `package' structure from DIR.
+(defun package-from-filename (file &optional suffix noerror)
+  "Create a skeleton `package' structure from FILE.
 
 This is mainly used to create a package with enough information
-that `package-info-file' can find the info file for the package
-in DIR.
+that `package-info-file' can find the info file for the package.
 
-Searches `package-archives' for a prefix which contains DIR and
+Optional argument SUFFIX is a string to strip from the end of
+FILE. If a package cannot be created, an error is signaled unless
+NOERROR is non-nil, in which case nil is returned.
+
+Searches `package-archives' for a prefix which contains FILE and
 then uses the tail directory to determine the package name and
 version."
-  (let ((local-dir (file-name-nondirectory (directory-file-name dir)))
-        (dir-info (package-split-filename dir))
+  (when suffix
+    (setq file (replace-regexp-in-string
+                (format "\\.%s$" suffix)
+                ""
+                file)))
+  (let ((local-file (file-name-nondirectory (directory-file-name file)))
+        (file-info (package-split-filename file suffix noerror))
         archive)
-    (dolist (arch package-archives)
-      (when (locate-dominating-file
-                    (package-archive-localpath (cdr arch))
-                    local-dir)
-        (setq archive arch)))
-    (unless archive
-      (error "Could not find an archive containing dir: %s" dir))
-    (make-package :name (car dir-info)
-                  :version (cdr dir-info)
-                  :archive archive)))
+    (loop for (arch info) in package-archives
+          for arch-path = (package-archive-localpath arch)
+          for path-len = (length arch-path)
+          if (equal (substring file 0 path-len) arch-path)
+          do (setq archive arch))
+    (if (or archive noerror)
+        (make-package :name (car file-info)
+                      :version (cdr file-info)
+                      :archive archive)
+      (error "Could not find an archive containing file: %s" file))))
 
 ;; TODO: Add special handling of builtin packages, so that directories don't
 ;; need to be created for each builtin package.
@@ -549,7 +557,7 @@ Uses `package-archives' to find packages."
                      (file-directory-p archive-dir))
               (mapc (lambda (pkg-dirname)
                       (package-register (package-load-descriptor
-                                         (package-from-dirname pkg-dirname))
+                                         (package-from-filename pkg-dirname))
                                         package-installed-alist))
                     (directory-files archive-dir t "^[^.]")))))
         package-archives))

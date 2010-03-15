@@ -71,8 +71,17 @@
                                     ))
           (package-available-alist
            `((test-pkg . (,test-pkg1 ,test-pkg2))
-             (dep-pkg . (,dep-pkg)))))
-     ,@body))
+             (dep-pkg . (,dep-pkg))))
+          (test-tmp-dir "/tmp/package-test/")
+          (package-archives `((test "file:///tmp/test/" ,test-tmp-dir)))
+          )
+     (prog2
+         (make-directory test-tmp-dir t)
+         (progn
+          ,@body)
+       (require 'dired)
+       (dired-delete-file test-tmp-dir 'always))
+     ))
 
 (defun package-exps-assert-with-package-test (expected actual)
   (with-package-test
@@ -87,7 +96,6 @@
   (desc "Basic sanity tests")
   (expect (package 'test-pkg)
     (caar package-available-alist))
-
   (expect (package test-pkg1)
     (cadar package-available-alist))
 
@@ -124,6 +132,12 @@
     (package-split-filename "package-test-0.1.this-is-a-bad-name_#-" "" nil))
   (expect nil
     (package-split-filename "package-test-0.1.this-is-a-bad-name_#-" "" t))
+
+  (desc "package-from-filename")
+  (expect (package (make-package :name 'package-test
+                         :version '(0 2 3)
+                         :archive 'test))
+    (package-from-filename "/tmp/package-test/package-test-0.2.3"))
 
   (desc "package-find")
   (expect (package (list test-pkg1 test-pkg2))
