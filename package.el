@@ -409,12 +409,18 @@ will be."
         result
       (error "No package found named '%s' matching parameters '%s'" name keys))))
 
-(defun package-archive-url (archive)
+(defun package-archive-url (archive &optional noerror)
   "Returns the Url containing information about ARCHIVE.
 
-ARCHIVE must be the symbol name of an archive.
+ARCHIVE must be the symbol name of an archive. If ARCHIVE is
+'builtin, then an error is signaled unless NOERROR is non-nil.
+The built-in packages cannot be downloaded using package.el, so
+an archive URL is meaningless for them.
 
 Each archive in `package-archives' is checked."
+  (when (eq archive 'builtin)
+      (unless noerror
+        (error "Builtin archive does not have a download URL")))
   (nth 0 (aget package-archives archive)))
 
 (defun package-archive-localpath (archive)
