@@ -74,11 +74,22 @@
              (dep-pkg . (,dep-pkg)))))
      ,@body))
 
+(defun package-exps-assert-with-package-test (expected actual)
+  (with-package-test
+   (exps-do-assertion
+    expected actual 'package t
+    (lambda (e a) (equal (eval e) a))
+    (lambda (e a) (format "FAIL: Expected <%S> but was <%S>" (eval e) a)))))
+
+(add-to-list 'exps-assert-functions 'package-exps-assert-with-package-test)
+
 (expectations
-  (desc "Basic sanity test.")
-  (expect 'test-pkg
-    (with-package-test
-     (caar package-archive-contents)))
+  (desc "Basic sanity tests")
+  (expect (package 'test-pkg)
+    (caar package-available-alist))
+
+  (expect (package test-pkg1)
+    (cadar package-available-alist))
 
   (desc "package-split-dirname")
   (expect '(package . (0 1 1))
