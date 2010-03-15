@@ -376,7 +376,7 @@ supplied keywords. For example:
 
 Would return a list of packages called 'package with version
 number \"0.9.5\", if any exist."
-  (let ((pkgs (aget package name-available-alist)))
+  (let ((pkgs (aget package-available-alist name)))
     (dolist (slot
              ;; This is `cddr' to skip the `name' slot, as well as the cl-tag.
              (cddr (mapcar 'car (get 'package 'cl-struct-slots)))
