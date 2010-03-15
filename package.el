@@ -118,7 +118,7 @@
 ;;   available to the user.
 ;; * Load.  Actually load the package and run some code from it.
 
-;;; Package fields:
+;;; Package Metadata:
 ;;
 ;; The `package' structure is used throughout this library and contains metadata
 ;; about an individual version of a package. It contains the following fields
@@ -147,9 +147,19 @@
 ;; information about each of the fields.
 ;;
 ;; When saved to disk, a package is written as a plist, with each of the fields
-;; as a property and that field's value as the plist value.
+;; as a property and that field's value as the plist value. This means that an
+;; epkg file would look like:
+;;
+;;     (:name 'package
+;;      :version '(0 9 5)
+;;      :version-raw "0.9.5"
+;;      ...
+;;      )
+;;
+;; and so on, for each field defined.
 
-;;; Package archive format:
+
+;;; Package Archive Format:
 ;;
 ;; Each archive has its own path, under which the archive metadata and installed
 ;; packages live. By default, the main "ELPA" archive lives in the
@@ -162,7 +172,25 @@
 ;;     )
 ;;
 ;; where PACKAGE is a plist package description as described above in "Package
-;; fields".
+;; Metadata". 2 is the version number `package-archive-version', which describes
+;; the archive format version.
+;;
+;; Additionally, there is a directory for each installed package from that
+;; archive whose name is "PACKAGE-VERSION". This directory contains the contents
+;; of the package, such as the Emacs Lisp files and any resources (such as
+;; images) used by that package. Additionally, the metadata file "info.epkg" and
+;; an autoload file named "autoloads.el" are included in the directory.
+;; "info.epkg" contains information about the package in the format described in
+;; "Package Metadata". The "autoloads.el" file contains the
+;; automatically-extracted autoload information from the package.
+
+;; This means that if the package "bm" version "1.37" was installed from the
+;; "elpa" archive which has the base directory "~/.emacs.d/elpa", then the
+;; following files would exist:
+;;
+;; * ~/emacs.d/elpa/bm-1.37/bm.el
+;; * ~/emacs.d/elpa/bm-1.37/autoloads.el
+;; * ~/emacs.d/elpa/bm-1.37/info.epkg
 
 ;;; Thanks:
 ;;; (sorted by sort-lines):
