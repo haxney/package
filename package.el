@@ -786,15 +786,6 @@ built in) and so signal an error if PKG has :type 'builtin."
     (kill-buffer buf)))
 
 ;; TODO: CL-CHECK
-(defun package-installed? (package &optional min-version)
-  "Check whether PACKAGE is installed and at least MIN-VERSION."
-  (let ((pkg-desc (assq package package-installed-alist)))
-    (and pkg-desc
-         (package-version-compare min-version
-                                  (package-version (cdr pkg-desc))
-                                  '<=))))
-
-;; TODO: CL-CHECK
 (defun package-compute-transaction (result requirements)
   "Recursively prepare a transaction, resolving dependencies.
 
@@ -808,7 +799,7 @@ processed to resolve all dependencies (if possible)."
     (let* ((elt (car requirements))
            (next-pkg (car elt))
            (next-version (car (cdr elt))))
-      (unless (package-installed? next-pkg next-version)
+      (unless (package-find next-pkg :version next-version)
         (let ((pkg-desc (assq next-pkg package-available-alist)))
           (unless pkg-desc
             (error "Package '%s' not available for installation"
