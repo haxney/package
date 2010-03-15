@@ -241,59 +241,6 @@ Maps the package name to a `package' struct.")
 Like `package-active-alist', but maps package name to a second alist.
 The inner alist is keyed by version.")
 
-;; TODO: CL-CHECK
-(defun package-version-join (l)
-  "Turn a list L of version numbers into a version string."
-  (mapconcat 'int-to-string l "."))
-
-;; TODO: CL-CHECK
-(defun package--version-first-nonzero (l)
-  "Find the first non-zero number in the list L.
-
-Returns the value of the first non-zero integer in L, or 0 if
-none is found."
-  (while (and l (= (car l) 0))
-    (setq l (cdr l)))
-  (if l (car l) 0))
-
-;; TODO: CL-CHECK
-(defun package-version-compare (v1 v2 fun)
-  "Compare two version V1 and V2 lists according to FUN.
-
-FUN can be <, <=, =, >, >=, or /=."
-  (while (and v1 v2 (= (car v1) (car v2)))
-    (setq v1 (cdr v1)
-          v2 (cdr v2)))
-  (if v1
-      (if v2
-          ;; Both not null; we know the cars are not =.
-          (funcall fun (car v1) (car v2))
-        ;; V1 not null, V2 null.
-        (funcall fun (package--version-first-nonzero v1) 0))
-    (if v2
-        ;; V1 null, V2 not null.
-        (funcall fun 0 (package--version-first-nonzero v2))
-      ;; Both null.
-      (funcall fun 0 0))))
-
-;; TODO: CL-CHECK
-(defun package--test-version-compare ()
-  "Test suite for `package-version-compare'."
-  (unless (and (package-version-compare '(0) '(0) '=)
-               (not (package-version-compare '(1) '(0) '=))
-               (package-version-compare '(1 0 1) '(1) '>=)
-               (package-version-compare '(1 0 1) '(1) '>)
-               (not (package-version-compare '(0 9 1) '(1 0 2) '>=)))
-    (error "Failed"))
-  t)
-
-;; TODO: CL-CHECK
-(defun package-strip-version (dirname)
-  "Strip the version from a combined package name and version.
-E.g., if DIRNAME is \"quux-23.0\", will return \"quux\""
-  (if (string-match "^\\(.*\\)-[0-9]+\\([.][0-9]+\\)*$" dirname)
-      (match-string 1 dirname)))
-
 (defun* package-find (name &key version
                            version-raw
                            summary
