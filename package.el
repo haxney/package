@@ -960,49 +960,26 @@ Interactively, prompts for the package name."
   ;; Try to activate it.
   (package-initialize))
 
-;; TODO: CL-CHECK
 (defun package-tar-file-info (file)
   "Find package information for a tar file.
 FILE is the name of the tar file to examine."
-  (setq file (expand-file-name file))
-  (unless (string-match "^\\(.+\\)-\\([0-9.]+\\)\\.tar$" file)
-    (error "`%s' doesn't have a package-ish name" file))
-  (let* ((pkg-name (file-name-nondirectory (match-string-no-properties 1 file)))
-         (pkg-version (match-string-no-properties 2 file))
-         ;; Extract the package descriptor.
-         (pkg-def-contents (shell-command-to-string
+  (let* ((pkg (package-from-filename file))
+
+         (pkg-info (shell-command-to-string
                             ;; Requires GNU tar.
                             (concat "tar -xOf " file " "
-                                    pkg-name "-" pkg-version "/"
-                                    pkg-name ".epkg")))
-         (pkg-def-parsed (package-read-from-string pkg-def-contents)))
-    ;; TODO: Handle `pkg-def-parsed' better.
-    (let ((name-str (nth 1 pkg-def-parsed))
-          (version-string (nth 2 pkg-def-parsed))
-          (docstring (nth 3 pkg-def-parsed))
-          (requires (nth 4 pkg-def-parsed))
+                                    (package-info-file pkg t))))
+         (pkg-new (apply 'make-package (package-read-from-string pkg-info))))
 
-          (readme (shell-command-to-string
-                   ;; Requires GNU tar.
-                   (concat "tar -xOf " file " "
-                           pkg-name "-" pkg-version "/README"))))
-      (unless (equal pkg-version version-string)
-        (error "Inconsistent versions!"))
-      (unless (equal pkg-name name-str)
-        (error "Inconsistent names!"))
-      ;; Kind of a hack.
-      (if (string-match ": Not found in archive" readme)
-          (setq readme nil))
-      ;; Turn string version numbers into list form.
-      (if (eq (car requires) 'quote)
-          (setq requires (car (cdr requires))))
-      (setq requires
-            (mapcar
-             (lambda (elt)
-               (list (car elt)
-                     (package-version-split (car (cdr elt)))))
-             requires))
-      (vector pkg-name requires docstring version-string readme))))
+    ;; TODO: Maybe add some more sanity checks...
+    (unless (eq (package-name pkg-new) (package-name pkg))
+      (error "Inconsistent package names"))
+    (unless (equal (package-version pkg-new) (package-version pkg))
+      (error "Inconsistent package versions"))
+    (unless (equal (package-archive pkg-new) (package-archive pkg))
+      (error "Inconsistent package archives"))
+
+    pkg-new))
 
 ;; TODO: CL-CHECK
 (defun package-install-buffer-internal (pkg-info type)
