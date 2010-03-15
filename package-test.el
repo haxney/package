@@ -30,56 +30,47 @@
 
 (defmacro with-package-test (&rest body)
   "Set up environment for testing with package"
-  `(let ((package-archive-contents '((dog . (,(make-package
-                                               :name 'dog
-                                               :version '(1 0)
-                                               :version-raw "1.0"
-                                               :summary "summ"
-                                               :created "123"
-                                               :updated "123"
-                                               :license "gpl3"
-                                               :authors '()
-                                               :maintainer '()
-                                               :provides '(dog mouse)
-                                               :requires-hard '()
-                                               :requires-soft '()
-                                               :keywords '("key1" "key2")
-                                               :homepage "www.example.com"
-                                               :wikipage "wiki"
-                                               :commentary "comment")
-                                             ,(make-package
-                                               :name 'dog
-                                               :version '(1 1)
-                                               :version-raw "1.1"
-                                               :summary "summ"
-                                               :created "123"
-                                               :updated "123"
-                                               :license "gpl3"
-                                               :authors '()
-                                               :maintainer '()
-                                               :provides '(dog mouse)
-                                               :requires-hard '()
-                                               :requires-soft '()
-                                               :keywords '("key1" "key2")
-                                               :homepage "www.example.com"
-                                               :wikipage "wiki"
-                                               :commentary "comment"))))))
-     (unwind-protect
-         (progn
-           ,@body))))
+  `(let ((package-archive-contents '((test-pkg . (,(make-package
+                                                    :name 'test-pkg
+                                                    :version '(1 0)
+                                                    :version-raw "1.0"
+                                                    :summary "Simple package system for Emacs"
+                                                    :created "10 Mar 2007"
+                                                    :updated "10 Mar 2007"
+                                                    :license "gpl3"
+                                                    :authors '(("Joe Bob" . "jbob@example.com"))
+                                                    :maintainer '("Joe Bob" . "jbob@example.com")
+                                                    :provides '(test-pkg)
+                                                    :requires-hard '()
+                                                    :requires-soft '()
+                                                    :keywords '("tools" "libraries")
+                                                    :homepage "www.example.com"
+                                                    :wikipage "test-pkg.el"
+                                                    :commentary "This is a completely great testing package")
+                                                  ,(make-package
+                                                    :name 'test-pkg
+                                                    :version '(1 1)
+                                                    :version-raw "1.1"
+                                                    :summary "Simple package system for Emacs"
+                                                    :created "10 Mar 2008"
+                                                    :updated "10 Mar 2008"
+                                                    :license "gpl3"
+                                                    :authors '(("Joe Bob" . "jbob@example.com"))
+                                                    :maintainer '("Joe Bob" . "jbob@example.com")
+                                                    :provides '(test-pkg)
+                                                    :requires-hard '()
+                                                    :requires-soft '()
+                                                    :keywords '("tools" "libraries")
+                                                    :homepage "www.example.com"
+                                                    :wikipage "test-pkg.el"
+                                                    :commentary "This is a completely great testing package"))))))
+     ,@body))
 
 (expectations
-  (expect 'dog
-    (with-package-test
-     (caar package-archive-contents))
-    )
-  (expect 'cat
-    (with-package-test
-     (setq package-archive-contents 'q)
-    (error "no")
-     'cat)
-    )
-  )
+ (desc "Basic sanity test.")
+ (expect 'test-pkg
+         (with-package-test
+          (caar package-archive-contents))))
 
 (provide 'package-test)
 
