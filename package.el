@@ -222,6 +222,7 @@
   "Name of the directory where the user's packages are stored.")
 
 (defcustom package-archives `((elpa "http://tromey.com/elpa/" ,(concat package-user-dir "elpa"))
+                              (manual nil ,(concat package-user-dir "manual"))
                               (builtin nil "/usr/share/emacs/site-lisp/elpa/"))
   "An alist of archives (names, URLs, and local paths) from which to fetch.
 
@@ -1060,14 +1061,15 @@ TYPE is either `single' or `tar'."
         ;; Try to activate it.
         (package-initialize)))))
 
-;; TODO: CL-CHECK
-(defun package-install-from-buffer ()
+(defun package-install-from-buffer (buf)
   "Install a package from the current buffer.
 The package is assumed to be a single .el file which
 follows the elisp comment guidelines; see
 info node `(elisp)Library Headers'."
-  (interactive)
-  (package-install-buffer-internal (package-buffer-info) 'single))
+  (interactive "bInstall package from buffer:")
+  (package-install-buffer-internal (inherit-package (elx-package-metadata buf)
+                                                    :archive 'manual
+                                                    :type 'single)))
 
 ;; TODO: CL-CHECK
 (defun package-install-file (file)
