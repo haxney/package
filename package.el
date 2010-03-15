@@ -95,9 +95,7 @@
 
 ;; A tar file should be named "NAME-VERSION.tar".  The tar file must
 ;; unpack into a directory named after the package and version:
-;; "NAME-VERSION".  It must contain a file named "PACKAGE.epkg"
-;; which consists of a call to `package-register'.  It may also contain a
-;; "dir" file and the info files it references.
+;; "NAME-VERSION".
 
 ;; A .el file will be named "NAME-VERSION.el" in ELPA, but will be
 ;; installed as simply "NAME.el" in a directory named "NAME-VERSION".
@@ -145,21 +143,34 @@
 (require 'elm)
 (eval-when-compile (require 'cl))
 
-(defcustom package-archives '((elpa . "http://tromey.com/elpa/"))
-  "An alist of archives (names and URLs) from which to fetch.
+(defvar package-user-dir
+  (expand-file-name (convert-standard-filename "~/.emacs.d/elpa/"))
+  "Name of the directory where the user's packages are stored.")
+
+(defcustom package-archives `((elpa "http://tromey.com/elpa/" ,(concat package-user-dir "elpa"))
+                              (builtin nil "/usr/share/emacs/site-lisp/elpa/"))
+  "An alist of archives (names, URLs, and local paths) from which to fetch.
 
 The archive name must be a symbol, while the repository URL is a
 string.
 
 The default points to ELPA, the Emacs Lisp Package Archive."
   :type '(alist :key-type (symbol :tag "Archive name")
-                :value-type (string :tag "Archive URL"))
+                :value-type (group (string :tag "Archive URL")
+                                   (string :tag "Local path")))
   :group 'package
   :package-version '("package.el" . "0.9.3"))
 
 (defconst package-archive-version 2
   "Version number of the package archive understood by this file.
 Lower version numbers than this will probably be understood as well.")
+
+(defconst package-info-filename "info.epkg"
+  "The name of the package metadata file in each package directory.
+
+Each package directory will contain a file with this name which
+contains the metadata about the package. This can be loaded as a
+`package' structure.")
 
 (defconst package-version "0.9.5pre"
   "Version of package.el.")
@@ -200,25 +211,19 @@ arguments are supported by keys."
   archive
   type)
 
-;; We don't prime the cache since it tends to get out of date.
-(defvar package-archive-contents
+(defvar package-available-alist
   nil
-  "A representation of the contents of the ELPA archive.
+  "Alist of all packages available for installation.
 
-This is an alist mapping package names (symbols) to a list of
-`package' structures.")
+This is an alist of the form (NAME . (PACKAGE...)), where NAME is
+the symbol name of a package and PACKAGE is an individual
+`package' structure.
 
-(defvar package-user-dir
-  (expand-file-name (convert-standard-filename "~/.emacs.d/elpa"))
-  "Name of the directory where the user's packages are stored.")
-
-(defvar package-directory-list
-  (list (file-name-as-directory package-user-dir)
-        "/usr/share/emacs/site-lisp/elpa/")
-  "List of directories to search for packages.")
+More than one package is allowed for each name, since there may
+be multiple versions of a package available or two archives
+may each have different versions of a package available.")
 
 (defconst package--builtins-base nil
-
   "Packages which are always built-in.")
 
 (defvar package--builtins
@@ -259,7 +264,7 @@ The inner alist is keyed by version.")
                            commentary
                            archive
                            type)
-  "Search `package-archive-contents' for a package named NAME.
+  "Search `package-available-alist' for a package named NAME.
 
 Returns a list of matches, since there may be more than one
 package with the same name (i.e. different versions).
@@ -272,7 +277,7 @@ supplied keywords. For example:
 
 Would return a list of packages called 'package with version
 number \"0.9.5\", if any exist."
-  (let ((pkgs (cdr (assq name package-archive-contents))))
+  (let ((pkgs (cdr (assq name package-available-alist))))
     (dolist (slot
              ;; This is `cddr' to skip the `name' slot, as well as the cl-tag.
              (cddr (mapcar 'car (get 'package 'cl-struct-slots)))
@@ -305,28 +310,74 @@ will be."
       (when (version-list-< (package-version result) (package-version pkg))
         (setq result pkg)))))
 
-;; TODO: CL-CHECK
-;; TODO: Make package descriptor an .epkg file.
-(defun package-load-descriptor (dir package)
-  "Load the description file in directory DIR for a PACKAGE.
-Return nil if the package could not be found."
-  (let* ((pkg-dir (expand-file-name package dir))
-         (pkg-file (expand-file-name
-                    (concat (package-strip-version package) "-pkg") pkg-dir)))
-    (when (and (file-directory-p pkg-dir)
-               (file-exists-p (concat pkg-file ".el")))
-        (load pkg-file nil t))))
+(defun package-archive-url (archive)
+  "Returns the Url containing information about ARCHIVE.
 
-;; TODO: CL-CHECK
-(defun package-load-all-descriptors ()
-  "Load descriptors of all packages.
-Uses `package-directory-list' to find packages."
-  (mapc (lambda (dir)
-          (if (file-directory-p dir)
-              (mapc (lambda (name)
-                      (package-load-descriptor dir name))
-                    (directory-files dir nil "^[^.]"))))
-        package-directory-list))
+ARCHIVE must be the symbol name of an archive.
+
+Each archive in `package-archives' is checked."
+  (nth 1 (assq archive package-archives)))
+
+(defun package-archive-localpath (archive)
+  "Returns the local path of ARCHIVE.
+
+ARCHIVE must be the symbol name of an archive.
+
+Each archive in `package-archives' is checked."
+  (nth 2 (assq archive package-archives)))
+
+(defun package-read-file (file)
+  "Read `package' data.
+
+FILE is the file to read. Returns a `package' structure if
+successful."
+  (let (str data)
+    (when (and (file-readable-p file)
+               (file-regular-p file))
+      (with-temp-buffer
+        (insert-file-contents file)
+        (setq str (buffer-string)))
+      (when str
+        (setq data (read str))))
+    (apply 'make-package data)))
+
+(defun package-register (pkg)
+  "Register package PKG if it isn't already in `package-active-alist'.
+
+Returns nil if PKG was already in the list or PKG if it was not."
+  (let ((pkg-name (package-name pkg))
+        (existing-pkgs (cdr-safe (assq pkg-name package-active-alist))))
+    (when existing-pkgs
+      (unless (member pkg existing-pkgs)
+       (nconc existing-pkgs (list pkg))
+       pkg))))
+
+(defun package-load-descriptor (archive pkg-dir)
+  "Return information from a file in ARCHIVE for PKG-DIR.
+
+PKG-DIR is the string name of a package directory, in the form
+\"NAME-VERSION\".
+
+Return nil if the package could not be found."
+  (let* ((arch-dir (package-archive-localpath archive))
+         (pkg-file (expand-file-name
+                    (concat (file-name-as-directory pkg-dir) package-info-filename)
+                    arch-dir)))
+    (package-read-file pkg-file)))
+
+(defun package-register-installed ()
+  "Register metadata of all installed packages.
+
+Uses `package-archives' to find packages."
+  (mapc (lambda (archive-info)
+          (let* ((archive (car archive-info))
+                 (archive-dir (package-archive-localpath archive)))
+            (when (and (file-readable-p archive-dir)
+                     (file-directory-p archive-dir))
+              (mapc (lambda (pkg-name)
+                      (package-register (package-load-descriptor archive pkg-name)))
+                    (directory-files archive-dir nil "^[^.]")))))
+        package-archives))
 
 ;; TODO: CL-CHECK
 (defun package-do-activate (package pkg-vec)
@@ -427,26 +478,6 @@ PKG-VEC describes the version of PACKAGE to mark obsolete."
   (let ((pkg-versions (cdr-safe (assq pkg-name package-installed-alist))))
     (when (consp pkg-versions)
         (mapcar 'car pkg-versions))))
-
-;; TODO: CL-CHECK
-(defun package-register (pkg)
-  "Register package PKG if its version isn't already in `package-installed-alist'.
-
-Return nil if PKG was already in the list"
-  (let ((pkg-name (package-name pkg))
-        (pkg-version (package-version pkg))
-        (existing-pkg (cdr-safe (assq pkg-name package-installed-alist))))
-    (if existing-pkg
-        (unless (member pkg-version (package-versions pkg-name))
-          (setcdr (last existing) (list (cons pkg-version pkg))))
-      (aput 'package-installed-alist pkg-name (cons pkg-version pkg)))))
-
-;; TODO: CL-CHECK
-(defun package-registered-p (name version)
-  "Check whether package NAME at VERSION is in `package-installed-alist'.
-
-Returns t if the package version exists, nil if not."
-  (consp (assoc version (cdr-safe (assq pkg-name package-installed-alist)))))
 
 ;; TODO: CL-CHECK
 ;; From Emacs 22.
@@ -630,7 +661,7 @@ processed to resolve all dependencies (if possible)."
            (next-pkg (car elt))
            (next-version (car (cdr elt))))
       (unless (package-installed? next-pkg next-version)
-        (let ((pkg-desc (assq next-pkg package-archive-contents)))
+        (let ((pkg-desc (assq next-pkg package-available-alist)))
           (unless pkg-desc
             (error "Package '%s' not available for installation"
                    (symbol-name next-pkg)))
@@ -708,7 +739,7 @@ Will throw an error if the archive version is too new."
 (defun package-read-archive-contents (archive)
   "Re-read `archive-contents' and `builtin-packages', for ARCHIVE if they exist.
 
-Will set `package-archive-contents' and `package--builtins' if
+Will set `package-available-alist' and `package--builtins' if
 successful. Will throw an error if the archive version is too
 new."
   (let ((archive-contents (package--read-archive-file
@@ -730,17 +761,17 @@ Adds the archive from which it came to the end of the package vector."
          (package-version (aref (cdr package) 0))
          (package-with-archive (cons (car package)
                                      (vconcat (cdr package) (vector archive))))
-         (existing-package (cdr (assq package-name package-archive-contents))))
+         (existing-package (cdr (assq package-name package-available-alist))))
     (when (or (not existing-package)
               (package-version-compare package-version
                                        (aref existing-package 0) '>))
-      (add-to-list 'package-archive-contents package-with-archive))))
+      (add-to-list 'package-available-alist package-with-archive))))
 
 ;; TODO: CL-CHECK
 (defun package-download-transaction (transaction)
   "Download and install all the packages in the given TRANSACTION."
   (mapc (lambda (elt)
-          (let* ((desc (cdr (assq elt package-archive-contents)))
+          (let* ((desc (cdr (assq elt package-available-alist)))
                  (v-string (package-version-join (package-version desc)))
                  (kind (package-type desc)))
             (cond
@@ -767,7 +798,7 @@ Interactively, prompts for the package name."
    (list (intern (completing-read "Install package: "
                                  (mapcar (lambda (elt)
                                            (symbol-name (car elt)))
-                                         package-archive-contents)
+                                         package-available-alist)
                                  nil t))))
   (unless version
     (setq version (package-version (package-find-latest name))))
@@ -988,7 +1019,7 @@ The file can either be a tar file or an Emacs Lisp file."
 ;; TODO: CL-CHECK
 (defun package-archive-for (name)
   "Return the archive containing the package NAME."
-  (let ((desc (cdr (assq (intern-soft name) package-archive-contents))))
+  (let ((desc (cdr (assq (intern-soft name) package-available-alist))))
     (cdr (assoc (aref desc (- (length desc) 1)) package-archives))))
 
 ;; TODO: CL-CHECK
@@ -1028,7 +1059,7 @@ download."
 (defun package-initialize ()
   "Load all packages and activate as many as possible."
   (setq package-obsolete-alist nil)
-  (package-load-all-descriptors)
+  (package-register-installed)
   (package-read-all-archive-contents)
   ;; Try to activate all our packages.
   (mapc (lambda (elt)
@@ -1368,7 +1399,7 @@ RESULT is the list to which to add the package."
                     (package-list-maybe-add (cdr elt)
                                             "available"
                                             info-list)))
-            package-archive-contents)
+            package-available-alist)
       (mapc (lambda (elt)
               (mapc (lambda (inner-elt)
                       (setq info-list
