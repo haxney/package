@@ -539,26 +539,6 @@ PKG-VEC describes the version of PACKAGE to mark obsolete."
                   package-obsolete-alist)))))
 
 ;; TODO: CL-CHECK
-;; From Emacs 22.
-(defun package-autoload-ensure-default-file (file)
-  "Make sure that the autoload file FILE exists and if not create it."
-  (unless (file-exists-p file)
-    (write-region
-     (concat ";;; " (file-name-nondirectory file)
-             " --- automatically extracted autoloads\n"
-             ";;\n"
-             ";;; Code:\n\n"
-             "\n;; Local Variables:\n"
-             ";; version-control: never\n"
-             ";; no-byte-compile: t\n"
-             ";; no-update-autoloads: t\n"
-             ";; End:\n"
-             ";;; " (file-name-nondirectory file)
-             " ends here\n")
-     nil file))
-  file)
-
-;; TODO: CL-CHECK
 (defun package-generate-autoloads (name pkg-dir)
   "Generate autoload definitions for package NAME in PKG-DIR."
   (let* ((auto-name (concat name "-autoloads.el"))
@@ -568,8 +548,6 @@ PKG-VEC describes the version of PACKAGE to mark obsolete."
     ;; In Emacs 22 `update-directory-autoloads' does not seem
     ;; to be autoloaded...
     (require 'autoload)
-    (unless (fboundp 'autoload-ensure-default-file)
-      (package-autoload-ensure-default-file generated-autoload-file))
     (update-directory-autoloads pkg-dir)))
 
 ;; TODO: CL-CHECK
