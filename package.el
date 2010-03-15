@@ -590,6 +590,12 @@ PKG-VEC describes the version of PACKAGE to mark obsolete."
     (require 'autoload)
     (update-directory-autoloads pkg-dir)))
 
+(defsubst package-parent-directory (dir)
+  "Return the parent directory of DIR.
+
+This is pretty primitive, and should really be included in Emacs."
+  (file-name-directory (directory-file-name dir)))
+
 (defun package-untar-buffer (&optional buf dir)
   "Untar BUF or the current buffer to DIR.
 
@@ -617,26 +623,22 @@ uses an external `tar' program."
         (call-process-region (point) (point-max) "tar" nil nil nil
                              "xf" "-")))))
 
-;; TODO: CL-CHECK
-(defun package-unpack-tar (name version)
-  "Unpack a package tar from the current buffer.
+(defun package-unpack-tar (pkg &optional buf)
+  "Unpack a tar PKG from BUF or the current buffer.
 
-Unpack the package, using NAME and VERSION to determine the
-target. The current buffer is expected to contain a tarred
-package archive."
-  (let ((pkg-dir (concat (file-name-as-directory package-user-dir)
-                         (symbol-name name) "-" version "/")))
-    ;; Be careful!!
-    (make-directory package-user-dir t)
+BUF is expected to contain a tarred package archive. If BUF is
+nil, the current buffer is used."
+  (let ((buf (or buf (current-buffer)))
+        (pkg-dir (package-install-directory pkg)))
+
+    (make-directory pkg-dir t)
     (if (file-directory-p pkg-dir)
-        (mapc (lambda (file) nil) ; 'delete-file -- FIXME: when we're
-                                        ; more confident
+        (mapc (lambda (file) nil) ;; TODO: 'delete-file when we're more confident
               (directory-files pkg-dir t "^[^.]")))
-    (let* ((default-directory (file-name-as-directory package-user-dir)))
-      (package-untar-buffer)
-      (package-generate-autoloads (symbol-name name) pkg-dir)
-      (let ((load-path (cons pkg-dir load-path)))
-        (byte-recompile-directory pkg-dir 0 t)))))
+    (package-untar-buffer buf (package-parent-directory pkg-dir))
+    (package-generate-autoloads pkg)
+    (let ((load-path (cons pkg-dir load-path)))
+      (byte-recompile-directory pkg-dir 0 t))))
 
 ;; TODO: CL-CHECK
 (defun package-unpack-single (file-name version desc requires)
