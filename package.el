@@ -320,6 +320,21 @@ ARCHIVE must be the symbol name of an archive.
 Each archive in `package-archives' is checked."
   (nth 2 (assq archive package-archives)))
 
+(defun package-read-file (file)
+  "Read `package' data.
+
+FILE is the file to read. Returns a `package' structure if
+successful."
+  (let (str data)
+    (when (and (file-readable-p file)
+               (file-regular-p file))
+      (with-temp-buffer
+        (insert-file-contents file)
+        (setq str (buffer-string)))
+      (when str
+        (setq data (read str))))
+    (apply 'make-package data)))
+
 Return nil if the package could not be found."
   (let* ((pkg-dir (expand-file-name package dir))
          (pkg-file (expand-file-name
