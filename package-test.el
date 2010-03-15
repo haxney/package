@@ -30,7 +30,7 @@
 
 (defmacro with-package-test (&rest body)
   "Set up environment for testing with package"
-  `(let* ((test-pkg ,(make-package
+  `(let* ((test-pkg1 (make-package
                       :name 'test-pkg
                       :version '(1 0)
                       :version-raw "1.0"
@@ -49,28 +49,29 @@
                       :commentary "This is a completely great testing package"
                       :archive 'elpa
                       :type 'single))
+          (test-pkg2 (cl-merge-struct 'package
+                                      (copy-package test-pkg1)
+                                      (make-package
+                                       :version '(1 1)
+                                       :version-raw "1.1"
+                                       :created "10 Mar 2008"
+                                       :updated "10 Mar 2008")))
+          (dep-pkg (cl-merge-struct 'package
+                                    (copy-package test-pkg1)
+                                    (make-package
+                                     :name 'deppy
+                                     :version '(2 0)
+                                     :version-raw "2.0"
+                                     :authors '(("Sally Smith" . "ssmith@example.com"))
+                                     :maintainer '("Sally Smith" . "ssmith@example.com")
+                                     :requires-hard '(())
+                                     :provides '(deppy)
+                                     :homepage "deppy.example.com"
+                                     :wikipage "deppy.el")
+                                    ))
           (package-archive-contents
-           '((test-pkg . (test-pkg
-                          ,(cl-merge-struct 'package
-                                            (copy-package test-pkg)
-                                            (make-package
-                                             :version '(1 1)
-                                             :version-raw "1.1"
-                                             :created "10 Mar 2008"
-                                             :updated "10 Mar 2008"))))
-             (dep-pkg . (,(cl-merge-struct 'package
-                                           (copy-packge test-pkg)
-                                           (make-package
-                                            :name 'deppy
-                                            :version '(2 0)
-                                            :version-raw "2.0"
-                                            :authors '(("Sally Smith" . "ssmith@example.com"))
-                                            :maintainer '("Sally Smith" . "ssmith@example.com")
-                                            :requires-hard '(())
-                                            :provides '(deppy)
-                                            :homepage "deppy.example.com"
-                                            :wikipage "deppy.el")
-                                           ))))))
+           '((test-pkg . (test-pkg1 test-pkg2))
+             (dep-pkg . (dep-pkg)))))
      ,@body))
 
 (expectations
