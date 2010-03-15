@@ -497,7 +497,10 @@ VERSION is the version of the package after being processed by
 `package-version-canonical'."
   (let* ((name (symbol-name (package-name pkg)))
          (version (package-version-canonical pkg))
-         (archive-dir (package-archive-localpath (package-archive pkg)))
+         (archive-dir (if (eq name 'package)
+                          ;; The package for package.el is handled specially.
+                          package-user-dir
+                          (package-archive-localpath (package-archive pkg))))
          (raw-name (format "%s/%s-%s" archive-dir name version)))
     (convert-standard-filename (file-name-as-directory (expand-file-name
                                                         raw-name)))))
