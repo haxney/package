@@ -547,23 +547,32 @@ PKG-VEC describes the version of PACKAGE to mark obsolete."
     (require 'autoload)
     (update-directory-autoloads pkg-dir)))
 
-;; TODO: CL-CHECK
-(defun package-untar-buffer ()
-  "Untar the current buffer.
-This uses `tar-untar-buffer' if it is available.
-Otherwise it uses an external `tar' program.
-`default-directory' should be set by the caller."
+(defun package-untar-buffer (&optional buf dir)
+  "Untar BUF or the current buffer to DIR.
+
+If BUF is nil, then use the current buffer. If DIR is nil, use
+the current value of `default-directory'.
+
+This uses `tar-untar-buffer' if it is available. Otherwise it
+uses an external `tar' program."
+  (unless buf
+    (setq buf (current-buffer)))
+  (unless dir
+    (setq dir default-directory))
+
   (require 'tar-mode)
-  (if (fboundp 'tar-untar-buffer)
-      (progn
-        ;; tar-mode messes with narrowing, so we just let it have the
-        ;; whole buffer to play with.
-        (delete-region (point-min) (point))
-        (tar-mode)
-        (tar-untar-buffer))
-    ;; FIXME: check the result.
-    (call-process-region (point) (point-max) "tar" nil '(nil nil) nil
-                         "xf" "-")))
+  (with-current-buffer buf
+    (let ((default-directory dir))
+      (if (fboundp 'tar-untar-buffer)
+          (progn
+            ;; tar-mode messes with narrowing, so we just let it have the
+            ;; whole buffer to play with.
+            (delete-region (point-min) (point))
+            (tar-mode)
+            (tar-untar-buffer))
+        ;; FIXME: check the result.
+        (call-process-region (point) (point-max) "tar" nil nil nil
+                             "xf" "-")))))
 
 ;; TODO: CL-CHECK
 (defun package-unpack-tar (name version)
