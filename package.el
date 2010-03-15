@@ -868,24 +868,10 @@ supported."
                        (car contents) package-archive-version))
             (cdr contents))))))
 
-;; TODO: CL-CHECK
 (defun package-read-all-archive-contents ()
   "Read the archive description of each of the archives in `package-archives'."
-  (dolist (archive package-archives)
-    (package-read-archive-contents (car archive)))
-  (let ((builtins (package--read-archive-file
-                   (concat "archives/" (symbol-name (caar package-archives))
-                           "/builtin-packages"))))
-    (if builtins
-        ;; Version 1 of 'builtin-packages' is a list where the car is
-        ;; a split emacs version and the cdr is an alist suitable for
-        ;; package--builtins.
-        (let ((our-version (package-version-split emacs-version))
-              (result package--builtins-base))
-          (setq package--builtins
-                (dolist (elt builtins result)
-                  (if (package-version-compare our-version (car elt) '>=)
-                      (setq result (append (cdr elt) result)))))))))
+  (loop for (archive info) in package-archives
+        do (package-read-archive-contents archive)))
 
 (defun package-read-archive-contents (archive)
   "Re-read `archive-contents' for ARCHIVE.
