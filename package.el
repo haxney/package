@@ -246,6 +246,13 @@ Each package directory will contain a file with this name which
 contains the metadata about the package. This can be loaded as a
 `package' structure.")
 
+(defconst package-archive-contents-filename "archive-contents"
+  "The name of the file which contains the package archive contents.
+
+Each archive has a local file which contains the list of packages
+provided by that archive. This constant is the name of that file
+within an archive's local path.")
+
 (defconst package-version "0.9.5pre"
   "Version of package.el.")
 
@@ -429,7 +436,13 @@ Each archive in `package-archives' is checked."
 ARCHIVE must be the symbol name of an archive.
 
 Each archive in `package-archives' is checked."
-  (nth 1 (aget package-archives archive)))
+  (file-name-expand (file-name-as-directory (nth 1 (aget package-archives archive)))))
+
+(defun package-archive-content-file (archive)
+  "Returns the path of the content file of ARCHIVE.
+
+ARCHIVE must be the symbol name of an archive."
+  (concat (package-archive-localpath archive) package-archive-contents-filename))
 
 (defun package-read-file (file)
   "Read `package' data.
