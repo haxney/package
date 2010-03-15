@@ -406,11 +406,11 @@ successful."
     (apply 'make-package data)))
 
 (defun package-register (pkg)
-  "Register package PKG if it isn't already in `package-active-alist'.
+  "Register package PKG if it isn't already in `package-installed-alist'.
 
 Returns nil if PKG was already in the list or PKG if it was not."
   (let ((pkg-name (package-name pkg))
-        (existing-pkgs (aget package-active-alist pkg-name)))
+        (existing-pkgs (aget package-installed-alist pkg-name)))
     (when existing-pkgs
       (unless (member pkg existing-pkgs)
        (nconc existing-pkgs (list pkg))
