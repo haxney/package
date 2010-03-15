@@ -277,7 +277,7 @@ supplied keywords. For example:
 
 Would return a list of packages called 'package with version
 number \"0.9.5\", if any exist."
-  (let ((pkgs (cdr (assq name package-available-alist))))
+  (let ((pkgs (aget package name-available-alist)))
     (dolist (slot
              ;; This is `cddr' to skip the `name' slot, as well as the cl-tag.
              (cddr (mapcar 'car (get 'package 'cl-struct-slots)))
@@ -316,7 +316,7 @@ will be."
 ARCHIVE must be the symbol name of an archive.
 
 Each archive in `package-archives' is checked."
-  (nth 1 (assq archive package-archives)))
+  (nth 0 (aget package archive-archives)))
 
 (defun package-archive-localpath (archive)
   "Returns the local path of ARCHIVE.
@@ -324,7 +324,7 @@ Each archive in `package-archives' is checked."
 ARCHIVE must be the symbol name of an archive.
 
 Each archive in `package-archives' is checked."
-  (nth 2 (assq archive package-archives)))
+  (nth 1 (aget package archive-archives)))
 
 (defun package-read-file (file)
   "Read `package' data.
@@ -346,7 +346,7 @@ successful."
 
 Returns nil if PKG was already in the list or PKG if it was not."
   (let ((pkg-name (package-name pkg))
-        (existing-pkgs (cdr-safe (assq pkg-name package-active-alist))))
+        (existing-pkgs (aget package-active-alist pkg-name)))
     (when existing-pkgs
       (unless (member pkg existing-pkgs)
        (nconc existing-pkgs (list pkg))
@@ -754,7 +754,7 @@ Adds the archive from which it came to the end of the package vector."
          (package-version (aref (cdr package) 0))
          (package-with-archive (cons (car package)
                                      (vconcat (cdr package) (vector archive))))
-         (existing-package (cdr (assq package-name package-available-alist))))
+         (existing-package (aget package-available-alist package-name)))
     (when (or (not existing-package)
               (package-version-compare package-version
                                        (aref existing-package 0) '>))
@@ -764,7 +764,7 @@ Adds the archive from which it came to the end of the package vector."
 (defun package-download-transaction (transaction)
   "Download and install all the packages in the given TRANSACTION."
   (mapc (lambda (elt)
-          (let* ((desc (cdr (assq elt package-available-alist)))
+          (let* ((desc (aget package-available-alist elt))
                  (v-string (package-version-join (package-version desc)))
                  (kind (package-type desc)))
             (cond
@@ -1012,7 +1012,7 @@ The file can either be a tar file or an Emacs Lisp file."
 ;; TODO: CL-CHECK
 (defun package-archive-for (name)
   "Return the archive containing the package NAME."
-  (let ((desc (cdr (assq (intern-soft name) package-available-alist))))
+  (let ((desc (aget package-available-alist (intern-soft name))))
     (cdr (assoc (aref desc (- (length desc) 1)) package-archives))))
 
 ;; TODO: CL-CHECK
