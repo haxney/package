@@ -88,7 +88,13 @@
   (expect '(package . (0 1 1))
     (package-split-dirname "/tmp/package-test/package-0.1.1"))
   (expect '(package . (0 1 1))
-    (package-split-dirname "/tmp/package-test/package-0.1.1/")))
+    (package-split-dirname "/tmp/package-test/package-0.1.1/"))
+
+  (desc "package-compute-transaction")
+  (expect (test-pkg2 dep-pkg)
+    (with-package-test
+     (package-compute-transaction test-pkg2 (package-requires-hard test-pkg2))))
+  )
 
 (provide 'package-test)
 
