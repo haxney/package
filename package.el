@@ -445,6 +445,22 @@ Uses `package-archives' to find packages."
                     (directory-files archive-dir nil "^[^.]")))))
         package-archives))
 
+(defun package-install-directory (pkg)
+  "Return the install directory for PKG.
+
+The install directory is where a particular package is (or would
+be, for un-installed packages) installed. Packages are installed
+within a sub-folder of their archive's local path named
+\"NAME-VERSION\", where NAME is the name of the package and
+VERSION is the version of the package after being processed by
+`elx-version-canonical'."
+  (let* ((name (symbol-name (package-name pkg)))
+        (version (elx-version-canonical (package-version pkg)))
+        (archive-dir (package-archive-localpath (package-archive pkg)))
+        (raw-name (format "%s/%s-%s" archive-dir name version)))
+    (convert-standard-filename (file-name-as-directory (expand-file-name
+                                                        raw-name)))))
+
 ;; TODO: CL-CHECK
 (defun package-do-activate (package pkg-vec)
   "Set up a single PACKAGE.
