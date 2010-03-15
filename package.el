@@ -249,6 +249,16 @@ contains the metadata about the package. This can be loaded as a
 (defconst package-version "0.9.5pre"
   "Version of package.el.")
 
+(defconst package-types '((single . "el")
+                          (tar . "tar")
+                          (builtin . special))
+  "Allowed file types for package files.
+
+A list of (TYPE-NAME . EXTENSION). The special type \"builtin\"
+doesn't have an extension, since it will never be independently
+downloaded or dealt with in any way aside from resolving
+dependencies.")
+
 (defstruct (package (:include elx-pkg)
                          (:constructor inherit-package
                                        (pkg
@@ -276,8 +286,8 @@ the archive index. The fields are:
 
  - ARCHIVE: The archive from which this package comes, as a symbol.
 
- - TYPE: The distribution type of the package, currently
-   'single, 'tar, or 'builtin.
+ - TYPE: The distribution type of the package, must one of the
+   types in `package-types'.
 
 The special constructor, `inherit-package' allows constructing a
 `package' struct from an existing `elx-pkg' struct. Extra
