@@ -118,6 +118,52 @@
 ;;   available to the user.
 ;; * Load.  Actually load the package and run some code from it.
 
+;;; Package fields:
+;;
+;; The `package' structure is used throughout this library and contains metadata
+;; about an individual version of a package. It contains the following fields
+;; (most of which are inherited from `elx-pkg', which see):
+;;
+;; * name
+;; * version
+;; * version-raw
+;; * summary
+;; * created
+;; * updated
+;; * license
+;; * authors
+;; * maintainer
+;; * provides
+;; * requires-hard
+;; * requires-soft
+;; * keywords
+;; * homepage
+;; * wikipage
+;; * commentary
+;; * archive
+;; * type
+;;
+;; See the documentation of the `package' and `elx-pkg' structures for more
+;; information about each of the fields.
+;;
+;; When saved to disk, a package is written as a plist, with each of the fields
+;; as a property and that field's value as the plist value.
+
+;;; Package archive format:
+;;
+;; Each archive has its own path, under which the archive metadata and installed
+;; packages live. By default, the main "ELPA" archive lives in the
+;; "~/.emacs.d/elpa/" directory. Within the archive directory is an
+;; "archive-contents" file which contains a description of all of the packages
+;; provided by that archive. This file is of the form
+;;
+;;     (2
+;;       PACKAGE...
+;;     )
+;;
+;; where PACKAGE is a plist package description as described above in "Package
+;; fields".
+
 ;;; Thanks:
 ;;; (sorted by sort-lines):
 
