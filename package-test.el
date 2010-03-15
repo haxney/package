@@ -67,10 +67,20 @@
      ,@body))
 
 (expectations
- (desc "Basic sanity test.")
- (expect 'test-pkg
-         (with-package-test
-          (caar package-archive-contents))))
+  (desc "Basic sanity test.")
+  (expect 'test-pkg
+    (with-package-test
+     (caar package-archive-contents)))
+
+  (desc "package-split-dirname")
+  (expect '(package . (0 1 1))
+    (package-split-dirname "package-0.1.1"))
+  (expect '(package . (0 1 1))
+    (package-split-dirname "package-0.1.1/"))
+  (expect '(package . (0 1 1))
+    (package-split-dirname "/tmp/package-test/package-0.1.1"))
+  (expect '(package . (0 1 1))
+    (package-split-dirname "/tmp/package-test/package-0.1.1/")))
 
 (provide 'package-test)
 
