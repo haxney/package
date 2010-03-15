@@ -935,73 +935,9 @@ Interactively, prompts for the package name."
   (package-initialize))
 
 ;; TODO: CL-CHECK
-(defun package-strip-rcs-id (v-str)
-  "Strip RCS version ID from the version string V-STR.
-
-If the result looks like a dotted numeric version, return it.
-Otherwise return nil."
-  (if v-str
-      (if (string-match "[ \t]*\\$\\(?:Revision\\|Id\\):[ \t]\\(?:[^ \t]+,v[ \t]+\\)?\\([0-9.]+\\).*\\$$" v-str)
-          (match-string 1 v-str)
-        (if (string-match "^[0-9.]*$" v-str)
-            v-str))))
-
-;; TODO: CL-CHECK
-(defun package-buffer-info ()
-  "Return a vector of information about the package in the current buffer.
-The vector looks like [FILENAME REQUIRES DESCRIPTION VERSION COMMENTARY]
-FILENAME is the file name, a string.  It does not have the \".el\" extension.
-REQUIRES is a requires list, or nil.
-DESCRIPTION is the package description (a string).
-VERSION is the version, a string.
-COMMENTARY is the commentary section, a string, or nil if none.
-Throws an exception if the buffer does not contain a conforming package.
-If there is a package, narrows the buffer to the file's boundaries.
-May narrow buffer or move point even on failure."
-  (goto-char (point-min))
-  (if (re-search-forward "^;;; \\([^ ]*\\)\\.el --- \\(.*\\)$" nil t)
-      (let ((file-name (match-string 1))
-            (desc (match-string 2))
-            (start (progn (beginning-of-line) (point))))
-        (if (search-forward (concat ";;; " file-name ".el ends here"))
-            (progn
-              ;; Try to include a trailing newline.
-              (forward-line)
-              (narrow-to-region start (point))
-              (require 'lisp-mnt)
-              ;; Use some headers we've invented to drive the process.
-              (let* ((requires-str (lm-header "package-requires"))
-                     (requires (if requires-str
-                                   (package-read-from-string requires-str)))
-                     ;; Prefer Package-Version, because if it is
-                     ;; defined the package author probably wants us
-                     ;; to use it.  Otherwise try Version.
-                     (pkg-version
-                      (or (package-strip-rcs-id (lm-header "package-version"))
-                          (package-strip-rcs-id (lm-header "version"))))
-                     (commentary (lm-commentary)))
-                (unless pkg-version
-                  (error
-                   "Package does not define a usable \"Version\" or \"Package-Version\" header"))
-                ;; Turn string version numbers into list form.
-                (setq requires
-                      (mapcar
-                       (lambda (elt)
-                         (list (car elt)
-                               (package-version-split (car (cdr elt)))))
-                       requires))
-                (set-text-properties 0 (length file-name) nil file-name)
-                (set-text-properties 0 (length pkg-version) nil pkg-version)
-                (set-text-properties 0 (length desc) nil desc)
-                (vector file-name requires desc pkg-version commentary)))
-          (error "Package missing a terminating comment")))
-    (error "No starting comment for package")))
-
-;; TODO: CL-CHECK
 (defun package-tar-file-info (file)
   "Find package information for a tar file.
-FILE is the name of the tar file to examine.
-The return result is a vector like `package-buffer-info'."
+FILE is the name of the tar file to examine."
   (setq file (expand-file-name file))
   (unless (string-match "^\\(.+\\)-\\([0-9.]+\\)\\.tar$" file)
     (error "`%s' doesn't have a package-ish name" file))
