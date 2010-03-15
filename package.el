@@ -480,7 +480,7 @@ the :name, :version, and :archive fields are needed.
 Return nil if the package could not be found."
   (package-read-file (package-info-file pkg)))
 
-(defun package-split-filename (file &optional suffix)
+(defun package-split-filename (file &optional suffix noerror)
   "Split FILE into a name and version.
 
 FILE must be a directory of the form \"NAME-VERSION\" which will
@@ -491,7 +491,10 @@ filename, only the last element of the filename (which should be
 the directory to examine) will be considered.
 
 If optional argument SUFFIX is provided, strip the suffix from
-FILE before processing the name."
+FILE before processing the name.
+
+If NOERROR is non-nil, returns nil rather than signaling an error
+when FILE cannot be resolved to a name and version."
   (when suffix
     (setq file (replace-regexp-in-string
                 (format "\\.%s$" suffix)
@@ -501,8 +504,13 @@ FILE before processing the name."
          (parts (split-string local-dir "-" t))
          (version (car (last parts)))
          (name (combine-and-quote-strings (butlast parts 1) "-")))
-    (cons (intern name)
-          (version-to-list version))))
+    (condition-case err
+        ;; TODO: Add some format checks to `name'.
+        (cons (intern name)
+              (version-to-list version))
+      (error (if noerror
+                 nil
+               (signal (car err) (cdr err)))))))
 
 (defun package-from-dirname (dir)
   "Create a skeleton `package' structure from DIR.

@@ -120,6 +120,11 @@
   (expect '(package-test . (0 2 3))
     (package-split-filename "/tmp/package-test/package-test-0.2.3/"))
 
+  (expect (error error *)
+    (package-split-filename "package-test-0.1.this-is-a-bad-name_#-" "" nil))
+  (expect nil
+    (package-split-filename "package-test-0.1.this-is-a-bad-name_#-" "" t))
+
   (desc "package-find")
   (expect (package (list test-pkg1 test-pkg2))
     (with-package-test
