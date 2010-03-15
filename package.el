@@ -295,6 +295,23 @@ arguments are supported by keys."
   archive
   type)
 
+(defsubst package-version-canonical (pkg)
+  "Return the canonical version of PKG.
+
+Simply passes it through `elx-version-canonical'."
+  (elx-version-canonical (package-version pkg)))
+
+(defun package-suffix (pkg &optional noerror)
+  "Gets the download suffix for PKG.
+
+If PKG is a builtin package, signals an error unless NOERROR is
+non-nil."
+  (let ((suffix (aget package-types (package-type pkg))))
+    (when (eq suffix 'special)
+      (unless noerror
+        (error "Package is a builtin, and therefore does not have a suffix")))
+    suffix))
+
 (defvar package-available-alist
   nil
   "Alist of all packages available for installation.
@@ -471,13 +488,23 @@ be, for un-installed packages) installed. Packages are installed
 within a sub-folder of their archive's local path named
 \"NAME-VERSION\", where NAME is the name of the package and
 VERSION is the version of the package after being processed by
-`elx-version-canonical'."
+`package-version-canonical'."
   (let* ((name (symbol-name (package-name pkg)))
-        (version (elx-version-canonical (package-version pkg)))
-        (archive-dir (package-archive-localpath (package-archive pkg)))
-        (raw-name (format "%s/%s-%s" archive-dir name version)))
+         (version (package-version-canonical pkg))
+         (archive-dir (package-archive-localpath (package-archive pkg)))
+         (raw-name (format "%s/%s-%s" archive-dir name version)))
     (convert-standard-filename (file-name-as-directory (expand-file-name
                                                         raw-name)))))
+
+(defun package-download-url (pkg)
+  "Return the download URL of PKG.
+
+The download URL is the URL from which PKG can be downloaded.
+This depends on the base URL of the package's archive."
+  (format "%s%s-%s.%s" (package-archive-url (package-archive pkg))
+          (package-name pkg)
+          (package-version-canonical pkg)
+          (package-suffix pkg)))
 
 (defun package-autoload-file (pkg)
   "Return the full path of the autoload file for PKG."
