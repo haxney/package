@@ -456,15 +456,15 @@ successful."
         (insert-file-contents file)
         (setq str (buffer-string)))
       (when str
-        (setq data (read str))))
+        (setq data (package-read-from-string str))))
     (apply 'make-package data)))
 
-(defun package-register (pkg)
-  "Register package PKG if it isn't already in `package-installed-alist'.
+(defun package-register (pkg registry)
+  "Register package PKG if it isn't already in REGISTRY.
 
 Returns nil if PKG was already in the list or PKG if it was not."
   (let ((pkg-name (package-name pkg))
-        (existing-pkgs (aget package-installed-alist pkg-name)))
+        (existing-pkgs (aget registry pkg-name)))
     (when existing-pkgs
       (unless (member pkg existing-pkgs)
        (nconc existing-pkgs (list pkg))
@@ -530,7 +530,8 @@ Uses `package-archives' to find packages."
                      (file-directory-p archive-dir))
               (mapc (lambda (pkg-dirname)
                       (package-register (package-load-descriptor
-                                         (package-from-dirname pkg-dirname))))
+                                         (package-from-dirname pkg-dirname))
+                                        package-installed-alist))
                     (directory-files archive-dir t "^[^.]")))))
         package-archives))
 
@@ -832,6 +833,7 @@ processed to resolve all dependencies (if possible)."
 ;; TODO: CL-CHECK
 (defun package-read-from-string (str)
   "Read a Lisp expression from STR.
+
 Signal an error if the entire string was not used."
   (let* ((read-data (read-from-string str))
          (more-left
@@ -845,21 +847,21 @@ Signal an error if the entire string was not used."
         (error "Can't read whole string")
       (car read-data))))
 
-;; TODO: CL-CHECK
-(defun package--read-archive-file (file)
+(defun package--read-archive-file (archive)
   "Re-read archive file FILE, if it exists.
-Will return the data from the file, or nil if the file does not exist.
-Will throw an error if the archive version is too new."
-  (let ((filename (concat (file-name-as-directory package-user-dir)
-                          file)))
-    (if (file-exists-p filename)
+
+Will return the data from the file, or nil if the file does not
+exist. Will signal an error if the archive version is not
+supported."
+  (let ((file (package-archive-content-file archive)))
+    (if (file-exists-p file)
         (with-temp-buffer
-          (insert-file-contents-literally filename)
+          (insert-file-contents-literally file)
           (let ((contents (package-read-from-string
                            (buffer-substring-no-properties (point-min)
                                                            (point-max)))))
-            (if (> (car contents) package-archive-version)
-                (error "Package archive version %d is greater than %d - upgrade package.el"
+            (if (/= (car contents) package-archive-version)
+                (error "Package archive version %d is not equal to %d - upgrade package.el"
                        (car contents) package-archive-version))
             (cdr contents))))))
 
@@ -882,37 +884,21 @@ Will throw an error if the archive version is too new."
                   (if (package-version-compare our-version (car elt) '>=)
                       (setq result (append (cdr elt) result)))))))))
 
-;; TODO: CL-CHECK
 (defun package-read-archive-contents (archive)
-  "Re-read `archive-contents' and `builtin-packages', for ARCHIVE if they exist.
+  "Re-read `archive-contents' for ARCHIVE.
 
-Will set `package-available-alist' and `package--builtins' if
-successful. Will throw an error if the archive version is too
-new."
-  (let ((archive-contents (package--read-archive-file
-                           (concat "archives/" (symbol-name archive)
-                                   "/archive-contents"))))
+Will add any new packages found `package-available-alist'. Will
+signal an error if the archive version is too new or if a
+package's :archive field does not match ARCHIVE."
+  (let ((archive-contents (package--read-archive-file archive)))
     (if archive-contents
-        ;; Version 1 of 'archive-contents' is identical to our
-        ;; internal representation.
-        ;; TODO: merge archive lists
-        (dolist (package archive-contents)
-          (package--add-to-archive-contents package archive)))))
-
-;; TODO: CL-CHECK
-(defun package--add-to-archive-contents (package archive)
-  "Add the PACKAGE from the given ARCHIVE if needed.
-
-Adds the archive from which it came to the end of the package vector."
-  (let* ((package-name (car package))
-         (package-version (aref (cdr package) 0))
-         (package-with-archive (cons (car package)
-                                     (vconcat (cdr package) (vector archive))))
-         (existing-package (aget package-available-alist package-name)))
-    (when (or (not existing-package)
-              (package-version-compare package-version
-                                       (aref existing-package 0) '>))
-      (add-to-list 'package-available-alist package-with-archive))))
+        (dolist (pkg archive-contents)
+          (unless (eq (package-archive pkg) archive)
+            (error "Package %s lists %s as its archive, but was read from archive %s"
+                   (package-name pkg)
+                   (package-archive pkg)
+                   archive))
+          (package-register pkg package-available-alist)))))
 
 ;; TODO: CL-CHECK
 (defun package-download-transaction (transaction)
