@@ -302,9 +302,10 @@ may each have different versions of a package available.")
 
 Maps the package name to a `package' struct.")
 
-(defvar package-activated-list
-  (mapcar #'car package-installed-alist)
-  "List of the names of all activated packages.")
+(defvar package-activated-list nil
+  "List of all activated packages.
+
+Only one version of a package can be activated at a time.")
 
 (defvar package-obsolete-alist nil
   "Representation of obsolete packages.
