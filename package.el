@@ -666,25 +666,37 @@ REQUIRES is a list of symbols which this package needs to run."
         (let ((load-path (cons pkg-dir load-path)))
           (byte-recompile-directory pkg-dir 0 t))))))
 
-;; TODO: CL-CHECK
-(defun package-handle-response ()
+(defun package-handle-response (&optional buf)
   "Handle the response from the server.
-Parse the HTTP response and throw if an error occurred.
+
+Parse the response and signal an error if the download failed.
 The url package seems to require extra processing for this.
-This should be called in a `save-excursion', in the download buffer.
-It will move point to somewhere in the headers."
-  (let ((type (url-type url-current-object)))
-    (cond
-     ((equal type "http")
-      (let ((response (url-http-parse-response)))
-        (when (or (< response 200) (>= response 300))
-          (display-buffer (current-buffer))
-          (error "Error during download request:%s"
-                 (buffer-substring-no-properties (point) (progn
-                                                           (end-of-line)
-                                                           (point)))))))
-     ((equal type "file")
-      nil))))
+Either BUF or the current buffer is used as the response buffer
+from `url-retrieve-synchronously'.
+
+It will remove any headers and move the point to the beginning of
+the buffer."
+  (let ((type (url-type url-current-object))
+        (buf (or buf (current-buffer))))
+    (with-current-buffer buf
+     (cond
+      ((equal type "http")
+       (let ((response (url-http-parse-response))
+             header-end)
+         (unless (eq (/ response 100) 2)
+           (display-buffer (current-buffer))
+           (error "Error during download request:%s"
+                  (buffer-substring-no-properties (point) (progn
+                                                            (end-of-line)
+                                                            (point)))))
+         ;; Strip HTTP headers
+         (ietf-drums-narrow-to-header)
+         (setq header-end (1+ (point-max)))
+         (widen)
+         (delete-region (point-min) header-end)
+         (goto-char (point-min))))
+      ((equal type "file")
+       nil)))))
 
 ;; TODO: CL-CHECK
 (defun package-download-single (name version desc requires)
@@ -695,33 +707,20 @@ info."
   (let ((buffer (url-retrieve-synchronously
                  (concat (package-archive-for name)
                          (symbol-name name) "-" version ".el"))))
-    (save-excursion
-      (set-buffer buffer)
+    (with-current-buffer buffer
       (package-handle-response)
-      (re-search-forward "^$" nil 'move)
-      (forward-char)
-      (delete-region (point-min) (point))
-      (package-unpack-single (symbol-name name) version desc requires)
-      (kill-buffer buffer))))
+      (package-unpack-single (symbol-name name) version desc requires))
+    (kill-buffer buffer)))
 
 ;; TODO: CL-CHECK
-(defun package-download-tar (name version)
-  "Download and install a tar package NAME at VERSION."
+(defun package-download-tar (pkg)
+  "Download and install a tar package PKG."
   (let ((tar-buffer (url-retrieve-synchronously
-                     (concat (package-archive-for name)
-                             (symbol-name name) "-" version ".tar"))))
-    (save-excursion
-      (set-buffer tar-buffer)
+                     (package-download-url pkg))))
+    (with-current-buffer tar-buffer
       (package-handle-response)
-
-      ;; Skip past url-retrieve headers, which would otherwise confuse poor
-      ;; tar-mode.
-      (goto-char (point-min))
-      (re-search-forward "^$" nil 'move)
-      (forward-char)
-
-      (package-unpack-tar name version)
-      (kill-buffer tar-buffer))))
+      (package-unpack-tar name version))
+    (kill-buffer buffer)))
 
 ;; TODO: CL-CHECK
 (defun package-installed? (package &optional min-version)
@@ -1116,19 +1115,15 @@ Downloads the archive index from ARCHIVE and stores it in FILE."
   (let* ((archive-name (symbol-name (car archive)))
          (archive-url (cdr archive))
          (buffer (url-retrieve-synchronously (concat archive-url file))))
-    (save-excursion
-      (set-buffer buffer)
+    (with-current-buffer buffer
       (package-handle-response)
-      (re-search-forward "^$" nil 'move)
-      (forward-char)
-      (delete-region (point-min) (point))
       (make-directory (concat (file-name-as-directory package-user-dir)
                               "archives/" archive-name) t)
       (setq buffer-file-name (concat (file-name-as-directory package-user-dir)
                                      "archives/" archive-name "/" file))
       (let ((version-control 'never))
-        (save-buffer))
-      (kill-buffer buffer))))
+        (save-buffer)))
+    (kill-buffer buffer)))
 
 ;; TODO: CL-CHECK
 (defun package-refresh-contents ()
