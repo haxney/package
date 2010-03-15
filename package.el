@@ -473,13 +473,6 @@ PKG-VEC describes the version of PACKAGE to mark obsolete."
                   package-obsolete-alist)))))
 
 ;; TODO: CL-CHECK
-(defun package-versions (pkg-name)
-  "Return a list of registered versions of PKG-NAME."
-  (let ((pkg-versions (cdr-safe (assq pkg-name package-installed-alist))))
-    (when (consp pkg-versions)
-        (mapcar 'car pkg-versions))))
-
-;; TODO: CL-CHECK
 ;; From Emacs 22.
 (defun package-autoload-ensure-default-file (file)
   "Make sure that the autoload file FILE exists and if not create it."
