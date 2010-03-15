@@ -101,10 +101,15 @@
   (expect '(package . (0 1 1))
     (package-split-dirname "/tmp/package-test/package-0.1.1/"))
 
-  (desc "package-compute-transaction")
-  (expect (test-pkg2 dep-pkg)
+  (desc "package-find")
+  (expect (package (list test-pkg1 test-pkg2))
     (with-package-test
-     (package-compute-transaction test-pkg2 (package-requires-hard test-pkg2))))
+     (package-find 'test-pkg)))
+
+  (desc "package-compute-transaction")
+  (expect '(test-pkg2 dep-pkg)
+    (with-package-test
+     (package-compute-transaction test-pkg2 (package-required-packages test-pkg2))))
   )
 
 (provide 'package-test)
