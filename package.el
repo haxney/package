@@ -429,6 +429,8 @@ Return nil if the package could not be found."
                     arch-dir)))
     (package-read-file pkg-file)))
 
+;; TODO: Add special handling of builtin packages, so that directories don't
+;; need to be created for each builtin package.
 (defun package-register-installed ()
   "Register metadata of all installed packages.
 
