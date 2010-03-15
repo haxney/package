@@ -562,7 +562,7 @@ Uses `package-archives' to find packages."
                     (directory-files archive-dir t "^[^.]")))))
         package-archives))
 
-(defun package-install-directory (pkg)
+(defun package-install-directory (pkg &optional relative)
   "Return the install directory for PKG.
 
 The install directory is where a particular package is (or would
@@ -570,16 +570,23 @@ be, for un-installed packages) installed. Packages are installed
 within a sub-folder of their archive's local path named
 \"NAME-VERSION\", where NAME is the name of the package and
 VERSION is the version of the package after being processed by
-`package-version-canonical'."
+`package-version-canonical'.
+
+If RELATIVE is non-nil, return the install directory of PKG
+relative to its archive root."
   (let* ((name (symbol-name (package-name pkg)))
          (version (package-version-canonical pkg))
          (archive-dir (if (eq name 'package)
                           ;; The package for package.el is handled specially.
                           package-user-dir
-                          (package-archive-localpath (package-archive pkg))))
-         (raw-name (format "%s/%s-%s" archive-dir name version)))
-    (convert-standard-filename (file-name-as-directory (expand-file-name
-                                                        raw-name)))))
+                        (package-archive-localpath (package-archive pkg))))
+         (raw-name (format "%s/%s-%s" archive-dir name version))
+         (abs-name (convert-standard-filename
+                    (file-name-as-directory (expand-file-name
+                                             raw-name)))))
+    (if relative
+        (file-relative-name abs-name archive-dir)
+      abs-name)))
 
 (defun package-install-file-path (pkg)
   "Returns the install file for PKG.
@@ -593,9 +600,12 @@ file for either `tar' or `builtin' packages."
           "."
           (package-suffix pkg)))
 
-(defsubst package-info-file (pkg)
-  "Returns the info (.epkg) file for PKG."
-  (concat (package-install-directory pkg) package-info-filename))
+(defsubst package-info-file (pkg &optional relative)
+  "Returns the info (.epkg) file for PKG.
+
+If RELATIVE is non-nil, return the path of the info file relative
+to the archive directory of PKG."
+  (concat (package-install-directory pkg relative) package-info-filename))
 
 (defun package-download-url (pkg)
   "Return the download URL of PKG.

@@ -148,6 +148,17 @@
   (expect '(test-pkg2 dep-pkg)
     (with-package-test
      (package-compute-transaction test-pkg2 (package-required-packages test-pkg2))))
+
+  (desc "package-info-file")
+  (expect (package (concat test-tmp-dir "package-test-1.2.3/info.epkg"))
+    (package-info-file (make-package :name 'package-test
+                                     :version '(1 2 3)
+                                     :archive 'test)))
+
+  (expect (package "package-test-1.2.3/info.epkg")
+    (package-info-file (make-package :name 'package-test
+                                     :version '(1 2 3)
+                                     :archive 'test) t))
   )
 
 (provide 'package-test)
