@@ -95,9 +95,7 @@
 
 ;; A tar file should be named "NAME-VERSION.tar".  The tar file must
 ;; unpack into a directory named after the package and version:
-;; "NAME-VERSION".  It must contain a file named "PACKAGE.epkg"
-;; which consists of a call to `package-register'.  It may also contain a
-;; "dir" file and the info files it references.
+;; "NAME-VERSION".
 
 ;; A .el file will be named "NAME-VERSION.el" in ELPA, but will be
 ;; installed as simply "NAME.el" in a directory named "NAME-VERSION".
