@@ -41,7 +41,7 @@
                       :authors '(("Joe Bob" . "jbob@example.com"))
                       :maintainer '("Joe Bob" . "jbob@example.com")
                       :provides '(test-pkg)
-                      :requires-hard '((deppy deppy))
+                      :requires-hard '((dep-pkg deppy))
                       :requires-soft '()
                       :keywords '("tools" "libraries")
                       :homepage "www.example.com"
@@ -59,7 +59,7 @@
           (dep-pkg (cl-merge-struct 'package
                                     (copy-package test-pkg1)
                                     (make-package
-                                     :name 'deppy
+                                     :name 'dep-pkg
                                      :version '(2 0)
                                      :version-raw "2.0"
                                      :authors '(("Sally Smith" . "ssmith@example.com"))
