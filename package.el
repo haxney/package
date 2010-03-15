@@ -380,7 +380,7 @@ will be."
 ARCHIVE must be the symbol name of an archive.
 
 Each archive in `package-archives' is checked."
-  (nth 0 (aget package archive-archives)))
+  (nth 0 (aget package-archives archive)))
 
 (defun package-archive-localpath (archive)
   "Returns the local path of ARCHIVE.
@@ -388,7 +388,7 @@ Each archive in `package-archives' is checked."
 ARCHIVE must be the symbol name of an archive.
 
 Each archive in `package-archives' is checked."
-  (nth 1 (aget package archive-archives)))
+  (nth 1 (aget package-archives archive)))
 
 (defun package-read-file (file)
   "Read `package' data.
