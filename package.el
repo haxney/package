@@ -785,7 +785,40 @@ built in) and so signal an error if PKG has :type 'builtin."
     (apply unpacker (list pkg buf))
     (kill-buffer buf)))
 
-;; TODO: CL-CHECK
+(defun package-required-packages (pkg &optional type)
+  "Return a list of the required packages of PKG.
+
+Unlike `elx-required-packages', this returns a list of the
+package structures, and not the features within those packages
+that are required.
+
+TYPE determines which kind of required packages are returned:
+hard, soft, or both. Its behavior is as follows:
+
+ * nil or 'both: Return a merged list of both hard and soft
+   requirements.
+
+ * 'hard: Return a list of only the hard requirements.
+
+ * 'soft: Return a list of only the soft requirements."
+  (let ((hard (loop for (name provides)
+                    in (package-requires-hard pkg)
+                    collect (package-find-latest
+                             name nil :provides provides)))
+        (soft (loop for (name provides)
+                    in (package-requires-soft pkg)
+                    collect (package-find-latest
+                             name nil :provides provides))))
+    (cond
+     ((or (null type) (eq type 'both))
+      (append hard soft))
+     ((eq type 'hard)
+      hard)
+     ((eq type 'soft)
+      soft)
+     (t
+      (error "TYPE must be 'hard, 'soft, 'both, or nil; '%s' received" type)))))
+
 (defun package-compute-transaction (result requirements)
   "Recursively prepare a transaction, resolving dependencies.
 
