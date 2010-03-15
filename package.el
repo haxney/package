@@ -712,23 +712,21 @@ the buffer."
 
 NAME, VERSION, DESC, and REQUIRES are used to build the package
 info."
-  (let ((buffer (url-retrieve-synchronously
-                 (concat (package-archive-for name)
-                         (symbol-name name) "-" version ".el"))))
-    (with-current-buffer buffer
-      (package-handle-response)
-      (package-unpack-single (symbol-name name) version desc requires))
-    (kill-buffer buffer)))
+  (let ((buf (url-retrieve-synchronously
+              (concat (package-archive-for name)
+                      (symbol-name name) "-" version ".el"))))
+    (package-handle-response buf)
+    (package-unpack-single (symbol-name name) version desc requires)
+    (kill-buffer buf)))
 
 ;; TODO: CL-CHECK
 (defun package-download-tar (pkg)
   "Download and install a tar package PKG."
-  (let ((tar-buffer (url-retrieve-synchronously
-                     (package-download-url pkg))))
-    (with-current-buffer tar-buffer
-      (package-handle-response)
-      (package-unpack-tar name version))
-    (kill-buffer buffer)))
+  (let ((buf (url-retrieve-synchronously
+              (package-download-url pkg))))
+    (package-handle-response buf)
+    (package-unpack-tar name version)
+    (kill-buffer buf)))
 
 ;; TODO: CL-CHECK
 (defun package-installed? (package &optional min-version)
@@ -1122,16 +1120,15 @@ The file can either be a tar file or an Emacs Lisp file."
 Downloads the archive index from ARCHIVE and stores it in FILE."
   (let* ((archive-name (symbol-name (car archive)))
          (archive-url (cdr archive))
-         (buffer (url-retrieve-synchronously (concat archive-url file))))
-    (with-current-buffer buffer
-      (package-handle-response)
-      (make-directory (concat (file-name-as-directory package-user-dir)
-                              "archives/" archive-name) t)
-      (setq buffer-file-name (concat (file-name-as-directory package-user-dir)
-                                     "archives/" archive-name "/" file))
-      (let ((version-control 'never))
-        (save-buffer)))
-    (kill-buffer buffer)))
+         (buf (url-retrieve-synchronously (concat archive-url file))))
+    (package-handle-response buf)
+    (make-directory (concat (file-name-as-directory package-user-dir)
+                            "archives/" archive-name) t)
+    (setq buffer-file-name (concat (file-name-as-directory package-user-dir)
+                                   "archives/" archive-name "/" file))
+    (let ((version-control 'never))
+      (save-buffer))
+    (kill-buffer buf)))
 
 ;; TODO: CL-CHECK
 (defun package-refresh-contents ()
