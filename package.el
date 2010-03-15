@@ -228,17 +228,18 @@ This is an alist mapping package names (symbols) to a list of
   "Alist of all built-in packages.
 Maps the package name to a vector [VERSION REQS DOCSTRING].")
 
-(defvar package-active-alist package--builtins
-  "Alist of all packages activated.
+(defvar package-installed-alist package--builtins
+  "Alist of all installed packages activated.
+
 Maps the package name to a `package' struct.")
 
 (defvar package-activated-list
-  (mapcar #'car package-active-alist)
+  (mapcar #'car package-installed-alist)
   "List of the names of all activated packages.")
 
 (defvar package-obsolete-alist nil
   "Representation of obsolete packages.
-Like `package-active-alist', but maps package name to a second alist.
+Like `package-installed-alist', but maps package name to a second alist.
 The inner alist is keyed by version.")
 
 (defun* package-find (name &key version
@@ -382,7 +383,7 @@ Recursively activates all dependencies of the named package."
   ;; activated.  However, don't try to activate 'emacs', as that makes
   ;; no sense.
   (unless (eq package 'emacs)
-    (let* ((pkg-desc (assq package package-active-alist))
+    (let* ((pkg-desc (assq package package-installed-alist))
            (this-version (package-version (cdr pkg-desc)))
            (req-list (package-requires-hard (cdr pkg-desc)))
            ;; If the package was never activated, we want to do it
@@ -423,29 +424,29 @@ PKG-VEC describes the version of PACKAGE to mark obsolete."
 ;; TODO: CL-CHECK
 (defun package-versions (pkg-name)
   "Return a list of registered versions of PKG-NAME."
-  (let ((pkg-versions (cdr-safe (assq pkg-name package-active-alist))))
+  (let ((pkg-versions (cdr-safe (assq pkg-name package-installed-alist))))
     (when (consp pkg-versions)
         (mapcar 'car pkg-versions))))
 
 ;; TODO: CL-CHECK
 (defun package-register (pkg)
-  "Register package PKG if its version isn't already in `package-active-alist'.
+  "Register package PKG if its version isn't already in `package-installed-alist'.
 
 Return nil if PKG was already in the list"
   (let ((pkg-name (package-name pkg))
         (pkg-version (package-version pkg))
-        (existing-pkg (cdr-safe (assq pkg-name package-active-alist))))
+        (existing-pkg (cdr-safe (assq pkg-name package-installed-alist))))
     (if existing-pkg
         (unless (member pkg-version (package-versions pkg-name))
           (setcdr (last existing) (list (cons pkg-version pkg))))
-      (aput 'package-active-alist pkg-name (cons pkg-version pkg)))))
+      (aput 'package-installed-alist pkg-name (cons pkg-version pkg)))))
 
 ;; TODO: CL-CHECK
 (defun package-registered-p (name version)
-  "Check whether package NAME at VERSION is in `package-active-alist'.
+  "Check whether package NAME at VERSION is in `package-installed-alist'.
 
 Returns t if the package version exists, nil if not."
-  (consp (assoc version (cdr-safe (assq pkg-name package-active-alist)))))
+  (consp (assoc version (cdr-safe (assq pkg-name package-installed-alist)))))
 
 ;; TODO: CL-CHECK
 ;; From Emacs 22.
@@ -608,7 +609,7 @@ info."
 ;; TODO: CL-CHECK
 (defun package-installed? (package &optional min-version)
   "Check whether PACKAGE is installed and at least MIN-VERSION."
-  (let ((pkg-desc (assq package package-active-alist)))
+  (let ((pkg-desc (assq package package-installed-alist)))
     (and pkg-desc
          (package-version-compare min-version
                                   (package-version (cdr pkg-desc))
@@ -1032,7 +1033,7 @@ download."
   ;; Try to activate all our packages.
   (mapc (lambda (elt)
           (package-activate (car elt) (package-version (cdr elt))))
-        package-active-alist))
+        package-installed-alist))
 
 
 
@@ -1361,7 +1362,7 @@ RESULT is the list to which to add the package."
                                             ;; That is lame!
                                             "installed"
                                             info-list)))
-            package-active-alist)
+            package-installed-alist)
       (mapc (lambda (elt)
               (setq info-list
                     (package-list-maybe-add (cdr elt)
