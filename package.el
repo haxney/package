@@ -760,9 +760,7 @@ the buffer."
 
 NAME, VERSION, DESC, and REQUIRES are used to build the package
 info."
-  (let ((buf (url-retrieve-synchronously
-              (concat (package-archive-for name)
-                      (symbol-name name) "-" version ".el"))))
+  (let ((buf (url-retrieve-synchronously (package-download-url pkg))))
     (package-handle-response buf)
     (package-unpack-single (symbol-name name) version desc requires)
     (kill-buffer buf)))
