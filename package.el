@@ -145,15 +145,21 @@
 (require 'elm)
 (eval-when-compile (require 'cl))
 
-(defcustom package-archives '((elpa . "http://tromey.com/elpa/"))
-  "An alist of archives (names and URLs) from which to fetch.
+(defvar package-user-dir
+  (expand-file-name (convert-standard-filename "~/.emacs.d/elpa/"))
+  "Name of the directory where the user's packages are stored.")
+
+(defcustom package-archives `((elpa "http://tromey.com/elpa/" ,(concat package-user-dir "elpa"))
+                              (builtin nil "/usr/share/emacs/site-lisp/elpa/"))
+  "An alist of archives (names, URLs, and local paths) from which to fetch.
 
 The archive name must be a symbol, while the repository URL is a
 string.
 
 The default points to ELPA, the Emacs Lisp Package Archive."
   :type '(alist :key-type (symbol :tag "Archive name")
-                :value-type (string :tag "Archive URL"))
+                :value-type (group (string :tag "Archive URL")
+                                   (string :tag "Local path")))
   :group 'package
   :package-version '("package.el" . "0.9.3"))
 
@@ -208,17 +214,7 @@ arguments are supported by keys."
 This is an alist mapping package names (symbols) to a list of
 `package' structures.")
 
-(defvar package-user-dir
-  (expand-file-name (convert-standard-filename "~/.emacs.d/elpa"))
-  "Name of the directory where the user's packages are stored.")
-
-(defvar package-directory-list
-  (list (file-name-as-directory package-user-dir)
-        "/usr/share/emacs/site-lisp/elpa/")
-  "List of directories to search for packages.")
-
 (defconst package--builtins-base nil
-
   "Packages which are always built-in.")
 
 (defvar package--builtins
@@ -308,6 +304,22 @@ will be."
 ;; TODO: Make package descriptor an .epkg file.
 (defun package-load-descriptor (dir package)
   "Load the description file in directory DIR for a PACKAGE.
+(defun package-archive-url (archive)
+  "Returns the Url containing information about ARCHIVE.
+
+ARCHIVE must be the symbol name of an archive.
+
+Each archive in `package-archives' is checked."
+  (nth 1 (assq archive package-archives)))
+
+(defun package-archive-localpath (archive)
+  "Returns the local path of ARCHIVE.
+
+ARCHIVE must be the symbol name of an archive.
+
+Each archive in `package-archives' is checked."
+  (nth 2 (assq archive package-archives)))
+
 Return nil if the package could not be found."
   (let* ((pkg-dir (expand-file-name package dir))
          (pkg-file (expand-file-name
