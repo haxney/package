@@ -538,12 +538,9 @@ PKG-VEC describes the version of PACKAGE to mark obsolete."
                                             pkg-vec)))
                   package-obsolete-alist)))))
 
-;; TODO: CL-CHECK
-(defun package-generate-autoloads (name pkg-dir)
-  "Generate autoload definitions for package NAME in PKG-DIR."
-  (let* ((auto-name (concat name "-autoloads.el"))
-         (ignore-name (concat name ".epkg"))
-         (generated-autoload-file (concat pkg-dir auto-name))
+(defun package-generate-autoloads (pkg)
+  "Generate autoload definitions for PKG."
+  (let ((generated-autoload-file (package-autoload-file pkg))
          (version-control 'never))
     ;; In Emacs 22 `update-directory-autoloads' does not seem
     ;; to be autoloaded...
