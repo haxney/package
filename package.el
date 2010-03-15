@@ -889,16 +889,10 @@ package's :archive field does not match ARCHIVE."
                    archive))
           (package-register pkg package-available-alist)))))
 
-;; TODO: CL-CHECK
 (defun package-download-transaction (transaction)
   "Download and install all the packages in the given TRANSACTION."
-  (mapc (lambda (elt)
-          ;; TODO: bind a `pkg' variable from transaction.
-          (let* ((desc (aget package-available-alist elt))
-                 (v-string (package-version-join (package-version desc)))
-                 (kind (package-type desc)))
-            (package-download pkg)))
-        transaction))
+  (loop for pkg in transaction
+        do (package-download pkg)))
 
 (defun package-install (name &optional version)
   "Install the package named NAME at VERSION.
