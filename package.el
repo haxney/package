@@ -340,6 +340,17 @@ successful."
         (setq data (read str))))
     (apply 'make-package data)))
 
+(defun package-register (pkg)
+  "Register package PKG if it isn't already in `package-active-alist'.
+
+Returns nil if PKG was already in the list or PKG if it was not."
+  (let ((pkg-name (package-name pkg))
+        (existing-pkgs (cdr-safe (assq pkg-name package-active-alist))))
+    (when existing-pkgs
+      (unless (member pkg existing-pkgs)
+       (nconc existing-pkgs (list pkg))
+       pkg))))
+
 (defun package-load-descriptor (archive pkg-dir)
   "Return information from a file in ARCHIVE for PKG-DIR.
 
@@ -466,26 +477,6 @@ PKG-VEC describes the version of PACKAGE to mark obsolete."
   (let ((pkg-versions (cdr-safe (assq pkg-name package-active-alist))))
     (when (consp pkg-versions)
         (mapcar 'car pkg-versions))))
-
-;; TODO: CL-CHECK
-(defun package-register (pkg)
-  "Register package PKG if its version isn't already in `package-active-alist'.
-
-Return nil if PKG was already in the list"
-  (let ((pkg-name (package-name pkg))
-        (pkg-version (package-version pkg))
-        (existing-pkg (cdr-safe (assq pkg-name package-active-alist))))
-    (if existing-pkg
-        (unless (member pkg-version (package-versions pkg-name))
-          (setcdr (last existing) (list (cons pkg-version pkg))))
-      (aput 'package-active-alist pkg-name (cons pkg-version pkg)))))
-
-;; TODO: CL-CHECK
-(defun package-registered-p (name version)
-  "Check whether package NAME at VERSION is in `package-active-alist'.
-
-Returns t if the package version exists, nil if not."
-  (consp (assoc version (cdr-safe (assq pkg-name package-active-alist)))))
 
 ;; TODO: CL-CHECK
 ;; From Emacs 22.
