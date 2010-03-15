@@ -352,8 +352,12 @@ number \"0.9.5\", if any exist."
                             :test-not 'equal
                             :key (intern (concat "package-" (symbol-name slot)))))))))
 
-(defun package-find-latest (name &rest keys)
+;; TODO: Resolve multiple matches using archive priority?
+(defun package-find-latest (name noerror &rest keys)
   "Find the newest version of package NAME.
+
+If NOERROR is nil, signal an error when no matching package is
+found, otherwise return nil.
 
 KEYS is a set of keyword arguments to be passed to
 `package-find'. If the :version keyword is present, it is
@@ -370,10 +374,13 @@ will be."
     (setq keys (plist-put keys :version nil)))
 
   (let* ((pkgs (apply 'package-find name keys))
-        (result (car pkgs)))
-    (dolist (pkg pkgs result)
+        (result (car-safe pkgs)))
+    (dolist (pkg (cdr-safe pkgs))
       (when (version-list-< (package-version result) (package-version pkg))
-        (setq result pkg)))))
+        (setq result pkg)))
+    (if (or result noerror)
+        result
+      (error "No package found named '%s' matching parameters '%s'" name keys))))
 
 (defun package-archive-url (archive)
   "Returns the Url containing information about ARCHIVE.
