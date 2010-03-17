@@ -975,6 +975,16 @@ Interactively, prompts for the package name."
   ;; Try to activate it.
   (package-initialize))
 
+(defun package-type-from-buffer (buf)
+  "Determine the package type from the contents of BUF."
+  (with-current-buffer buf
+    (condition-case err
+        (prog2
+            (tar-mode)
+            'tar)
+      (error (emacs-lisp-mode)
+             'single))))
+
 (defun package-from-buffer (buf)
   "Generates a package structure from BUF.
 
