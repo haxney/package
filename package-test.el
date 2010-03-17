@@ -102,15 +102,14 @@
              (dep-pkg . (,dep-pkg))
              (tarty . (,tarty))
              (internal-pkg . (,internal-pkg))))
-          (test-tmp-dir "/tmp/package-test/")
-          (package-archives `((test "file:///tmp/test/" ,test-tmp-dir)))
-          )
+          (test-dir (file-name-as-directory (make-temp-file "package-test" t)))
+          (package-archives `((test ,(concat "file://" test-dir) ,test-dir))))
      (prog2
-         (make-directory test-tmp-dir t)
+         (make-directory test-dir t)
          (progn
            ,@body)
        (require 'dired)
-       (dired-delete-file test-tmp-dir 'always))
+       (dired-delete-file test-dir 'always))
      ))
 
 (defun package-exps-assert-with-package-test (expected actual)
@@ -130,33 +129,33 @@
     (cadar package-available-alist))
 
   (desc "package-split-filename")
-  (expect '(package . (0 1 1))
+  (expect (package '(package . (0 1 1)))
     (package-split-filename "package-0.1.1"))
-  (expect '(package . (0 1 1))
+  (expect (package '(package . (0 1 1)))
     (package-split-filename "package-0.1.1/"))
-  (expect '(package . (0 1 1))
-    (package-split-filename "/tmp/package-test/package-0.1.1"))
-  (expect '(package . (0 1 1))
-    (package-split-filename "/tmp/package-test/package-0.1.1/"))
+  (expect (package '(package . (0 1 1)))
+    (package-split-filename (concat test-dir "package-0.1.1")))
+  (expect (package '(package . (0 1 1)))
+    (package-split-filename (concat test-dir "package-0.1.1/")))
 
-  (expect '(package-test . (0 2 3))
+  (expect (package '(package-test . (0 2 3)))
     (package-split-filename "package-test-0.2.3"))
-  (expect '(package-test . (0 2 3))
+  (expect (package '(package-test . (0 2 3)))
     (package-split-filename "package-test-0.2.3/"))
-  (expect '(package-test . (0 2 3))
+  (expect (package '(package-test . (0 2 3)))
     (package-split-filename "/package-test-0.2.3"))
 
   (expect '(tar-test . (1 -1 2))
     (package-split-filename "tar-test-1rc2.tar" "tar"))
-  (expect '(tar-test . (1 -1 2))
-    (package-split-filename "/tmp/packages/tar-test-1rc2.tar" "tar"))
+  (expect (package '(tar-test . (1 -1 2)))
+    (package-split-filename (concat test-dir "tar-test-1rc2.tar") "tar"))
 
-  (expect '(package-test . (0 2 3))
-    (package-split-filename "/tmp/package-test/package-test-0.2.3/"))
-  (expect '(package-test . (0 2 3))
-    (package-split-filename "/tmp/package-test/package-test-0.2.3"))
-  (expect '(package-test . (0 2 3))
-    (package-split-filename "/tmp/package-test/package-test-0.2.3/"))
+  (expect (package '(package-test . (0 2 3)))
+    (package-split-filename (concat test-dir "package-test-0.2.3/")))
+  (expect (package '(package-test . (0 2 3)))
+    (package-split-filename (concat test-dir "package-test-0.2.3")))
+  (expect (package '(package-test . (0 2 3)))
+    (package-split-filename (concat test-dir "package-test-0.2.3/")))
 
   (expect (error error *)
     (package-split-filename "package-test-0.1.this-is-a-bad-name_#-" "" nil))
@@ -168,11 +167,11 @@
     (package-find 'test-pkg))
 
   (desc "package-compute-transaction")
-  (expect (package (list test-pkg2 dep-pkg))
+  (expect (package (package (list test-pkg2 dep-pkg)))
     (package-compute-transaction (list test-pkg2) (package-required-packages test-pkg2)))
 
   (desc "package-info-file")
-  (expect (package (concat test-tmp-dir "package-test-1.2.3/info.epkg"))
+  (expect (package (concat test-dir "package-test-1.2.3/info.epkg"))
     (package-info-file (make-package :name 'package-test
                                      :version '(1 2 3)
                                      :archive 'test)))
@@ -196,33 +195,34 @@
     (package-suffix internal-pkg t))
 
   (desc "package-type-from-filename")
-  (expect 'single
-    (package-type-from-filename "/tmp/pkg/name.el"))
+  (expect (package 'single)
+    (package-type-from-filename (concat test-dir "name.el")))
   (expect 'single
     (package-type-from-filename "name.el"))
-  (expect 'single
-    (package-type-from-filename "/tmp/pkg/name.el" t))
-  (expect 'tar
-    (package-type-from-filename "/tmp/pkg/name.tar"))
-  (expect 'tar
-    (package-type-from-filename "/tmp/pkg/name.tar" t))
+  (expect (package 'single)
+    (package-type-from-filename (concat test-dir "name.el") t))
+  (expect (package 'tar)
+    (package-type-from-filename (concat test-dir "name.tar")))
+  (expect (package 'tar)
+    (package-type-from-filename (concat test-dir "name.tar") t))
   (expect (error error (format "Could not find package type for extension: %s" "dog"))
-    (package-type-from-filename "/tmp/pkg/name.dog"))
-  (expect nil
-    (package-type-from-filename "/tmp/pkg/name.dog" t))
-  (expect nil
-    (package-type-from-filename "/tmp/package-test/package-test-0.2.3" t))
+    (with-package-test
+     (package-type-from-filename (concat test-dir "name.dog"))))
+  (expect (package nil)
+    (package-type-from-filename (concat test-dir "name.dog") t))
+  (expect (package nil)
+    (package-type-from-filename (concat test-dir "package-test-0.2.3") t))
 
   (desc "package-from-filename")
   (expect (package (make-package :name 'package-test
                                  :version '(0 2 3)
                                  :archive 'test
                                  :type 'tar))
-    (package-from-filename "/tmp/package-test/package-test-0.2.3.tar"))
+    (package-from-filename (concat test-dir "package-test-0.2.3.tar")))
   (expect (package (make-package :name 'package-test
                                  :version '(0 2 3)
                                  :archive 'test))
-    (package-from-filename "/tmp/package-test/package-test-0.2.3" nil t))
+    (package-from-filename (concat test-dir "package-test-0.2.3") nil t))
   )
 
 (provide 'package-test)
