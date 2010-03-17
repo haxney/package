@@ -171,13 +171,11 @@
 
   (desc "package-find")
   (expect (package (list test-pkg1 test-pkg2))
-    (with-package-test
-     (package-find 'test-pkg)))
+    (package-find 'test-pkg))
 
   (desc "package-compute-transaction")
-  (expect '(test-pkg2 dep-pkg)
-    (with-package-test
-     (package-compute-transaction test-pkg2 (package-required-packages test-pkg2))))
+  (expect (package (list test-pkg2 dep-pkg))
+    (package-compute-transaction (list test-pkg2) (package-required-packages test-pkg2)))
 
   (desc "package-info-file")
   (expect (package (concat test-tmp-dir "package-test-1.2.3/info.epkg"))
