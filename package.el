@@ -852,6 +852,7 @@ hard, soft, or both. Its behavior is as follows:
      (t
       (error "TYPE must be 'hard, 'soft, 'both, or nil; '%s' received" type)))))
 
+;; TODO: Currently broken.
 (defun package-compute-transaction (result requirements)
   "Recursively prepare a transaction, resolving dependencies.
 
