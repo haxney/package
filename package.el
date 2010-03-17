@@ -975,6 +975,15 @@ Interactively, prompts for the package name."
   ;; Try to activate it.
   (package-initialize))
 
+(defun package-from-buffer (buf)
+  "Generates a package structure from BUF.
+
+If BUF is plain Elisp source, use `elx-package-metadata' to
+extract the information. If it is a tar file, signal an
+error (tar files are not yet handled)."
+
+  )
+
 (defun package-from-tar-file (file)
   "Find package information for a tar file.
 FILE is the name of the tar file to examine."
@@ -1010,9 +1019,15 @@ SOURCE is either a buffer or a file."
 
 SOURCE is either a buffer, a file, or nil, meaning use the
 current buffer."
-  (when (and (stringp source) (file-readable-p source))
-    (let ((type (package-type-from-filename)))))
-  )
+  (unless source
+    (setq source (current-buffer)))
+  (cond
+   ((and (stringp source) (file-readable-p source))
+    (let* ((type (package-type-from-filename source))
+           (extractor (intern (format "package-from-%s-file" type))))
+      (funcall extractor source)))
+   ((buffer-live-p (get-buffer source))
+    (package-from-buffer source))))
 
 (defun package-install-from-buffer (buf &optional pkg)
   "Install a package from BUF.
