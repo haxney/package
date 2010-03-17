@@ -69,9 +69,39 @@
                                      :homepage "deppy.example.com"
                                      :wikipage "deppy.el")
                                     ))
+          (tarty (cl-merge-struct 'package
+                                  (copy-package test-pkg1)
+                                  (make-package
+                                   :name 'tarty
+                                   :version '(1 5 -3 3)
+                                   :version-raw "1.5alpha3"
+                                   :authors '(("George Tarterson" . "jtart@example.com"))
+                                   :maintainer '("George Tarterson" . "jtart@example.com")
+                                   :requires-hard '(())
+                                   :provides '(tarty)
+                                   :homepage "tarty.example.com"
+                                   :wikipage "tarty.el"
+                                   :type 'tar)
+                                  ))
+          (internal-pkg (cl-merge-struct 'package
+                                  (copy-package test-pkg1)
+                                  (make-package
+                                   :name 'internal-pkg
+                                   :version '(2 0 -2 2)
+                                   :version-raw "2.0beta2"
+                                   :authors '(("RMS" . "rms@example.com"))
+                                   :maintainer '("RMS" . "rms@example.com")
+                                   :requires-hard '(())
+                                   :provides '(internal-pkg)
+                                   :homepage "internal.example.com"
+                                   :wikipage "internal-pkg.el"
+                                   :type 'builtin)
+                                  ))
           (package-available-alist
            `((test-pkg . (,test-pkg1 ,test-pkg2))
-             (dep-pkg . (,dep-pkg))))
+             (dep-pkg . (,dep-pkg))
+             (tarty . (,tarty))
+             (internal-pkg . (,internal-pkg))))
           (test-tmp-dir "/tmp/package-test/")
           (package-archives `((test "file:///tmp/test/" ,test-tmp-dir)))
           )
@@ -159,6 +189,19 @@
     (package-info-file (make-package :name 'package-test
                                      :version '(1 2 3)
                                      :archive 'test) t))
+
+  (desc "package-suffix")
+  (expect (package "el")
+    (package-suffix test-pkg1))
+  (expect (package "el")
+    (package-suffix test-pkg2 t))
+  (expect (package "tar")
+    (package-suffix tarty))
+  (expect (error error "Package is a builtin, and therefore does not have a suffix")
+    (with-package-test
+     (package-suffix internal-pkg)))
+    (expect (package nil)
+      (package-suffix internal-pkg t))
   )
 
 (provide 'package-test)

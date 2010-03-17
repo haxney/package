@@ -259,7 +259,7 @@ within an archive's local path.")
 
 (defconst package-types '((single . "el")
                           (tar . "tar")
-                          (builtin . special))
+                          (builtin . nil))
   "Allowed file types for package files.
 
 A list of (TYPE-NAME . EXTENSION). The special type \"builtin\"
@@ -314,11 +314,11 @@ Simply passes it through `elx-version-canonical'."
 
 If PKG is a builtin package, signals an error unless NOERROR is
 non-nil."
-  (let ((suffix (aget package-types (package-type pkg))))
-    (when (eq suffix 'special)
-      (unless noerror
-        (error "Package is a builtin, and therefore does not have a suffix")))
-    suffix))
+  (let* ((type (package-type pkg))
+        (suffix (aget package-types type t)))
+    (if (and (eq type 'builtin) (not noerror))
+        (error "Package is a builtin, and therefore does not have a suffix")
+      suffix)))
 
 (defvar package-available-alist
   nil
