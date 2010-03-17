@@ -978,7 +978,8 @@ FILE is the name of the tar file to examine."
                                     (package-info-file pkg t))))
          (pkg-new (apply 'make-package (package-read-from-string pkg-info))))
 
-    ;; TODO: Maybe add some more sanity checks...
+    ;; TODO: Maybe add some more sanity checks... Use a hook to avoid having to
+    ;; hard-code in the checks to this function.
     (unless (eq (package-name pkg-new) (package-name pkg))
       (error "Inconsistent package names"))
     (unless (equal (package-version pkg-new) (package-version pkg))
