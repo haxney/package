@@ -544,8 +544,11 @@ version."
                 (format "\\.%s$" suffix)
                 ""
                 file)))
-  (let ((local-file (file-name-nondirectory (directory-file-name file)))
-        (file-info (package-split-filename file suffix noerror))
+  (let* ((type (package-type-from-filename file noerror))
+         (local-file (file-name-nondirectory (directory-file-name file)))
+         (file-info (package-split-filename file
+                                            (aget package-types type t)
+                                            noerror))
         archive)
     (loop for (arch info) in package-archives
           for arch-path = (package-archive-localpath arch)
@@ -555,6 +558,7 @@ version."
     (if (or archive noerror)
         (make-package :name (car file-info)
                       :version (cdr file-info)
+                      :type type
                       :archive archive)
       (error "Could not find an archive containing file: %s" file))))
 

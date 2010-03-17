@@ -163,12 +163,6 @@
   (expect nil
     (package-split-filename "package-test-0.1.this-is-a-bad-name_#-" "" t))
 
-  (desc "package-from-filename")
-  (expect (package (make-package :name 'package-test
-                         :version '(0 2 3)
-                         :archive 'test))
-    (package-from-filename "/tmp/package-test/package-test-0.2.3"))
-
   (desc "package-find")
   (expect (package (list test-pkg1 test-pkg2))
     (package-find 'test-pkg))
@@ -216,6 +210,19 @@
       (package-type-from-filename "/tmp/pkg/name.dog"))
     (expect nil
       (package-type-from-filename "/tmp/pkg/name.dog" t))
+    (expect nil
+      (package-type-from-filename "/tmp/package-test/package-test-0.2.3" t))
+
+    (desc "package-from-filename")
+    (expect (package (make-package :name 'package-test
+                                   :version '(0 2 3)
+                                   :archive 'test
+                                   :type 'tar))
+      (package-from-filename "/tmp/package-test/package-test-0.2.3.tar"))
+        (expect (package (make-package :name 'package-test
+                                   :version '(0 2 3)
+                                   :archive 'test))
+      (package-from-filename "/tmp/package-test/package-test-0.2.3" nil t))
   )
 
 (provide 'package-test)
