@@ -200,6 +200,22 @@
      (package-suffix internal-pkg)))
     (expect (package nil)
       (package-suffix internal-pkg t))
+
+    (desc "package-type-from-filename")
+    (expect 'single
+      (package-type-from-filename "/tmp/pkg/name.el"))
+    (expect 'single
+      (package-type-from-filename "name.el"))
+    (expect 'single
+      (package-type-from-filename "/tmp/pkg/name.el" t))
+    (expect 'tar
+      (package-type-from-filename "/tmp/pkg/name.tar"))
+    (expect 'tar
+      (package-type-from-filename "/tmp/pkg/name.tar" t))
+    (expect (error error (format "Could not find package type for extension: %s" "dog"))
+      (package-type-from-filename "/tmp/pkg/name.dog"))
+    (expect nil
+      (package-type-from-filename "/tmp/pkg/name.dog" t))
   )
 
 (provide 'package-test)

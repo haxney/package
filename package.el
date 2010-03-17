@@ -320,6 +320,20 @@ non-nil."
         (error "Package is a builtin, and therefore does not have a suffix")
       suffix)))
 
+(defun package-type-from-filename (file &optional noerror)
+  "Return the package type of FILE based on its name.
+
+Examines `package-types' for a suffix which matches that of FILE.
+If no match is found, signals an error unless NOERROR is
+non-nil, in which case nil is returned."
+  (let* ((ext (file-name-extension file))
+         (result (car (find ext package-types
+                            :key 'cdr
+                            :test 'equal))))
+    (unless (or result noerror)
+      (error "Could not find package type for extension: %s" ext))
+    result))
+
 (defvar package-available-alist
   nil
   "Alist of all packages available for installation.
