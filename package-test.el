@@ -84,19 +84,19 @@
                                    :type 'tar)
                                   ))
           (internal-pkg (cl-merge-struct 'package
-                                  (copy-package test-pkg1)
-                                  (make-package
-                                   :name 'internal-pkg
-                                   :version '(2 0 -2 2)
-                                   :version-raw "2.0beta2"
-                                   :authors '(("RMS" . "rms@example.com"))
-                                   :maintainer '("RMS" . "rms@example.com")
-                                   :requires-hard '(())
-                                   :provides '(internal-pkg)
-                                   :homepage "internal.example.com"
-                                   :wikipage "internal-pkg.el"
-                                   :type 'builtin)
-                                  ))
+                                         (copy-package test-pkg1)
+                                         (make-package
+                                          :name 'internal-pkg
+                                          :version '(2 0 -2 2)
+                                          :version-raw "2.0beta2"
+                                          :authors '(("RMS" . "rms@example.com"))
+                                          :maintainer '("RMS" . "rms@example.com")
+                                          :requires-hard '(())
+                                          :provides '(internal-pkg)
+                                          :homepage "internal.example.com"
+                                          :wikipage "internal-pkg.el"
+                                          :type 'builtin)
+                                         ))
           (package-available-alist
            `((test-pkg . (,test-pkg1 ,test-pkg2))
              (dep-pkg . (,dep-pkg))
@@ -108,7 +108,7 @@
      (prog2
          (make-directory test-tmp-dir t)
          (progn
-          ,@body)
+           ,@body)
        (require 'dired)
        (dired-delete-file test-tmp-dir 'always))
      ))
@@ -192,37 +192,37 @@
   (expect (error error "Package is a builtin, and therefore does not have a suffix")
     (with-package-test
      (package-suffix internal-pkg)))
-    (expect (package nil)
-      (package-suffix internal-pkg t))
+  (expect (package nil)
+    (package-suffix internal-pkg t))
 
-    (desc "package-type-from-filename")
-    (expect 'single
-      (package-type-from-filename "/tmp/pkg/name.el"))
-    (expect 'single
-      (package-type-from-filename "name.el"))
-    (expect 'single
-      (package-type-from-filename "/tmp/pkg/name.el" t))
-    (expect 'tar
-      (package-type-from-filename "/tmp/pkg/name.tar"))
-    (expect 'tar
-      (package-type-from-filename "/tmp/pkg/name.tar" t))
-    (expect (error error (format "Could not find package type for extension: %s" "dog"))
-      (package-type-from-filename "/tmp/pkg/name.dog"))
-    (expect nil
-      (package-type-from-filename "/tmp/pkg/name.dog" t))
-    (expect nil
-      (package-type-from-filename "/tmp/package-test/package-test-0.2.3" t))
+  (desc "package-type-from-filename")
+  (expect 'single
+    (package-type-from-filename "/tmp/pkg/name.el"))
+  (expect 'single
+    (package-type-from-filename "name.el"))
+  (expect 'single
+    (package-type-from-filename "/tmp/pkg/name.el" t))
+  (expect 'tar
+    (package-type-from-filename "/tmp/pkg/name.tar"))
+  (expect 'tar
+    (package-type-from-filename "/tmp/pkg/name.tar" t))
+  (expect (error error (format "Could not find package type for extension: %s" "dog"))
+    (package-type-from-filename "/tmp/pkg/name.dog"))
+  (expect nil
+    (package-type-from-filename "/tmp/pkg/name.dog" t))
+  (expect nil
+    (package-type-from-filename "/tmp/package-test/package-test-0.2.3" t))
 
-    (desc "package-from-filename")
-    (expect (package (make-package :name 'package-test
-                                   :version '(0 2 3)
-                                   :archive 'test
-                                   :type 'tar))
-      (package-from-filename "/tmp/package-test/package-test-0.2.3.tar"))
-        (expect (package (make-package :name 'package-test
-                                   :version '(0 2 3)
-                                   :archive 'test))
-      (package-from-filename "/tmp/package-test/package-test-0.2.3" nil t))
+  (desc "package-from-filename")
+  (expect (package (make-package :name 'package-test
+                                 :version '(0 2 3)
+                                 :archive 'test
+                                 :type 'tar))
+    (package-from-filename "/tmp/package-test/package-test-0.2.3.tar"))
+  (expect (package (make-package :name 'package-test
+                                 :version '(0 2 3)
+                                 :archive 'test))
+    (package-from-filename "/tmp/package-test/package-test-0.2.3" nil t))
   )
 
 (provide 'package-test)
