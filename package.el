@@ -994,17 +994,6 @@ BUF must be an Emacs Lisp source code file which is parseable by
       (error (emacs-lisp-mode)
              'single))))
 
-(defun package-from-buffer (buf)
-  "Generates a package structure from BUF.
-
-If BUF is plain Elisp source, use `elx-package-metadata' to
-extract the information. If it is a tar file, signal an
-error (tar files are not yet handled)."
-  (case (package-type-from-buffer buf)
-    ('single (package-from-single-buffer buf))
-    ('tar (package-from-tar-buffer buf))
-    (t (error "Only 'single and 'tar packages can be processed"))))
-
 (defun package-from-tar-file (file)
   "Find package information for a tar file.
 FILE is the name of the tar file to examine."
@@ -1024,7 +1013,6 @@ FILE is the name of the tar file to examine."
       (error "Inconsistent package versions"))
     (unless (equal (package-archive pkg-new) (package-archive pkg))
       (error "Inconsistent package archives"))
-
     pkg-new))
 
 (defsubst package-from-single-file (file)
@@ -1046,7 +1034,10 @@ current buffer."
            (extractor (intern (format "package-from-%s-file" type))))
       (funcall extractor source)))
    ((buffer-live-p (get-buffer source))
-    (package-from-buffer source))))
+    (case (package-type-from-buffer source)
+      ('single (package-from-single-buffer source))
+      ('tar (package-from-tar-buffer source))
+      (t (error "Only 'single and 'tar packages can be processed"))))))
 
 (defun package-install-from-buffer (buf &optional pkg)
   "Install a package from BUF.
