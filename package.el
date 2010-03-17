@@ -988,34 +988,14 @@ FILE is the name of the tar file to examine."
 
     pkg-new))
 
-;; TODO: CL-CHECK
-(defun package-install-buffer-internal (pkg-info type)
-  "Download and install a single package.
+(defun package-install-buffer-internal (pkg buf)
+  "Install PKG from buffer BUF.
 
-PKG-INFO describes the package to be installed.
-
-TYPE is either `single' or `tar'."
-  (save-excursion
-    (save-restriction
-      (let* ((file-name (aref pkg-info 0))
-             (requires (aref pkg-info 1))
-             (desc (if (string= (aref pkg-info 2) "")
-                       "No description available."
-                     (aref pkg-info 2)))
-             (pkg-version (aref pkg-info 3)))
-        ;; Download and install the dependencies.
-        (let ((transaction (package-compute-transaction nil requires)))
-          (package-download-transaction transaction))
-        ;; Install the package itself.
-        (cond
-         ((eq type 'single)
-          (package-unpack-single file-name pkg-version desc requires))
-         ((eq type 'tar)
-          (package-unpack-tar (intern file-name) pkg-version))
-         (t
-          (error "Unknown type: %s" (symbol-name type))))
-        ;; Try to activate it.
-        (package-initialize)))))
+PKG describes the package to be installed."
+  (package-download-transaction (package-compute-transaction nil (package-required-packages pkg)))
+  (package-unpack pkg buf)
+  ;; Try to activate it.
+  (package-initialize))
 
 (defun package-install-from-buffer (buf)
   "Install a package from the current buffer.
@@ -1025,7 +1005,8 @@ info node `(elisp)Library Headers'."
   (interactive "bInstall package from buffer:")
   (package-install-buffer-internal (inherit-package (elx-package-metadata buf)
                                                     :archive 'manual
-                                                    :type 'single)))
+                                                    :type 'single)
+                                   buf))
 
 ;; TODO: CL-CHECK
 (defun package-install-file (file)
