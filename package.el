@@ -975,7 +975,7 @@ Interactively, prompts for the package name."
   ;; Try to activate it.
   (package-initialize))
 
-(defun package-tar-file-info (file)
+(defun package-from-tar-file (file)
   "Find package information for a tar file.
 FILE is the name of the tar file to examine."
   (let* ((pkg (package-from-filename file))
@@ -997,38 +997,47 @@ FILE is the name of the tar file to examine."
 
     pkg-new))
 
-(defun package-install-buffer-internal (pkg buf)
-  "Install PKG from buffer BUF.
+(defun package-from-single-file (source)
+  "Returns a package structure for SOURCE.
 
-PKG describes the package to be installed."
-  (package-download-transaction (package-compute-transaction nil (package-required-packages pkg)))
+SOURCE is either a buffer or a file."
+  (inherit-package (elx-package-metadata source)
+                   :archive 'manual
+                   :type 'single))
+
+(defun package-from-file (&optional source)
+  "Return a package structure from SOURCE.
+
+SOURCE is either a buffer, a file, or nil, meaning use the
+current buffer."
+  (when (and (stringp source) (file-readable-p source))
+    (let ((type (package-type-from-filename)))))
+  )
+
+(defun package-install-from-buffer (buf &optional pkg)
+  "Install a package from BUF.
+
+If PKG is provided, use that as the package metadata. Otherwise
+attempt to read it from BUF. Currently, only single Elisp files
+are supported."
+  (interactive "bInstall package from buffer:")
+  (setq pkg (or pkg (package-file-info-single buf)))
+  (package-download-transaction
+   (package-compute-transaction nil (package-required-packages pkg)))
   (package-unpack pkg buf)
   ;; Try to activate it.
   (package-initialize))
 
-(defun package-install-from-buffer (buf)
-  "Install a package from the current buffer.
-The package is assumed to be a single .el file which
-follows the elisp comment guidelines; see
-info node `(elisp)Library Headers'."
-  (interactive "bInstall package from buffer:")
-  (package-install-buffer-internal (inherit-package (elx-package-metadata buf)
-                                                    :archive 'manual
-                                                    :type 'single)
-                                   buf))
-
 ;; TODO: CL-CHECK
-(defun package-install-file (file)
-  "Install a package from a FILE.
-The file can either be a tar file or an Emacs Lisp file."
+(defun package-install-from-file (file)
+  "Install a package from FILE.
+
+The file must match one of the extensions in `package-types'."
   (interactive "fPackage file name: ")
-  (with-temp-buffer
-    (insert-file-contents-literally file)
-    (cond
-     ((string-match "\\.el$" file) (package-install-from-buffer))
-     ((string-match "\\.tar$" file)
-      (package-install-buffer-internal (package-tar-file-info file) 'tar))
-     (t (error "Unrecognized extension `%s'" (file-name-extension file))))))
+  (let ((pkg (package-from-file file)))
+    (with-temp-buffer
+      (insert-file-contents-literally file)
+      (package-install-from-buffer (current-buffer) pkg))))
 
 ;; TODO: CL-CHECK
 (defun package-delete (name version)
