@@ -223,6 +223,33 @@
                                    :version '(0 2 3)
                                    :archive 'test))
       (package-from-filename "/tmp/package-test/package-test-0.2.3" nil t))
+        (desc "package-type-from-buffer")
+        (expect 'single
+          (with-temp-buffer
+            (insert ";;; empty.el --- An empty file for testing")
+            (package-type-from-buffer (current-buffer))))
+
+        (expect (package 'tar)
+          (let ((file1 (make-temp-file test-tmp-dir nil ".el"))
+                (file2 (make-temp-file test-tmp-dir nil ".el"))
+                (info (concat test-tmp-dir "info.epkg"))
+                (tar-file (make-temp-file "output" nil ".tar")))
+            (with-temp-file file1
+              (format ";;; %s --- This is file 1" file1))
+            (with-temp-file file2
+              (format ";;; %s --- This is file 2" file2))
+            (with-temp-file info
+              (cl-merge-pp (make-package :name 'read-tar
+                                         :version '(0 1 2 3)
+                                         :type 'tar) 'package))
+            (shell-command (format "tar -cf %s %s %s %s"
+                                   tar-file
+                                   file1
+                                   file2
+                                   info))
+            (with-temp-buffer
+              (insert-file-contents-literally tar-file)
+              (package-type-from-buffer (current-buffer)))))
   )
 
 (provide 'package-test)
