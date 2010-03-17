@@ -975,6 +975,15 @@ Interactively, prompts for the package name."
   ;; Try to activate it.
   (package-initialize))
 
+(defun package-from-single-buffer (buf)
+  "Create a package structure from BUF.
+
+BUF must be an Emacs Lisp source code file which is parseable by
+`elx-package-metadata'."
+  (inherit-package (elx-package-metadata buf)
+                   :archive 'manual
+                   :type 'single))
+
 (defun package-type-from-buffer (buf)
   "Determine the package type from the contents of BUF."
   (with-current-buffer buf
@@ -991,8 +1000,10 @@ Interactively, prompts for the package name."
 If BUF is plain Elisp source, use `elx-package-metadata' to
 extract the information. If it is a tar file, signal an
 error (tar files are not yet handled)."
-
-  )
+  (case (package-type-from-buffer buf)
+    ('single (package-from-single-buffer buf))
+    ('tar (package-from-tar-buffer buf))
+    (t (error "Only 'single and 'tar packages can be processed"))))
 
 (defun package-from-tar-file (file)
   "Find package information for a tar file.
@@ -1016,13 +1027,11 @@ FILE is the name of the tar file to examine."
 
     pkg-new))
 
-(defun package-from-single-file (source)
-  "Returns a package structure for SOURCE.
-
-SOURCE is either a buffer or a file."
-  (inherit-package (elx-package-metadata source)
-                   :archive 'manual
-                   :type 'single))
+(defsubst package-from-single-file (file)
+  "Returns a package structure for FILE."
+  (with-temp-buffer file
+                    (insert-file-literally file)
+                    (package-from-single-buffer (current-buffer))))
 
 (defun package-from-file (&optional source)
   "Return a package structure from SOURCE.
