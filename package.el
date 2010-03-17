@@ -773,6 +773,14 @@ install the package. If BUF is nil, then use the current buffer."
     (let ((load-path (cons pkg-dir load-path)))
       (byte-recompile-directory pkg-dir 0 t))))
 
+(defun package-unpack (pkg &optional buf)
+  "Unpack and install PKG from BUF or the current buffer.
+
+Uses `package-type' to determine which function should be used to
+install PKG."
+  (apply (intern (format "packge-unpack-%s" (package-type pkg)))
+         (list pkg buf)))
+
 (defun package-handle-response (&optional buf)
   "Handle the response from the server.
 
@@ -816,10 +824,9 @@ built in) and so signal an error if PKG has :type 'builtin."
   (when (eq (package-type pkg) 'builtin)
     (error "Attempted to download builtin package %s" (package-name pkg)))
   (let ((buf (url-retrieve-synchronously
-              (package-download-url pkg)))
-        (unpacker (intern (format "packge-unpack-%s" (package-type pkg)))))
+              (package-download-url pkg))))
     (package-handle-response buf)
-    (apply unpacker (list pkg buf))
+    (package-unpack pkg buf)
     (kill-buffer buf)))
 
 (defun package-required-packages (pkg &optional type)
