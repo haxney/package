@@ -951,7 +951,7 @@ Interactively, prompts for the package name."
       (error "Package '%s', version '%s' not available for installation"
              name version))
     (let ((transaction
-           (package-compute-transaction (list name)
+           (package-compute-transaction (list pkg)
                                         (package-requires-hard pkg))))
       (package-download-transaction transaction)))
   ;; Try to activate it.
