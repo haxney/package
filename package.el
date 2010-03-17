@@ -728,58 +728,47 @@ uses an external `tar' program."
         (call-process-region (point) (point-max) "tar" nil nil nil
                              "xf" "-")))))
 
-(defun package-unpack-tar (pkg &optional buf)
-  "Unpack a tar PKG from BUF or the current buffer.
+(defun package-unpack-tar (pkg buf)
+  "Unpack a tar PKG from BUF.
 
 BUF is expected to contain a tarred package archive. If BUF is
 nil, the current buffer is used."
-  (let ((buf (or buf (current-buffer)))
-        (pkg-dir (package-install-directory pkg))
-        (pkg-info-file (package-info-file pkg)))
+  (let ((pkg-dir (package-install-directory pkg)))
+    ;; (if (file-directory-p pkg-dir)
+    ;;     (mapc (lambda (file) nil) ;; TODO: 'delete-file when we're more confident
+    ;;           (directory-files pkg-dir t "^[^.]")))
+    (package-untar-buffer buf (package-parent-directory pkg-dir))))
 
-    (make-directory pkg-dir t)
-    (if (file-directory-p pkg-dir)
-        (mapc (lambda (file) nil) ;; TODO: 'delete-file when we're more confident
-              (directory-files pkg-dir t "^[^.]")))
-    (package-untar-buffer buf (package-parent-directory pkg-dir))
-    ;; Write the "info.epkg" file.
-    (unless (file-exists-p pkg-info-file)
-     (with-temp-file pkg-info-file
-       (insert (cl-merge-pp pkg))))
-    (package-generate-autoloads pkg)
-    (let ((load-path (cons pkg-dir load-path)))
-      (byte-recompile-directory pkg-dir 0 t))))
-
-(defun package-unpack-single (pkg &optional buf)
-  "Install PKG from contents of buf or the current buffer.
+(defun package-unpack-single (pkg buf)
+  "Extract and install PKG from contents of BUF.
 
 PKG is the package metadata and BUF is the buffer from which to
-install the package. If BUF is nil, then use the current buffer."
-  (let ((buf (or buf (current-buffer)))
-        (pkg-dir (package-install-directory pkg))
-        (pkg-file (package-install-file-path pkg))
-        (pkg-info-file (package-info-file pkg)))
-    (when (and (not (eq (package-type pkg) 'package)) (file-exists-p pkg-file))
+install the package."
+  (let ((pkg-file (package-install-file-path pkg)))
+    (when (and (not (eq (package-type pkg) 'package))
+               (file-exists-p pkg-file))
       (error "Destination file %s exists, refusing to overwrite" pkg-file))
-
-    (make-directory pkg-dir t)
     (with-temp-file pkg-file
       (with-current-buffer buf
-        (buffer-substring)))
-    ;; Write the "info.epkg" file.
-    (with-temp-file pkg-info-file
-      (insert (cl-merge-pp pkg)))
-    (package-generate-autoloads file-name pkg-dir)
-    (let ((load-path (cons pkg-dir load-path)))
-      (byte-recompile-directory pkg-dir 0 t))))
+        (buffer-substring)))))
 
 (defun package-unpack (pkg &optional buf)
   "Unpack and install PKG from BUF or the current buffer.
 
 Uses `package-type' to determine which function should be used to
 install PKG."
-  (apply (intern (format "packge-unpack-%s" (package-type pkg)))
-         (list pkg buf)))
+  (let ((buf (or buf (current-buffer)))
+        (pkg-info-file (package-info-file pkg))
+        (pkg-dir (package-install-directory pkg)))
+    (make-directory pkg-dir t)
+    (apply (intern (format "packge-unpack-%s" (package-type pkg)))
+           (list pkg buf))
+    (unless (file-exists-p pkg-info-file)
+      (with-temp-file pkg-info-file
+        (insert (cl-merge-pp pkg))))
+    (package-generate-autoloads pkg)
+    (let ((load-path (append (list pkg-dir) load-path)))
+      (byte-recompile-directory pkg-dir 0 t))))
 
 (defun package-handle-response (&optional buf)
   "Handle the response from the server.
