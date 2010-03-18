@@ -98,6 +98,37 @@
                                           :type 'builtin)
                                          ))
           tarty-file
+          (simple-file ";;; simple-file.el --- A simple Elisp file for testing.
+
+;; Copyright (C) 2010 Example Ample
+
+;; Author: Example Ample <ample@example.com>
+;; Created: 5 Jan 2010
+;; Version: 1.2.3
+;; Keywords: tools
+
+;;; Commentary:
+
+;; This is a cool simple file which doesn't actually do stuff.
+
+;;; Code:
+
+\(provide 'simple-file\)
+
+;;; simple-file.el ends here
+")
+          (simple-file-pkg (make-package :version '(1 2 3)
+                                         :version-raw "1.2.3"
+                                         :summary "A simple Elisp file for testing"
+                                         :created "20100105"
+                                         :updated "2010"
+                                         :authors '(("Example Ample" . "ample@example.com"))
+                                         :maintainer '("Example Ample" . "ample@example.com")
+                                         :provides '(simple-file)
+                                         :keywords '("tools")
+                                         :commentary "This is a cool simple file which doesn't actually do stuff.\n"
+                                         :type 'single
+                                         :archive 'manual))
           (package-available-alist
            `((test-pkg . (,test-pkg1 ,test-pkg2))
              (dep-pkg . (,dep-pkg))
@@ -286,6 +317,13 @@
     (with-temp-buffer
       (insert-file-contents-literally tarty-file)
       (package-from-buffer (current-buffer))))
+
+  (desc "package-from-file")
+  (expect (package simple-file-pkg)
+    (let ((file (make-temp-file "simple" nil ".el")))
+      (with-temp-file file
+        (insert simple-file))
+      (package-from-file file)))
   )
 
 (provide 'package-test)
