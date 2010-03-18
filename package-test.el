@@ -104,12 +104,26 @@
              (internal-pkg . (,internal-pkg))))
           (test-dir (file-name-as-directory (make-temp-file "package-test" t)))
           (package-archives `((test ,(concat "file://" test-dir) ,test-dir))))
-     (prog2
-         (make-directory test-dir t)
-         (progn
-           ,@body)
-       (require 'dired)
-       (dired-delete-file test-dir 'always))
+     (flet ((make-tar (base output files)
+                      (let ((file-list
+                             (loop for f in files
+                                   for name = (car f)
+                                   for contents = (cdr f)
+                                   do (with-temp-file (expand-file-name name base)
+                                        (insert contents))
+                                   concat (concat name " ")))
+                            (base-full (expand-file-name output base)))
+                        (shell-command (format "tar -cf %s -C %s %s"
+                                               base-full
+                                               base
+                                               file-list))
+                        base-full)))
+      (prog2
+          (make-directory test-dir t)
+          (progn
+            ,@body)
+        (require 'dired)
+        (dired-delete-file test-dir 'always)))
      ))
 
 (defun package-exps-assert-with-package-test (expected actual)
@@ -230,11 +244,23 @@
       (insert ";;; empty.el --- An empty file for testing")
       (package-type-from-buffer (current-buffer))))
 
+  (desc "make-tar")
+  (expect (package (concat test-dir "out.tar"))
+    (make-tar test-dir "out.tar" '(("name" . "contents"))))
+  (expect (package '("name"))
+    (with-temp-buffer
+      (insert-file-contents-literally (make-tar test-dir "out.tar" '(("name" . "contents"))))
+      (mapcar 'tar-header-name (package-tar-items (current-buffer)))))
+  (expect (package '("contents"))
+    (with-temp-buffer
+      (insert-file-contents-literally (make-tar test-dir "out.tar" '(("name" . "contents"))))
+      (mapcar 'package-tar-item-contents (package-tar-items (current-buffer)))))
+
   (expect (package 'tar)
     (let ((file1 (make-temp-file test-dir nil ".el"))
           (file2 (make-temp-file test-dir nil ".el"))
           (info (concat test-dir "info.epkg"))
-          (tar-file (make-temp-file "output" nil ".tar")))
+          (tar-file (make-temp-file test-dir nil ".tar")))
       (with-temp-file file1
         (format ";;; %s --- This is file 1" file1))
       (with-temp-file file2
