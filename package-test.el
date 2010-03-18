@@ -342,6 +342,12 @@
   (expect (package tarty)
     (setup-test 'test-dir 'tarty)
     (package-from-file tarty-file))
+
+  (desc "package-delete")
+  (expect (package nil)
+    (setup-test 'test-dir 'tarty)
+    (package-delete tarty)
+    (file-directory-p (package-install-directory tarty)))
   )
 
 (provide 'package-test)

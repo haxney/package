@@ -1135,7 +1135,6 @@ attempt to read it from BUF."
   ;; Try to activate it.
   (package-initialize))
 
-;; TODO: CL-CHECK
 (defun package-install-from-file (file)
   "Install a package from FILE.
 
@@ -1146,12 +1145,14 @@ The file must match one of the extensions in `package-types'."
       (insert-file-contents-literally file)
       (package-install-from-buffer (current-buffer) pkg))))
 
-;; TODO: CL-CHECK
-(defun package-delete (name version)
-  "Delete package NAME at VERSION."
+(defun package-delete (pkg)
+  "Delete package PKG.
+
+This does not touch the package metadata at all (such as the fact
+that the package is no longer installed), so that must be done
+separately."
   (require 'dired)          ; for dired-delete-file
-  (dired-delete-file (concat (file-name-as-directory package-user-dir)
-                             name "-" version)
+  (dired-delete-file (package-install-directory pkg)
                      ;; FIXME: query user?
                      'always))
 
