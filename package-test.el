@@ -103,21 +103,25 @@
              (tarty . (,tarty))
              (internal-pkg . (,internal-pkg))))
           (test-dir (file-name-as-directory (make-temp-file "package-test" t)))
-          (package-archives `((test ,(concat "file://" test-dir) ,test-dir))))
-     (flet ((make-tar (base output files)
-                      (let ((file-list
+          (package-archives `((manual ,(concat "file://" test-dir) ,test-dir))))
+     (flet ((make-tar (base files)
+                      (let* ((base-abs (expand-file-name base test-dir))
+                             (file-list
                              (loop for f in files
                                    for name = (car f)
+                                   for full-path = (expand-file-name name base-abs)
+                                   for contain-dir = (file-name-directory full-path)
                                    for contents = (cdr f)
-                                   do (with-temp-file (expand-file-name name base)
-                                        (insert contents))
-                                   concat (concat name " ")))
-                            (base-full (expand-file-name output base)))
+                                   do (progn
+                                        (make-directory contain-dir t)
+                                        (with-temp-file full-path
+                                          (insert contents)))))
+                            (output-abs (concat base-abs ".tar")))
                         (shell-command (format "tar -cf %s -C %s %s"
-                                               base-full
-                                               base
-                                               file-list))
-                        base-full)))
+                                               output-abs
+                                               test-dir
+                                               base))
+                        output-abs)))
       (prog2
           (make-directory test-dir t)
           (progn
@@ -188,12 +192,12 @@
   (expect (package (concat test-dir "package-test-1.2.3/info.epkg"))
     (package-info-file (make-package :name 'package-test
                                      :version '(1 2 3)
-                                     :archive 'test)))
+                                     :archive 'manual)))
 
   (expect (package "package-test-1.2.3/info.epkg")
     (package-info-file (make-package :name 'package-test
                                      :version '(1 2 3)
-                                     :archive 'test) t))
+                                     :archive 'manual) t))
 
   (desc "package-suffix")
   (expect (package "el")
@@ -230,12 +234,12 @@
   (desc "package-from-filename")
   (expect (package (make-package :name 'package-test
                                  :version '(0 2 3)
-                                 :archive 'test
+                                 :archive 'manual
                                  :type 'tar))
     (package-from-filename (concat test-dir "package-test-0.2.3.tar")))
   (expect (package (make-package :name 'package-test
                                  :version '(0 2 3)
-                                 :archive 'test))
+                                 :archive 'manual))
     (package-from-filename (concat test-dir "package-test-0.2.3") nil t))
 
   (desc "package-type-from-buffer")
@@ -246,38 +250,43 @@
 
   (desc "make-tar")
   (expect (package (concat test-dir "out.tar"))
-    (make-tar test-dir "out.tar" '(("name" . "contents"))))
-  (expect (package '("name"))
+    (make-tar "out" '(("name" . "contents"))))
+  (expect (package '("out/" "out/name"))
     (with-temp-buffer
-      (insert-file-contents-literally (make-tar test-dir "out.tar" '(("name" . "contents"))))
+      (insert-file-contents-literally (make-tar "out" '(("name" . "contents"))))
       (mapcar 'tar-header-name (package-tar-items (current-buffer)))))
   (expect (package '("contents"))
     (with-temp-buffer
-      (insert-file-contents-literally (make-tar test-dir "out.tar" '(("name" . "contents"))))
-      (mapcar 'package-tar-item-contents (package-tar-items (current-buffer)))))
+      (insert-file-contents-literally (make-tar "out" '(("name" . "contents"))))
+      (delete ""
+              (mapcar 'package-tar-item-contents (package-tar-items (current-buffer))))))
 
   (expect (package 'tar)
-    (let ((file1 (make-temp-file test-dir nil ".el"))
-          (file2 (make-temp-file test-dir nil ".el"))
-          (info (concat test-dir "info.epkg"))
-          (tar-file (make-temp-file test-dir nil ".tar")))
-      (with-temp-file file1
-        (format ";;; %s --- This is file 1" file1))
-      (with-temp-file file2
-        (format ";;; %s --- This is file 2" file2))
-      (with-temp-file info
-        (cl-merge-pp (make-package :name 'read-tar
-                                   :version '(0 1 2 3)
-                                   :type 'tar) 'package))
-      (shell-command (format "tar -cf %s %s %s %s"
-                             tar-file
-                             file1
-                             file2
-                             info))
+    (let* ((pkg (make-package :name 'read-tar
+                              :version '(0 1 2 3)
+                              :type 'tar))
+           (tar-file (make-tar "read-tar-0.1.2.3"
+                               `(("file1.el" . ";;; file1.el --- This is file 1")
+                                 ("file2.el" . ";;; file2.el --- This is file 2")
+                                 ("info.epkg" . ,(cl-merge-pp pkg 'package))))))
       (with-temp-buffer
         (insert-file-contents-literally tar-file)
         (package-type-from-buffer (current-buffer)))))
 
+
+    (expect (package (make-package :name 'read-tar
+                                   :version '(0 1 2 3)
+                                   :type 'tar))
+    (let* ((pkg (make-package :name 'read-tar
+                              :version '(0 1 2 3)
+                              :type 'tar))
+           (tar-file (make-tar "read-tar-0.1.2.3"
+                               `(("file1.el" . ";;; file1.el --- This is file 1")
+                                 ("file2.el" . ";;; file2.el --- This is file 2")
+                                 ("info.epkg" . ,(cl-merge-pp pkg 'package))))))
+      (with-temp-buffer
+        (insert-file-contents-literally tar-file)
+        (package-from-tar-buffer (current-buffer)))))
   )
 
 (provide 'package-test)

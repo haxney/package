@@ -1040,10 +1040,12 @@ then an error is signaled unless NOERROR is non-nil."
   (let* ((items (package-tar-items buf))
          (dir-hdr (find-if '(lambda (item)
                           (and (package-split-filename (car item) nil t)
+                               ;; 5 is the tar link-type for a directory
                                (eq (cdr item) 5)))
                        items
                        :key '(lambda (item) (cons (tar-header-name item)
                                                   (tar-header-link-type item)))))
+         ;; Check that we actually received successfully found dir-hdr
          (name-vers (package-split-filename (tar-header-name dir-hdr)))
          (pkg-skel (make-package :name (car name-vers)
                                  :version (cdr name-vers)
