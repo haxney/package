@@ -97,6 +97,7 @@
                                           :wikipage "internal-pkg.el"
                                           :type 'builtin)
                                          ))
+          tarty-file
           (package-available-alist
            `((test-pkg . (,test-pkg1 ,test-pkg2))
              (dep-pkg . (,dep-pkg))
@@ -121,7 +122,12 @@
                                                output-abs
                                                test-dir
                                                base))
-                        output-abs)))
+                        output-abs))
+            (set-tarty ()
+                       (setq tarty-file (make-tar "read-tar-0.1.2.3"
+                                `(("file1.el" . ";;; file1.el --- This is file 1")
+                                  ("file2.el" . ";;; file2.el --- This is file 2")
+                                  ("info.epkg" . ,(cl-merge-pp tarty 'package)))))))
       (prog2
           (make-directory test-dir t)
           (progn
@@ -247,6 +253,11 @@
     (with-temp-buffer
       (insert ";;; empty.el --- An empty file for testing")
       (package-type-from-buffer (current-buffer))))
+    (expect (package 'tar)
+      (set-tarty)
+      (with-temp-buffer
+        (insert-file-contents-literally tarty-file)
+        (package-type-from-buffer (current-buffer))))
 
   (desc "make-tar")
   (expect (package (concat test-dir "out.tar"))
@@ -261,32 +272,19 @@
       (delete ""
               (mapcar 'package-tar-item-contents (package-tar-items (current-buffer))))))
 
-  (expect (package 'tar)
-    (let* ((pkg (make-package :name 'read-tar
-                              :version '(0 1 2 3)
-                              :type 'tar))
-           (tar-file (make-tar "read-tar-0.1.2.3"
-                               `(("file1.el" . ";;; file1.el --- This is file 1")
-                                 ("file2.el" . ";;; file2.el --- This is file 2")
-                                 ("info.epkg" . ,(cl-merge-pp pkg 'package))))))
-      (with-temp-buffer
-        (insert-file-contents-literally tar-file)
-        (package-type-from-buffer (current-buffer)))))
+  (desc "package-from-tar-buffer")
+  (expect (package tarty)
+    (set-tarty)
+    (with-temp-buffer
+      (insert-file-contents-literally tarty-file)
+      (package-from-tar-buffer (current-buffer))))
 
-
-    (expect (package (make-package :name 'read-tar
-                                   :version '(0 1 2 3)
-                                   :type 'tar))
-    (let* ((pkg (make-package :name 'read-tar
-                              :version '(0 1 2 3)
-                              :type 'tar))
-           (tar-file (make-tar "read-tar-0.1.2.3"
-                               `(("file1.el" . ";;; file1.el --- This is file 1")
-                                 ("file2.el" . ";;; file2.el --- This is file 2")
-                                 ("info.epkg" . ,(cl-merge-pp pkg 'package))))))
-      (with-temp-buffer
-        (insert-file-contents-literally tar-file)
-        (package-from-tar-buffer (current-buffer)))))
+  (desc "package-from-buffer")
+  (expect (package tarty)
+    (set-tarty)
+    (with-temp-buffer
+      (insert-file-contents-literally tarty-file)
+      (package-from-buffer (current-buffer))))
   )
 
 (provide 'package-test)
