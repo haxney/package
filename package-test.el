@@ -108,16 +108,16 @@
      (flet ((make-tar (base files)
                       (let* ((base-abs (expand-file-name base test-dir))
                              (file-list
-                             (loop for f in files
-                                   for name = (car f)
-                                   for full-path = (expand-file-name name base-abs)
-                                   for contain-dir = (file-name-directory full-path)
-                                   for contents = (cdr f)
-                                   do (progn
-                                        (make-directory contain-dir t)
-                                        (with-temp-file full-path
-                                          (insert contents)))))
-                            (output-abs (concat base-abs ".tar")))
+                              (loop for f in files
+                                    for name = (car f)
+                                    for full-path = (expand-file-name name base-abs)
+                                    for contain-dir = (file-name-directory full-path)
+                                    for contents = (cdr f)
+                                    do (progn
+                                         (make-directory contain-dir t)
+                                         (with-temp-file full-path
+                                           (insert contents)))))
+                             (output-abs (concat base-abs ".tar")))
                         (shell-command (format "tar -cf %s -C %s %s"
                                                output-abs
                                                test-dir
@@ -125,15 +125,15 @@
                         output-abs))
             (set-tarty ()
                        (setq tarty-file (make-tar "read-tar-0.1.2.3"
-                                `(("file1.el" . ";;; file1.el --- This is file 1")
-                                  ("file2.el" . ";;; file2.el --- This is file 2")
-                                  ("info.epkg" . ,(cl-merge-pp tarty 'package)))))))
-      (prog2
-          (make-directory test-dir t)
-          (progn
-            ,@body)
-        (require 'dired)
-        (dired-delete-file test-dir 'always)))
+                                                  `(("file1.el" . ";;; file1.el --- This is file 1")
+                                                    ("file2.el" . ";;; file2.el --- This is file 2")
+                                                    ("info.epkg" . ,(cl-merge-pp tarty 'package)))))))
+       (prog2
+           (make-directory test-dir t)
+           (progn
+             ,@body)
+         (require 'dired)
+         (dired-delete-file test-dir 'always)))
      ))
 
 (defun package-exps-assert-with-package-test (expected actual)
@@ -254,11 +254,11 @@
     (with-temp-buffer
       (insert ";;; empty.el --- An empty file for testing")
       (package-type-from-buffer (current-buffer))))
-    (expect (package 'tar)
-      (set-tarty)
-      (with-temp-buffer
-        (insert-file-contents-literally tarty-file)
-        (package-type-from-buffer (current-buffer))))
+  (expect (package 'tar)
+    (set-tarty)
+    (with-temp-buffer
+      (insert-file-contents-literally tarty-file)
+      (package-type-from-buffer (current-buffer))))
 
   (desc "make-tar")
   (expect (package (concat test-dir "out.tar"))
