@@ -459,20 +459,31 @@ Each archive in `package-archives' is checked."
 ARCHIVE must be the symbol name of an archive."
   (concat (package-archive-localpath archive) package-archive-contents-filename))
 
-(defun package-read-file (file)
+(defun package-read-file (file &optional noerror)
   "Read `package' data.
 
 FILE is the file to read. Returns a `package' structure if
-successful."
-  (let (str data)
-    (when (and (file-readable-p file)
-               (file-regular-p file))
+successful. Signals an error if FILE cannot be read unless
+NOERROR is non-nil."
+  (if (and (file-readable-p file)
+           (file-regular-p file))
       (with-temp-buffer
         (insert-file-contents file)
-        (setq str (buffer-string)))
-      (when str
-        (setq data (package-read-from-string str))))
-    (apply 'make-package data)))
+        (package-read-string (buffer-string)))
+    (if noerror
+        nil
+      (error "File %s not readable" file))))
+
+(defun package-read-string (str &optional noerror)
+  "Read `package' structure data from STR.
+
+Signals an error if something goes wrong unless NOERROR is
+non-nil."
+  (condition-case err
+      (apply 'make-package (package-read-from-string str))
+    (error (if noerror
+               nil
+             (signal (car err) (cdr err))))))
 
 (defun package-register (pkg registry)
   "Register package PKG if it isn't already in REGISTRY.
@@ -975,10 +986,74 @@ Interactively, prompts for the package name."
   ;; Try to activate it.
   (package-initialize))
 
-(defun package-from-tar-file (file)
+(defun package-from-single-buffer (buf)
+  "Create a package structure from BUF.
+
+BUF must be an Emacs Lisp source code file which is parseable by
+`elx-package-metadata'."
+  (inherit-package (elx-package-metadata buf)
+                   :archive 'manual
+                   :type 'single))
+
+(defun package-type-from-buffer (buf)
+  "Determine the package type from the contents of BUF."
+  (with-current-buffer buf
+    (condition-case err
+        (prog2
+            (tar-mode)
+            'tar)
+      (error (emacs-lisp-mode)
+             'single))))
+
+(defun package-tar-items (buf)
+  "Walk through BUF (as a tar buffer) and return the items.
+
+Return each of the header structures parsed from BUF."
+  (with-current-buffer buf
+    (set-buffer-multibyte nil)
+    (goto-char (point-min))
+    (loop
+     for pos = (point-min) then (tar-header-data-end hdr)
+     for hdr = (tar-header-block-tokenize pos tar-file-name-coding-system)
+     while (and (< pos (point-max)) hdr)
+     for link-type = (tar-header-link-type hdr)
+     for name = (tar-header-name hdr)
+     for size = (tar-header-size hdr)
+     collect hdr)))
+
+(defun package-from-tar-buffer (buf &optional noerror)
+  "Find package information for a tar file in BUF.
+
+BUF is a buffer containing raw tar data. If there is a problem,
+then an error is signaled unless NOERROR is non-nil."
+  (let* ((items (package-tar-items buf))
+         (dir-hdr (find-if '(lambda (item)
+                          (and (package-split-filename (car item) nil t)
+                               (eq (cdr item) 5)))
+                       items
+                       :key '(lambda (item) (cons (tar-header-name item)
+                                                  (tar-header-link-type item)))))
+         (name-vers (package-split-filename (tar-header-name dir-hdr)))
+         (pkg-skel (make-package :name (car name-vers)
+                                 :version (cdr name-vers)
+                                 ;; Doesn't actually matter, since we will be
+                                 ;; returning only the relative path.
+                                 :archive 'manual))
+         (info-file (package-info-file pkg-skel t))
+         (pkg-hdr (find info-file items
+                         :key 'tar-header-name
+                         :test 'equal))
+         (start (tar-header-data-start pkg-hdr))
+         (end (+ start (tar-header-size pkg-hdr)))
+         (pkg-data (with-current-buffer buf
+                     (buffer-substring start end))))
+    (package-read-string pkg-data)))
+
+(defun package-from-tar-file (buf)
   "Find package information for a tar file.
-FILE is the name of the tar file to examine."
-  (let* ((pkg (package-from-filename file))
+
+BUF is a buffer containing raw tar data."
+  (let* ((pkg (package-from-filename buf))
 
          (pkg-info (shell-command-to-string
                             ;; Requires GNU tar.
@@ -994,25 +1069,31 @@ FILE is the name of the tar file to examine."
       (error "Inconsistent package versions"))
     (unless (equal (package-archive pkg-new) (package-archive pkg))
       (error "Inconsistent package archives"))
-
     pkg-new))
 
-(defun package-from-single-file (source)
-  "Returns a package structure for SOURCE.
-
-SOURCE is either a buffer or a file."
-  (inherit-package (elx-package-metadata source)
-                   :archive 'manual
-                   :type 'single))
+(defsubst package-from-single-file (file)
+  "Returns a package structure for FILE."
+  (with-temp-buffer file
+                    (insert-file-literally file)
+                    (package-from-single-buffer (current-buffer))))
 
 (defun package-from-file (&optional source)
   "Return a package structure from SOURCE.
 
 SOURCE is either a buffer, a file, or nil, meaning use the
 current buffer."
-  (when (and (stringp source) (file-readable-p source))
-    (let ((type (package-type-from-filename)))))
-  )
+  (unless source
+    (setq source (current-buffer)))
+  (cond
+   ((and (stringp source) (file-readable-p source))
+    (let* ((type (package-type-from-filename source))
+           (extractor (intern (format "package-from-%s-file" type))))
+      (funcall extractor source)))
+   ((buffer-live-p (get-buffer source))
+    (case (package-type-from-buffer source)
+      ('single (package-from-single-buffer source))
+      ('tar (package-from-tar-buffer source))
+      (t (error "Only 'single and 'tar packages can be processed"))))))
 
 (defun package-install-from-buffer (buf &optional pkg)
   "Install a package from BUF.
