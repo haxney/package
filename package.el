@@ -1157,40 +1157,6 @@ separately."
                      'always))
 
 ;; TODO: CL-CHECK
-(defun package--encode (string)
-  "Encode a STRING by replacing some characters with XML entities."
-  ;; We need a special case for translating "&" to "&amp;".
-  (let ((index))
-    (while (setq index (string-match "[&]" string index))
-      (setq string (replace-match "&amp;" t nil string))
-      (setq index (1+ index))))
-  (while (string-match "[<]" string)
-    (setq string (replace-match "&lt;" t nil string)))
-  (while (string-match "[>]" string)
-    (setq string (replace-match "&gt;" t nil string)))
-  (while (string-match "[']" string)
-    (setq string (replace-match "&apos;" t nil string)))
-  (while (string-match "[\"]" string)
-    (setq string (replace-match "&quot;" t nil string)))
-  string)
-
-;; TODO: CL-CHECK
-(defun package--update-file (file location text)
-  "Update FILE by finding LOCATION and inserting TEXT."
-  (save-excursion
-    (let ((old-buffer (find-buffer-visiting file)))
-      (with-current-buffer (let ((find-file-visit-truename t))
-                             (or old-buffer (find-file-noselect file)))
-        (goto-char (point-min))
-        (search-forward location)
-        (forward-line)
-        (insert text)
-        (let ((file-precious-flag t))
-          (save-buffer))
-        (unless old-buffer
-          (kill-buffer (current-buffer)))))))
-
-;; TODO: CL-CHECK
 (defun package-archive-for (name)
   "Return the archive containing the package NAME."
   (let ((desc (aget package-available-alist (intern-soft name))))
