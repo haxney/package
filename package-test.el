@@ -136,7 +136,8 @@
              (tarty . (,tarty))
              (internal-pkg . (,internal-pkg))))
           (test-dir (file-name-as-directory (make-temp-name (expand-file-name "package-test"
-                                                               temporary-file-directory))))
+                                                                              temporary-file-directory))))
+          test-dir-created
           (package-archives `((manual ,(concat "file://" test-dir) ,test-dir))))
      (flet ((make-tar (base files)
                       (let* ((base-abs (expand-file-name base test-dir))
@@ -161,7 +162,8 @@
             (setup-test (&rest options)
                         (dolist (op options)
                           (case op
-                            (test-dir (make-directory test-dir t))
+                            (test-dir (make-directory test-dir t)
+                                      (setq test-dir-created t))
                             (tarty
                              (setq tarty-file
                                    (make-tar "tarty-1.5alpha3"
@@ -171,8 +173,9 @@
        (prog1
            (progn
              ,@body)
-         (require 'dired)
-         (dired-delete-file test-dir 'always)))
+         (when test-dir-created
+           (require 'dired)
+           (dired-delete-file test-dir 'always))))
      ))
 
 (defun package-exps-assert-with-package-test (expected actual)
