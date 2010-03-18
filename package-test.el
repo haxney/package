@@ -81,7 +81,8 @@
                                    :provides '(tarty)
                                    :homepage "tarty.example.com"
                                    :wikipage "tarty.el"
-                                   :type 'tar)
+                                   :type 'tar
+                                   :archive 'manual)
                                   ))
           (internal-pkg (cl-merge-struct 'package
                                          (copy-package test-pkg1)
@@ -155,7 +156,7 @@
                                                base))
                         output-abs))
             (set-tarty ()
-                       (setq tarty-file (make-tar "read-tar-0.1.2.3"
+                       (setq tarty-file (make-tar "tarty-1.5alpha3"
                                                   `(("file1.el" . ";;; file1.el --- This is file 1")
                                                     ("file2.el" . ";;; file2.el --- This is file 2")
                                                     ("info.epkg" . ,(cl-merge-pp tarty 'package)))))))
