@@ -1021,6 +1021,17 @@ Return each of the header structures parsed from BUF."
      for size = (tar-header-size hdr)
      collect hdr)))
 
+(defun package-tar-item-contents (hdr)
+  "Extract the contents from a single tar header HDR.
+
+The tar buffer from which HDR was parsed must still be active,
+since this function reads data from that buffer."
+  (let* ((start (tar-header-data-start hdr))
+         (end (+ start (tar-header-size hdr)))
+         (buf (marker-buffer start)))
+    (with-current-buffer buf
+      (buffer-substring-no-properties start end))))
+
 (defun package-from-tar-buffer (buf &optional noerror)
   "Find package information for a tar file in BUF.
 
