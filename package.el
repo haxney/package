@@ -1021,11 +1021,33 @@ Return each of the header structures parsed from BUF."
      for size = (tar-header-size hdr)
      collect hdr)))
 
-(defun package-from-tar-buffer (buf)
+(defun package-from-tar-buffer (buf &optional noerror)
   "Find package information for a tar file in BUF.
 
-BUF is a buffer containing raw tar data."
-  (package-tar-items buf))
+BUF is a buffer containing raw tar data. If there is a problem,
+then an error is signaled unless NOERROR is non-nil."
+  (let* ((items (package-tar-items buf))
+         (dir-hdr (find-if '(lambda (item)
+                          (and (package-split-filename (car item) nil t)
+                               (eq (cdr item) 5)))
+                       items
+                       :key '(lambda (item) (cons (tar-header-name item)
+                                                  (tar-header-link-type item)))))
+         (name-vers (package-split-filename (tar-header-name dir-hdr)))
+         (pkg-skel (make-package :name (car name-vers)
+                                 :version (cdr name-vers)
+                                 ;; Doesn't actually matter, since we will be
+                                 ;; returning only the relative path.
+                                 :archive 'manual))
+         (info-file (package-info-file pkg-skel t))
+         (pkg-hdr (find info-file items
+                         :key 'tar-header-name
+                         :test 'equal))
+         (start (tar-header-data-start pkg-hdr))
+         (end (+ start (tar-header-size pkg-hdr)))
+         (pkg-data (with-current-buffer buf
+                     (buffer-substring start end))))
+    (package-read-string pkg-data)))
 
 (defun package-from-tar-file (buf)
   "Find package information for a tar file.
