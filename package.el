@@ -1290,7 +1290,6 @@ Letters do not insert themselves; instead, they are commands.
       (run-mode-hooks 'package-menu-mode-hook)
     (run-hooks 'package-menu-mode-hook)))
 
-;; TODO: CL-CHECK
 (defun package-menu-refresh ()
   "Download the ELPA archive.
 This fetches the file describing the current contents of
@@ -1301,13 +1300,11 @@ available for download."
   (package-refresh-contents)
   (package-list-packages-internal))
 
-;; TODO: CL-CHECK
 (defun package-menu-revert ()
   "Update the list of packages."
   (interactive)
   (package-list-packages-internal))
 
-;; TODO: CL-CHECK
 (defun package-menu-mark-internal (what)
   "Internal function to mark a package.
 
@@ -1319,7 +1316,6 @@ WHAT is the character used to mark the line."
       (insert what)
       (forward-line))))
 
-;; TODO: CL-CHECK
 (defun package-menu-mark-delete (&optional arg)
   "Mark a package for deletion and move to the next line.
 
@@ -1327,7 +1323,6 @@ ARG is a (currently unused) numeric argument."
   (interactive "p")
   (package-menu-mark-internal "D"))
 
-;; TODO: CL-CHECK
 (defun package-menu-mark-install (&optional arg)
   "Mark a package for installation and move to the next line.
 
@@ -1335,7 +1330,6 @@ ARG is a (currently unused) numeric argument."
   (interactive "p")
   (package-menu-mark-internal "I"))
 
-;; TODO: CL-CHECK
 (defun package-menu-mark-unmark (&optional arg)
   "Clear any marks on a package and move to the next line.
 
@@ -1343,7 +1337,6 @@ ARG is a (currently unused) numeric argument."
   (interactive "p")
   (package-menu-mark-internal " "))
 
-;; TODO: CL-CHECK
 (defun package-menu-backup-unmark ()
   "Back up one line and clear any marks on that package."
   (interactive)
@@ -1351,7 +1344,6 @@ ARG is a (currently unused) numeric argument."
   (package-menu-mark-internal " ")
   (forward-line -1))
 
-;; TODO: CL-CHECK
 (defun package-menu-mark-obsolete-for-deletion ()
   "Mark all obsolete packages for deletion."
   (interactive)
@@ -1363,7 +1355,6 @@ ARG is a (currently unused) numeric argument."
           (package-menu-mark-internal "D")
         (forward-line 1)))))
 
-;; TODO: CL-CHECK
 (defun package-menu-quick-help ()
   "Show short key binding help for `package-menu-mode'."
   (interactive)
@@ -1411,7 +1402,6 @@ For larger packages, shows the README file."
     (if (looking-at ". [^ \t]*[ \t]*\\([0-9.]*\\)")
         (match-string 1))))
 
-;; TODO: CL-CHECK
 (defun package-menu-get-status ()
   "Get the status of the current line."
   (save-excursion
