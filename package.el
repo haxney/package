@@ -1073,11 +1073,11 @@ Signals an error on failure unless NOERROR is non-nil."
     (funcall func buf noerror)))
 
 ;; Merge this somehow with (a less-ugly) `package-from-tar-buffer'.
-(defun package-from-tar-file (buf)
+(defun package-from-tar-file (file)
   "Find package information for a tar file.
 
-BUF is a buffer containing raw tar data."
-  (let* ((pkg (package-from-filename buf))
+FILE is the path to a tar archive."
+  (let* ((pkg (package-from-filename file))
 
          (pkg-info (shell-command-to-string
                             ;; Requires GNU tar.

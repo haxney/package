@@ -325,6 +325,9 @@
       (with-temp-file file
         (insert simple-file))
       (package-from-file file)))
+  (expect (package tarty)
+    (set-tarty)
+    (package-from-file tarty-file))
   )
 
 (provide 'package-test)
