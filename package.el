@@ -1157,12 +1157,6 @@ separately."
                      'always))
 
 ;; TODO: CL-CHECK
-(defun package-archive-for (name)
-  "Return the archive containing the package NAME."
-  (let ((desc (aget package-available-alist (intern-soft name))))
-    (cdr (assoc (aref desc (- (length desc) 1)) package-archives))))
-
-;; TODO: CL-CHECK
 (defun package--download-one-archive (archive file)
   "Download a single archive file and cache it locally.
 
@@ -1384,7 +1378,7 @@ For larger packages, shows the README file."
   (let* (start-point ok
                      (pkg-name (package-menu-get-package))
                      (buffer (url-retrieve-synchronously
-                              (concat (package-archive-for pkg-name)
+                              (concat (package-archive pkg-name)
                                       pkg-name "-readme.txt"))))
     (with-current-buffer buffer
       ;; FIXME: it would be nice to work with any URL type.
