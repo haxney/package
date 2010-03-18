@@ -1125,7 +1125,10 @@ current buffer."
 If PKG is provided, use that as the package metadata. Otherwise
 attempt to read it from BUF."
   (interactive "bInstall package from buffer:")
-  (setq pkg (or pkg (package-from-buffer buf)))
+  (setq pkg (if (package-p pkg)
+                (cl-merge-struct 'package pkg (package-from-buffer buf))
+              (package-from-buffer buf)))
+
   (package-download-transaction
    (package-compute-transaction nil (package-required-packages pkg)))
   (package-unpack pkg buf)
