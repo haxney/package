@@ -994,10 +994,33 @@ BUF must be an Emacs Lisp source code file which is parseable by
       (error (emacs-lisp-mode)
              'single))))
 
-(defun package-from-tar-file (file)
+(defun package-tar-items (buf)
+  "Walk through BUF (as a tar buffer) and return the items.
+
+Return each of the header structures parsed from BUF."
+  (with-current-buffer buf
+    (set-buffer-multibyte nil)
+    (goto-char (point-min))
+    (loop
+     for pos = (point-min) then (tar-header-data-end hdr)
+     for hdr = (tar-header-block-tokenize pos tar-file-name-coding-system)
+     while (and (< pos (point-max)) hdr)
+     for link-type = (tar-header-link-type hdr)
+     for name = (tar-header-name hdr)
+     for size = (tar-header-size hdr)
+     collect hdr)))
+
+(defun package-from-tar-buffer (buf)
+  "Find package information for a tar file in BUF.
+
+BUF is a buffer containing raw tar data."
+  (package-tar-items buf))
+
+(defun package-from-tar-file (buf)
   "Find package information for a tar file.
-FILE is the name of the tar file to examine."
-  (let* ((pkg (package-from-filename file))
+
+BUF is a buffer containing raw tar data."
+  (let* ((pkg (package-from-filename buf))
 
          (pkg-info (shell-command-to-string
                             ;; Requires GNU tar.
