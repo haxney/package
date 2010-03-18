@@ -222,7 +222,8 @@
         (expect (package (make-package :name 'package-test
                                    :version '(0 2 3)
                                    :archive 'test))
-      (package-from-filename "/tmp/package-test/package-test-0.2.3" nil t))
+          (package-from-filename "/tmp/package-test/package-test-0.2.3" nil t))
+
         (desc "package-type-from-buffer")
         (expect 'single
           (with-temp-buffer
