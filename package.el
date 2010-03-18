@@ -1010,6 +1010,8 @@ BUF must be an Emacs Lisp source code file which is parseable by
 
 Return each of the header structures parsed from BUF."
   (with-current-buffer buf
+    (when (tar-data-swapped-p)
+      (tar-swap-data))
     (set-buffer-multibyte nil)
     (goto-char (point-min))
     (loop
