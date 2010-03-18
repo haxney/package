@@ -135,7 +135,8 @@
              (dep-pkg . (,dep-pkg))
              (tarty . (,tarty))
              (internal-pkg . (,internal-pkg))))
-          (test-dir (file-name-as-directory (make-temp-file "package-test" t)))
+          (test-dir (file-name-as-directory (make-temp-name (expand-file-name "package-test"
+                                                               temporary-file-directory))))
           (package-archives `((manual ,(concat "file://" test-dir) ,test-dir))))
      (flet ((make-tar (base files)
                       (let* ((base-abs (expand-file-name base test-dir))
@@ -155,13 +156,19 @@
                                                test-dir
                                                base))
                         output-abs))
-            (set-tarty ()
-                       (setq tarty-file (make-tar "tarty-1.5alpha3"
-                                                  `(("file1.el" . ";;; file1.el --- This is file 1")
-                                                    ("file2.el" . ";;; file2.el --- This is file 2")
-                                                    ("info.epkg" . ,(cl-merge-pp tarty 'package)))))))
-       (prog2
-           (make-directory test-dir t)
+            ;; Setup various parts of the test, such as creating files and
+            ;; directories and such.
+            (setup-test (&rest options)
+                        (dolist (op options)
+                          (case op
+                            (test-dir (make-directory test-dir t))
+                            (tarty
+                             (setq tarty-file
+                                   (make-tar "tarty-1.5alpha3"
+                                             `(("file1.el" . ";;; file1.el --- This is file 1")
+                                               ("file2.el" . ";;; file2.el --- This is file 2")
+                                               ("info.epkg" . ,(cl-merge-pp tarty 'package))))))))))
+       (prog1
            (progn
              ,@body)
          (require 'dired)
@@ -287,19 +294,22 @@
       (insert ";;; empty.el --- An empty file for testing")
       (package-type-from-buffer (current-buffer))))
   (expect (package 'tar)
-    (set-tarty)
+    (setup-test 'test-dir 'tarty)
     (with-temp-buffer
       (insert-file-contents-literally tarty-file)
       (package-type-from-buffer (current-buffer))))
 
   (desc "make-tar")
   (expect (package (concat test-dir "out.tar"))
+    (setup-test 'test-dir)
     (make-tar "out" '(("name" . "contents"))))
   (expect (package '("out/" "out/name"))
+    (setup-test 'test-dir 'tarty)
     (with-temp-buffer
       (insert-file-contents-literally (make-tar "out" '(("name" . "contents"))))
       (mapcar 'tar-header-name (package-tar-items (current-buffer)))))
   (expect (package '("contents"))
+    (setup-test 'test-dir 'tarty)
     (with-temp-buffer
       (insert-file-contents-literally (make-tar "out" '(("name" . "contents"))))
       (delete ""
@@ -307,26 +317,27 @@
 
   (desc "package-from-tar-buffer")
   (expect (package tarty)
-    (set-tarty)
+    (setup-test 'test-dir 'tarty)
     (with-temp-buffer
       (insert-file-contents-literally tarty-file)
       (package-from-tar-buffer (current-buffer))))
 
   (desc "package-from-buffer")
   (expect (package tarty)
-    (set-tarty)
+    (setup-test 'test-dir 'tarty)
     (with-temp-buffer
       (insert-file-contents-literally tarty-file)
       (package-from-buffer (current-buffer))))
 
   (desc "package-from-file")
   (expect (package simple-file-pkg)
-    (let ((file (make-temp-file "simple" nil ".el")))
+    (setup-test 'test-dir)
+    (let ((file (make-temp-file test-dir nil ".el")))
       (with-temp-file file
         (insert simple-file))
       (package-from-file file)))
   (expect (package tarty)
-    (set-tarty)
+    (setup-test 'test-dir 'tarty)
     (package-from-file tarty-file))
   )
 
