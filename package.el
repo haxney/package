@@ -1064,6 +1064,15 @@ then an error is signaled unless NOERROR is non-nil."
                      (buffer-substring start end))))
     (package-read-string pkg-data)))
 
+(defun package-from-buffer (buf &optional noerror)
+  "Generate and return a package structure from BUF.
+
+Signals an error on failure unless NOERROR is non-nil."
+  (let* ((type (package-type-from-buffer buf))
+         (func (intern (format "package-from-%s-buffer" type))))
+    (funcall func buf noerror)))
+
+;; Merge this somehow with (a less-ugly) `package-from-tar-buffer'.
 (defun package-from-tar-file (buf)
   "Find package information for a tar file.
 
@@ -1114,10 +1123,9 @@ current buffer."
   "Install a package from BUF.
 
 If PKG is provided, use that as the package metadata. Otherwise
-attempt to read it from BUF. Currently, only single Elisp files
-are supported."
+attempt to read it from BUF."
   (interactive "bInstall package from buffer:")
-  (setq pkg (or pkg (package-file-info-single buf)))
+  (setq pkg (or pkg (package-from-buffer buf)))
   (package-download-transaction
    (package-compute-transaction nil (package-required-packages pkg)))
   (package-unpack pkg buf)
