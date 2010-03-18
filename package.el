@@ -459,20 +459,31 @@ Each archive in `package-archives' is checked."
 ARCHIVE must be the symbol name of an archive."
   (concat (package-archive-localpath archive) package-archive-contents-filename))
 
-(defun package-read-file (file)
+(defun package-read-file (file &optional noerror)
   "Read `package' data.
 
 FILE is the file to read. Returns a `package' structure if
-successful."
-  (let (str data)
-    (when (and (file-readable-p file)
-               (file-regular-p file))
+successful. Signals an error if FILE cannot be read unless
+NOERROR is non-nil."
+  (if (and (file-readable-p file)
+           (file-regular-p file))
       (with-temp-buffer
         (insert-file-contents file)
-        (setq str (buffer-string)))
-      (when str
-        (setq data (package-read-from-string str))))
-    (apply 'make-package data)))
+        (package-read-string (buffer-string)))
+    (if noerror
+        nil
+      (error "File %s not readable" file))))
+
+(defun package-read-string (str &optional noerror)
+  "Read `package' structure data from STR.
+
+Signals an error if something goes wrong unless NOERROR is
+non-nil."
+  (condition-case err
+      (apply 'make-package (package-read-from-string str))
+    (error (if noerror
+               nil
+             (signal (car err) (cdr err))))))
 
 (defun package-register (pkg registry)
   "Register package PKG if it isn't already in REGISTRY.
