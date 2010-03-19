@@ -267,10 +267,34 @@ doesn't have an extension, since it will never be independently
 downloaded or dealt with in any way aside from resolving
 dependencies.")
 
+(defconst package-statuses '(available installed activated obsolete)
+  "Possible statuses of a package.
+
+At any time, a package is in exactly one of these states. The
+mean of each status is described below:
+
+ - `available': The package exists within an archive and is
+   available to be downloaded and installed.
+
+ - `installed': The package files exist on the local computer,
+   but the package has not been activated. Activating a package
+   primarily involves loading that package's \"autoloads\" file
+   and adding its directory to `load-path'.
+
+ - `activated': The package has been installed and activated, its
+   autoloads registered, and its install directory added to
+   `load-path'.
+
+ - `obsolete': This package has been superseded by a newer
+   version, and can be safely uninstalled.")
+
+(defconst package-status-default 'available
+  "Status to assign to packages which don't provide their own.")
+
 (defstruct (package (:include elx-pkg)
                          (:constructor inherit-package
                                        (pkg
-                                        &key archive type
+                                        &key archive type status
                                         &aux (name (elx-pkg-name pkg))
                                         (version (elx-pkg-version pkg))
                                         (version-raw (elx-pkg-version-raw pkg))
@@ -297,11 +321,15 @@ the archive index. The fields are:
  - TYPE: The distribution type of the package, must one of the
    types in `package-types'.
 
+ - STATUS: The installed status of this package, see
+   `package-statuses'.
+
 The special constructor, `inherit-package' allows constructing a
 `package' struct from an existing `elx-pkg' struct. Extra
 arguments are supported by keys."
   archive
-  type)
+  type
+  status)
 
 (defsubst package-version-canonical (pkg)
   "Return the canonical version of PKG.
