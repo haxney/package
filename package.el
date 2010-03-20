@@ -592,17 +592,15 @@ version."
   "Register metadata of all installed packages.
 
 Uses `package-archives' to find packages."
-  (mapc (lambda (archive-info)
-          (let* ((archive (car archive-info))
-                 (archive-dir (package-archive-localpath archive)))
-            (when (and (file-readable-p archive-dir)
-                       (file-directory-p archive-dir))
-              (loop for pkg-dirname in (directory-files archive-dir t "^[^.]")
-                    for pkg = (package-load-descriptor
-                               (package-from-filename pkg-dirname))
-                    do (setf (package-status pkg) 'installed)
-                    do (package-register pkg)))))
-        package-archives))
+  (loop for (archive ign) in package-archives
+        for archive-dir = (package-archive-localpath archive)
+        when (and (file-readable-p archive-dir)
+                  (file-directory-p archive-dir))
+        do (loop for pkg-dirname in (directory-files archive-dir t "^[^.]")
+                 for pkg = (package-load-descriptor
+                            (package-from-filename pkg-dirname))
+                 do (setf (package-status pkg) 'installed)
+                 do (package-register pkg))))
 
 (defun package-install-directory (pkg &optional relative)
   "Return the install directory for PKG.
