@@ -698,8 +698,8 @@ Recursively activates all dependencies of PACKAGE."
      ((eq name 'emacs))
      ;; If this package is already the most recently installed version, no
      ;; further action is needed.
-     ((equal package (package-find-latest name t)))
-     ((member package package-activated-list))
+     ((equal package (package-find-latest name t :status 'activated)))
+     ((member package (package-find name)))
      (t
       ;; Signal an error if a hard requirement cannot be found, but not for a
       ;; soft requirement.
