@@ -3,7 +3,6 @@
 ;; Copyright (C) 2010 Daniel Hackney
 
 ;; Author: Daniel Hackney
-;; Keywords: convenience abbrev local matching
 
 ;; This file is free software; you can redistribute it and/or modify it under
 ;; the terms of the GNU General Public License as published by the Free Software

@@ -4,7 +4,7 @@
 
 ;; Author: Tom Tromey <tromey@redhat.com>
 ;; Created: 10 Mar 2007
-;; Version: 0.9.5pre
+;; Version: 2.0pre
 ;; Keywords: tools
 
 ;; This file is not (yet) part of GNU Emacs.
@@ -54,29 +54,29 @@
 ;; Other external functions you may want to use:
 ;;
 ;; M-x package-list-packages
-;;    Enters a mode similar to buffer-menu which lets you manage
-;;    packages.  You can choose packages for install (mark with "i",
-;;    then "x" to execute) or deletion (not implemented yet), and you
-;;    can see what packages are available.  This will automatically
-;;    fetch the latest list of packages from ELPA.
+;;    Enters a mode similar to buffer-menu which lets you manage packages. You
+;;    can choose packages for install (mark with "i", then "x" to execute) or
+;;    deletion, and you can see what packages are available. This will
+;;    automatically fetch the latest list of packages from your selected
+;;    archives.
 ;;
 ;; M-x package-list-packages-no-fetch
-;;    Like package-list-packages, but does not automatically fetch the
-;;    new list of packages.
+;;    Like `package-list-packages', but does not automatically fetch the new list
+;;    of packages.
 ;;
 ;; M-x package-install-from-buffer
-;;    Install a package consisting of a single .el file that appears
-;;    in the current buffer.  This only works for packages which
-;;    define a Version header properly; package.el also supports the
-;;    extension headers Package-Version (in case Version is an RCS id
-;;    or similar), and Package-Requires (if the package requires other
-;;    packages).
+;;    Install a package that appears in the current buffer. The package must
+;;    either be a single .el file or a tar archvie in the format described below
+;;    in "Tar Package Format." For single .el files, this only works for
+;;    packages which define a Version header properly; package.el also supports
+;;    the extension headers Package-Version (in case Version is an RCS id or
+;;    similar), and Package-Requires (if the package requires other packages).
 ;;
 ;; M-x package-install-file
-;;    Install a package from the indicated file.  The package can be
-;;    either a tar file or a .el file.  A tar file must contain an
-;;    appropriately-named ".epkg" file; a .el file must be properly
-;;    formatted as with package-install-from-buffer.
+;;    Install a package from the indicated file. The package can be either a tar
+;;    file or a .el file. A tar file must contain an appropriately-named ".epkg"
+;;    file; a .el file must be properly formatted as with
+;;    `package-install-from-buffer'.
 
 ;; The idea behind package.el is to be able to download packages and
 ;; install them.  Packages are versioned and have versioned
@@ -91,11 +91,8 @@
 ;; must be registered there.
 
 ;; A package is described by its name and version.  The distribution
-;; format is either  a tar file or a single .el file.
-
-;; A tar file should be named "NAME-VERSION.tar".  The tar file must
-;; unpack into a directory named after the package and version:
-;; "NAME-VERSION".
+;; format is either  a tar file or a single .el file. See "Tar Package Format"
+;; below for more details on the tar format.
 
 ;; A .el file will be named "NAME-VERSION.el" in ELPA, but will be
 ;; installed as simply "NAME.el" in a directory named "NAME-VERSION".
@@ -117,6 +114,14 @@
 ;; * Activate.  Evaluate the autoloads for the package to make it
 ;;   available to the user.
 ;; * Load.  Actually load the package and run some code from it.
+
+;;; Tar Package Format:
+
+;; A tar file must be named "NAME-VERSION.tar". The tar file must unpack into
+;; a directory named after the package and version: "NAME-VERSION". All of the
+;; package files must be in this directory, and it must include a file
+;; "info.epkg" in the unpacked directory which contains the package metadata
+;; (see "Package Metadata" below).
 
 ;;; Package Metadata:
 ;;
