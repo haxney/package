@@ -362,7 +362,7 @@ non-nil, in which case nil is returned."
       (error "Could not find package type for extension: %s" ext))
     result))
 
-(defvar package-available-alist
+(defvar package-registry
   nil
   "Alist of all packages available for installation.
 
@@ -373,21 +373,6 @@ the symbol name of a package and PACKAGE is an individual
 More than one package is allowed for each name, since there may
 be multiple versions of a package available or two archives
 may each have different versions of a package available.")
-
-(defvar package-installed-alist nil
-  "Alist of all installed packages activated.
-
-Maps the package name to a `package' struct.")
-
-(defvar package-activated-list nil
-  "List of all activated packages.
-
-Only one version of a package can be activated at a time.")
-
-(defvar package-obsolete-alist nil
-  "Representation of obsolete packages.
-Like `package-installed-alist', but maps package name to a second alist.
-The inner alist is keyed by version.")
 
 (defun* package-find (name &key version
                            version-raw
@@ -513,12 +498,12 @@ non-nil."
                nil
              (signal (car err) (cdr err))))))
 
-(defun package-register (pkg registry)
-  "Register package PKG if it isn't already in REGISTRY.
+(defun package-register (pkg)
+  "Register package PKG if it isn't already in `package-registry'.
 
 Returns nil if PKG was already in the list or PKG if it was not."
   (let ((pkg-name (package-name pkg))
-        (existing-pkgs (aget registry pkg-name)))
+        (existing-pkgs (aget package-registry pkg-name)))
     (when existing-pkgs
       (unless (member pkg existing-pkgs)
        (nconc existing-pkgs (list pkg))
