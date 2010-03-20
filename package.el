@@ -390,7 +390,8 @@ may each have different versions of a package available.")
                            wikipage
                            commentary
                            archive
-                           type)
+                           type
+                           status)
   "Search `package-registry' for a package named NAME.
 
 Returns a list of matches, since there may be more than one
@@ -1003,7 +1004,7 @@ BUF must be an Emacs Lisp source code file which is parseable by
   "Determine the package type from the contents of BUF."
   (with-current-buffer buf
     (condition-case err
-        (prog2
+        (progn
             (tar-mode)
             'tar)
       (error (emacs-lisp-mode)
