@@ -588,7 +588,7 @@ version."
 
 ;; TODO: Add special handling of builtin packages, so that directories don't
 ;; need to be created for each builtin package.
-(defun package-register-installed ()
+(defun package-register-all-installed ()
   "Register metadata of all installed packages.
 
 Uses `package-archives' to find packages."
@@ -596,12 +596,12 @@ Uses `package-archives' to find packages."
           (let* ((archive (car archive-info))
                  (archive-dir (package-archive-localpath archive)))
             (when (and (file-readable-p archive-dir)
-                     (file-directory-p archive-dir))
-              (mapc (lambda (pkg-dirname)
-                      (package-register (package-load-descriptor
-                                         (package-from-filename pkg-dirname))
-                                        package-installed-alist))
-                    (directory-files archive-dir t "^[^.]")))))
+                       (file-directory-p archive-dir))
+              (loop for pkg-dirname in (directory-files archive-dir t "^[^.]")
+                    for pkg = (package-load-descriptor
+                               (package-from-filename pkg-dirname))
+                    do (setf (package-status pkg) 'installed)
+                    do (package-register pkg)))))
         package-archives))
 
 (defun package-install-directory (pkg &optional relative)
