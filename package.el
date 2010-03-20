@@ -391,7 +391,7 @@ may each have different versions of a package available.")
                            commentary
                            archive
                            type)
-  "Search `package-available-alist' for a package named NAME.
+  "Search `package-registry' for a package named NAME.
 
 Returns a list of matches, since there may be more than one
 package with the same name (i.e. different versions).
@@ -404,7 +404,7 @@ supplied keywords. For example:
 
 Would return a list of packages called 'package with version
 number \"0.9.5\", if any exist."
-  (let ((pkgs (aget package-available-alist name)))
+  (let ((pkgs (aget package-registry name)))
     (dolist (slot
              ;; This is `cddr' to skip the `name' slot, as well as the cl-tag.
              (cddr (mapcar 'car (get 'package 'cl-struct-slots)))
@@ -944,8 +944,8 @@ supported."
 (defun package-read-archive-contents (archive)
   "Re-read `archive-contents' for ARCHIVE.
 
-Will add any new packages found `package-available-alist'. Will
-signal an error if the archive version is too new or if a
+Will add any new packages found `package-registry'. Will signal
+an error if the archive version is too new or if a
 package's :archive field does not match ARCHIVE."
   (let ((archive-contents (package--read-archive-file archive)))
     (if archive-contents
@@ -955,7 +955,7 @@ package's :archive field does not match ARCHIVE."
                    (package-name pkg)
                    (package-archive pkg)
                    archive))
-          (package-register pkg package-available-alist)))))
+          (package-register pkg)))))
 
 (defun package-download-transaction (transaction)
   "Download and install all the packages in the given TRANSACTION."
@@ -973,9 +973,8 @@ according to `package-find-latest'.
 Interactively, prompts for the package name."
   (interactive
    (list (intern (completing-read "Install package: "
-                                 (mapcar (lambda (elt)
-                                           (symbol-name (car elt)))
-                                         package-available-alist)
+                                  (loop for (name . pkgs) in package-registry
+                                        collect (symbol-name name))
                                  nil t))))
   (unless version
     (setq version (package-version (package-find-latest name))))
