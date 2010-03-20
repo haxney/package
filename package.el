@@ -663,50 +663,44 @@ This depends on the base URL of the package's archive."
 
 ;; TODO: Re-add info handling, used to add `package-install-directory' to
 ;; `Info-directory-list'.
-(defun package-do-activate (package)
-  "Set up a single PACKAGE after it has been installed.
+(defun package-do-activate (pkg)
+  "Set up a single PKG after it has been installed.
 
 Modifies `load-path' to include the package directory and loads
 the `autoload' file for the package."
-  (let* ((pkg-name (package-name package))
-         (pkg-dir (package-install-directory package)))
-
-    (add-to-list 'load-path pkg-dir)
-    ;; Load the autoloads and activate the package.
-    (load (package-autoload-file package) nil t)
-    (add-to-list 'package-activated-list package)
-    ;; Don't return nil.
-    t))
+  (add-to-list 'load-path (package-install-directory pkg))
+  (load (package-autoload-file pkg) nil t)
+  (setf (package-status pkg) 'activated))
 
 ;; FIXME: return a reason instead?
-(defun package-activate (package)
-  "Try to activate PACKAGE.
+(defun package-activate (pkg)
+  "Try to activate PKG.
 
 Signal an error if the package could not be activated.
 
-Recursively activates all dependencies of PACKAGE."
+Recursively activates all dependencies of PKG."
   ;; Assume the user knows what he is doing -- go ahead and activate a
   ;; newer version of a package if an older one has already been
   ;; activated.  This is not ideal; we'd at least need to check to see
   ;; if the package has actually been loaded, and not merely
   ;; activated.
-  (let ((name (package-name package))
-        (hard-reqs (package-required-packages package 'hard))
-        (soft-reqs (package-required-packages package 'soft)))
+  (let ((name (package-name pkg)))
     (cond
+     ((eq (package-status pkg) 'activated))
      ;; Don't try to activate 'emacs', that's just silly.
      ((eq name 'emacs))
      ;; If this package is already the most recently installed version, no
      ;; further action is needed.
-     ((equal package (package-find-latest name t :status 'activated)))
-     ((member package (package-find name)))
+     ((equal pkg (package-find-latest name t :status 'activated)))
+     ((member pkg (package-find name)))
      (t
       ;; Signal an error if a hard requirement cannot be found, but not for a
       ;; soft requirement.
-      (dolist (req hard-reqs)
+      (dolist (req (package-required-packages pkg 'hard))
         (package-activate (package-find-latest req nil)))
-      (dolist (req soft-reqs)
-        (package-activate (package-find-latest req t)))))))
+      (dolist (req (package-required-packages pkg 'soft))
+        (package-activate (package-find-latest req t)))
+      (package-do-activate pkg)))))
 
 ;; TODO: CL-CHECK
 (defun package-mark-obsolete (package pkg-vec)
