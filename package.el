@@ -286,7 +286,9 @@ mean of each status is described below:
    `load-path'.
 
  - `obsolete': This package has been superseded by a newer
-   version, and can be safely uninstalled.")
+   version, and can be safely uninstalled. Packages are only
+   marked obsolete when the newer version is `installed' or
+   `activated'.")
 
 (defconst package-status-default 'available
   "Status to assign to packages which don't provide their own.")
@@ -702,24 +704,6 @@ Recursively activates all dependencies of PKG."
       (dolist (req (package-required-packages pkg 'soft))
         (package-activate (package-find-latest req t)))
       (package-do-activate pkg)))))
-
-;; TODO: CL-CHECK
-(defun package-mark-obsolete (package pkg-vec)
-  "Put PACKAGE on the obsolete list, if not already there.
-
-PKG-VEC describes the version of PACKAGE to mark obsolete."
-  (let ((elt (assq package package-obsolete-alist)))
-    (if elt
-        ;; If this obsolete version does not exist in the list, update
-        ;; it the list.
-        (unless (assoc (package-version pkg-vec) (cdr elt))
-          (setcdr elt (cons (cons (package-version pkg-vec) pkg-vec)
-                            (cdr elt))))
-      ;; Make a new association.
-      (setq package-obsolete-alist
-            (cons (cons package (list (cons (package-version pkg-vec)
-                                            pkg-vec)))
-                  package-obsolete-alist)))))
 
 (defun package-generate-autoloads (pkg)
   "Generate autoload definitions for PKG."
