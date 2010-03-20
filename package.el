@@ -1195,16 +1195,18 @@ download."
     (package--download-one-archive archive "archive-contents"))
   (package-read-all-archive-contents))
 
-;; TODO: CL-CHECK
+(defun package-activate-all-installed ()
+  "Activate all installed packages."
+  (loop for (name . pkgs) in package-registry
+        do (loop for pkg in pkgs
+            when (eq (package-status pkg) 'installed)
+            do (package-activate pkg))))
+
 (defun package-initialize ()
   "Load all packages and activate as many as possible."
-  (setq package-obsolete-alist nil)
-  (package-register-installed)
-  (package-read-all-archive-contents)
-  ;; Try to activate all our packages.
-  (mapc (lambda (elt)
-          (package-activate (car elt) (package-version (cdr elt))))
-        package-installed-alist))
+  (package-register-all-installed)
+  (package-activate-all-installed)
+  (package-read-all-archive-contents))
 
 
 
