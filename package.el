@@ -272,10 +272,36 @@ doesn't have an extension, since it will never be independently
 downloaded or dealt with in any way aside from resolving
 dependencies.")
 
+(defconst package-statuses '(available installed activated obsolete)
+  "Possible statuses of a package.
+
+At any time, a package is in exactly one of these states. The
+mean of each status is described below:
+
+ - `available': The package exists within an archive and is
+   available to be downloaded and installed.
+
+ - `installed': The package files exist on the local computer,
+   but the package has not been activated. Activating a package
+   primarily involves loading that package's \"autoloads\" file
+   and adding its directory to `load-path'.
+
+ - `activated': The package has been installed and activated, its
+   autoloads registered, and its install directory added to
+   `load-path'.
+
+ - `obsolete': This package has been superseded by a newer
+   version, and can be safely uninstalled. Packages are only
+   marked obsolete when the newer version is `installed' or
+   `activated'.")
+
+(defconst package-status-default 'available
+  "Status to assign to packages which don't provide their own.")
+
 (defstruct (package (:include elx-pkg)
                          (:constructor inherit-package
                                        (pkg
-                                        &key archive type
+                                        &key archive type status
                                         &aux (name (elx-pkg-name pkg))
                                         (version (elx-pkg-version pkg))
                                         (version-raw (elx-pkg-version-raw pkg))
@@ -302,11 +328,15 @@ the archive index. The fields are:
  - TYPE: The distribution type of the package, must one of the
    types in `package-types'.
 
+ - STATUS: The installed status of this package, see
+   `package-statuses'.
+
 The special constructor, `inherit-package' allows constructing a
 `package' struct from an existing `elx-pkg' struct. Extra
 arguments are supported by keys."
   archive
-  type)
+  type
+  status)
 
 (defsubst package-version-canonical (pkg)
   "Return the canonical version of PKG.
@@ -339,7 +369,7 @@ non-nil, in which case nil is returned."
       (error "Could not find package type for extension: %s" ext))
     result))
 
-(defvar package-available-alist
+(defvar package-registry
   nil
   "Alist of all packages available for installation.
 
@@ -350,21 +380,6 @@ the symbol name of a package and PACKAGE is an individual
 More than one package is allowed for each name, since there may
 be multiple versions of a package available or two archives
 may each have different versions of a package available.")
-
-(defvar package-installed-alist nil
-  "Alist of all installed packages activated.
-
-Maps the package name to a `package' struct.")
-
-(defvar package-activated-list nil
-  "List of all activated packages.
-
-Only one version of a package can be activated at a time.")
-
-(defvar package-obsolete-alist nil
-  "Representation of obsolete packages.
-Like `package-installed-alist', but maps package name to a second alist.
-The inner alist is keyed by version.")
 
 (defun* package-find (name &key version
                            version-raw
@@ -382,8 +397,9 @@ The inner alist is keyed by version.")
                            wikipage
                            commentary
                            archive
-                           type)
-  "Search `package-available-alist' for a package named NAME.
+                           type
+                           status)
+  "Search `package-registry' for a package named NAME.
 
 Returns a list of matches, since there may be more than one
 package with the same name (i.e. different versions).
@@ -396,7 +412,7 @@ supplied keywords. For example:
 
 Would return a list of packages called 'package with version
 number \"0.9.5\", if any exist."
-  (let ((pkgs (aget package-available-alist name)))
+  (let ((pkgs (aget package-registry name)))
     (dolist (slot
              ;; This is `cddr' to skip the `name' slot, as well as the cl-tag.
              (cddr (mapcar 'car (get 'package 'cl-struct-slots)))
@@ -490,12 +506,12 @@ non-nil."
                nil
              (signal (car err) (cdr err))))))
 
-(defun package-register (pkg registry)
-  "Register package PKG if it isn't already in REGISTRY.
+(defun package-register (pkg)
+  "Register package PKG if it isn't already in `package-registry'.
 
 Returns nil if PKG was already in the list or PKG if it was not."
   (let ((pkg-name (package-name pkg))
-        (existing-pkgs (aget registry pkg-name)))
+        (existing-pkgs (aget package-registry pkg-name)))
     (when existing-pkgs
       (unless (member pkg existing-pkgs)
        (nconc existing-pkgs (list pkg))
@@ -580,21 +596,19 @@ version."
 
 ;; TODO: Add special handling of builtin packages, so that directories don't
 ;; need to be created for each builtin package.
-(defun package-register-installed ()
+(defun package-register-all-installed ()
   "Register metadata of all installed packages.
 
 Uses `package-archives' to find packages."
-  (mapc (lambda (archive-info)
-          (let* ((archive (car archive-info))
-                 (archive-dir (package-archive-localpath archive)))
-            (when (and (file-readable-p archive-dir)
-                     (file-directory-p archive-dir))
-              (mapc (lambda (pkg-dirname)
-                      (package-register (package-load-descriptor
-                                         (package-from-filename pkg-dirname))
-                                        package-installed-alist))
-                    (directory-files archive-dir t "^[^.]")))))
-        package-archives))
+  (loop for (archive ign) in package-archives
+        for archive-dir = (package-archive-localpath archive)
+        when (and (file-readable-p archive-dir)
+                  (file-directory-p archive-dir))
+        do (loop for pkg-dirname in (directory-files archive-dir t "^[^.]")
+                 for pkg = (package-load-descriptor
+                            (package-from-filename pkg-dirname))
+                 do (setf (package-status pkg) 'installed)
+                 do (package-register pkg))))
 
 (defun package-install-directory (pkg &optional relative)
   "Return the install directory for PKG.
@@ -657,68 +671,44 @@ This depends on the base URL of the package's archive."
 
 ;; TODO: Re-add info handling, used to add `package-install-directory' to
 ;; `Info-directory-list'.
-(defun package-do-activate (package)
-  "Set up a single PACKAGE after it has been installed.
+(defun package-do-activate (pkg)
+  "Set up a single PKG after it has been installed.
 
 Modifies `load-path' to include the package directory and loads
 the `autoload' file for the package."
-  (let* ((pkg-name (package-name package))
-         (pkg-dir (package-install-directory package)))
-
-    (add-to-list 'load-path pkg-dir)
-    ;; Load the autoloads and activate the package.
-    (load (package-autoload-file package) nil t)
-    (add-to-list 'package-activated-list package)
-    ;; Don't return nil.
-    t))
+  (add-to-list 'load-path (package-install-directory pkg))
+  (load (package-autoload-file pkg) nil t)
+  (setf (package-status pkg) 'activated))
 
 ;; FIXME: return a reason instead?
-(defun package-activate (package)
-  "Try to activate PACKAGE.
+(defun package-activate (pkg)
+  "Try to activate PKG.
 
 Signal an error if the package could not be activated.
 
-Recursively activates all dependencies of PACKAGE."
+Recursively activates all dependencies of PKG."
   ;; Assume the user knows what he is doing -- go ahead and activate a
   ;; newer version of a package if an older one has already been
   ;; activated.  This is not ideal; we'd at least need to check to see
   ;; if the package has actually been loaded, and not merely
   ;; activated.
-  (let ((name (package-name package))
-        (hard-reqs (package-required-packages package 'hard))
-        (soft-reqs (package-required-packages package 'soft)))
+  (let ((name (package-name pkg)))
     (cond
+     ((eq (package-status pkg) 'activated))
      ;; Don't try to activate 'emacs', that's just silly.
      ((eq name 'emacs))
      ;; If this package is already the most recently installed version, no
      ;; further action is needed.
-     ((equal package (package-find-latest name t)))
-     ((member package package-activated-list))
+     ((equal pkg (package-find-latest name t :status 'activated)))
+     ((member pkg (package-find name)))
      (t
       ;; Signal an error if a hard requirement cannot be found, but not for a
       ;; soft requirement.
-      (dolist (req hard-reqs)
+      (dolist (req (package-required-packages pkg 'hard))
         (package-activate (package-find-latest req nil)))
-      (dolist (req soft-reqs)
-        (package-activate (package-find-latest req t)))))))
-
-;; TODO: CL-CHECK
-(defun package-mark-obsolete (package pkg-vec)
-  "Put PACKAGE on the obsolete list, if not already there.
-
-PKG-VEC describes the version of PACKAGE to mark obsolete."
-  (let ((elt (assq package package-obsolete-alist)))
-    (if elt
-        ;; If this obsolete version does not exist in the list, update
-        ;; it the list.
-        (unless (assoc (package-version pkg-vec) (cdr elt))
-          (setcdr elt (cons (cons (package-version pkg-vec) pkg-vec)
-                            (cdr elt))))
-      ;; Make a new association.
-      (setq package-obsolete-alist
-            (cons (cons package (list (cons (package-version pkg-vec)
-                                            pkg-vec)))
-                  package-obsolete-alist)))))
+      (dolist (req (package-required-packages pkg 'soft))
+        (package-activate (package-find-latest req t)))
+      (package-do-activate pkg)))))
 
 (defun package-generate-autoloads (pkg)
   "Generate autoload definitions for PKG."
@@ -944,8 +934,8 @@ supported."
 (defun package-read-archive-contents (archive)
   "Re-read `archive-contents' for ARCHIVE.
 
-Will add any new packages found `package-available-alist'. Will
-signal an error if the archive version is too new or if a
+Will add any new packages found `package-registry'. Will signal
+an error if the archive version is too new or if a
 package's :archive field does not match ARCHIVE."
   (let ((archive-contents (package--read-archive-file archive)))
     (if archive-contents
@@ -955,7 +945,7 @@ package's :archive field does not match ARCHIVE."
                    (package-name pkg)
                    (package-archive pkg)
                    archive))
-          (package-register pkg package-available-alist)))))
+          (package-register pkg)))))
 
 (defun package-download-transaction (transaction)
   "Download and install all the packages in the given TRANSACTION."
@@ -973,9 +963,8 @@ according to `package-find-latest'.
 Interactively, prompts for the package name."
   (interactive
    (list (intern (completing-read "Install package: "
-                                 (mapcar (lambda (elt)
-                                           (symbol-name (car elt)))
-                                         package-available-alist)
+                                  (loop for (name . pkgs) in package-registry
+                                        collect (symbol-name name))
                                  nil t))))
   (unless version
     (setq version (package-version (package-find-latest name))))
@@ -1004,7 +993,7 @@ BUF must be an Emacs Lisp source code file which is parseable by
   "Determine the package type from the contents of BUF."
   (with-current-buffer buf
     (condition-case err
-        (prog2
+        (progn
             (tar-mode)
             'tar)
       (error (emacs-lisp-mode)
@@ -1189,16 +1178,18 @@ download."
     (package--download-one-archive archive "archive-contents"))
   (package-read-all-archive-contents))
 
-;; TODO: CL-CHECK
+(defun package-activate-all-installed ()
+  "Activate all installed packages."
+  (loop for (name . pkgs) in package-registry
+        do (loop for pkg in pkgs
+            when (eq (package-status pkg) 'installed)
+            do (package-activate pkg))))
+
 (defun package-initialize ()
   "Load all packages and activate as many as possible."
-  (setq package-obsolete-alist nil)
-  (package-register-installed)
-  (package-read-all-archive-contents)
-  ;; Try to activate all our packages.
-  (mapc (lambda (elt)
-          (package-activate (car elt) (package-version (cdr elt))))
-        package-installed-alist))
+  (package-register-all-installed)
+  (package-activate-all-installed)
+  (package-read-all-archive-contents))
 
 
 

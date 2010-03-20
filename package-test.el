@@ -129,7 +129,7 @@
                                          :commentary "This is a cool simple file which doesn't actually do stuff.\n"
                                          :type 'single
                                          :archive 'manual))
-          (package-available-alist
+          (package-registry
            `((test-pkg . (,test-pkg1 ,test-pkg2))
              (dep-pkg . (,dep-pkg))
              (tarty . (,tarty))
@@ -189,9 +189,9 @@
 (expectations
   (desc "Basic sanity tests")
   (expect (package 'test-pkg)
-    (caar package-available-alist))
+    (caar package-registry))
   (expect (package test-pkg1)
-    (cadar package-available-alist))
+    (cadar package-registry))
 
   (desc "package-split-filename")
   (expect (package '(package . (0 1 1)))
