@@ -52,6 +52,8 @@
                                       (copy-package test-pkg1)
                                       (make-package
                                        :version '(1 1)
+                                       :authors '(("Joe Bob" . "jbob@example.com")
+                                                  ("Fred Jones" . "fjones@example.com"))
                                        :version-raw "1.1"
                                        :created "10 Mar 2008"
                                        :updated "10 Mar 2008")))
@@ -193,6 +195,8 @@
     (caar package-registry))
   (expect (package test-pkg1)
     (cadar package-registry))
+  (expect (package '((dep-pkg deppy)))
+    (package-requires-hard test-pkg1))
 
   (desc "package-split-filename")
   (expect (package '(package . (0 1 1)))
@@ -237,6 +241,41 @@
   (desc "package-find")
   (expect (package (list test-pkg1 test-pkg2))
     (package-find 'test-pkg))
+  (expect (package (list dep-pkg))
+    (package-find 'dep-pkg))
+  (expect (package (list test-pkg1))
+    (package-find 'test-pkg :version '(1 0)))
+  (expect (package (list test-pkg2))
+    (package-find 'test-pkg :version '(1 1)))
+  (expect (package (list test-pkg1))
+    (package-find 'test-pkg :version-raw "1.0"))
+  (expect (package (list internal-pkg))
+    (package-find 'internal-pkg :maintainer '("RMS" . "rms@example.com")))
+  (expect (package (list tarty))
+    (package-find 'tarty :archive 'manual))
+  (expect (package (list tarty))
+    (package-find 'tarty :archive 'manual :type 'tar))
+  (expect (package nil)
+    (package-find 'tarty :archive 'manual :type 'single))
+  (expect (package (list dep-pkg))
+    (package-find 'dep-pkg :provides '(deppy)))
+
+  (desc "package-find-latest")
+  (expect (package test-pkg2)
+    (package-find-latest 'test-pkg nil))
+  (expect (error)
+    (with-package-test
+     (package-find-latest 'test-pkg nil :license "gpl2")))
+  (expect (package nil)
+    (package-find-latest 'test-pkg t :license "gpl2"))
+  (expect (package nil)
+    (package-find-latest 'dep-pkg t
+                         :provides '(deppy)
+                         :wikipage "not-dep.el"))
+  (expect (package dep-pkg)
+    (package-find-latest 'dep-pkg t
+                         :provides '(deppy)
+                         :wikipage "deppy.el"))
 
   ;; Re-enable this later
   (desc "package-compute-transaction")
