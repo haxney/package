@@ -908,22 +908,24 @@ Signal an error if the entire string was not used."
       (car read-data))))
 
 (defun package--read-archive-file (archive)
-  "Re-read archive file FILE, if it exists.
+  "Re-read the contents for ARCHIVE.
 
 Will return the data from the file, or nil if the file does not
 exist. Will signal an error if the archive version is not
 supported."
-  (let ((file (package-archive-content-file archive)))
-    (if (file-exists-p file)
-        (with-temp-buffer
-          (insert-file-contents-literally file)
-          (let ((contents (package-read-from-string
-                           (buffer-substring-no-properties (point-min)
-                                                           (point-max)))))
-            (if (/= (car contents) package-archive-version)
-                (error "Package archive version %d is not equal to %d - upgrade package.el"
-                       (car contents) package-archive-version))
-            (cdr contents))))))
+  (let ((file (package-archive-content-file archive))
+        contents arch-version)
+    (when (file-exists-p file)
+      (with-temp-buffer
+        (insert-file-contents-literally file)
+        (setq contents (package-read-from-string
+                        (buffer-substring-no-properties (point-min)
+                                                        (point-max)))
+              arch-version (car contents)))
+      (unless (eq arch-version package-archive-version)
+        (error "Package archive version %d is not equal to %d - upgrade package.el"
+               arch-version package-archive-version))
+      (cdr contents))))
 
 (defun package-read-all-archive-contents ()
   "Read the archive description of each of the archives in `package-archives'."
