@@ -220,6 +220,9 @@
 
 (require 'assoc)
 (require 'elm)
+(require 'autoload)
+(require 'tar-mode)
+(require 'dired)
 (eval-when-compile (require 'cl))
 
 (defvar package-user-dir
@@ -714,9 +717,6 @@ Recursively activates all dependencies of PKG."
   "Generate autoload definitions for PKG."
   (let ((generated-autoload-file (package-autoload-file pkg))
          (version-control 'never))
-    ;; In Emacs 22 `update-directory-autoloads' does not seem
-    ;; to be autoloaded...
-    (require 'autoload)
     (update-directory-autoloads pkg-dir)))
 
 (defsubst package-parent-directory (dir)
@@ -738,7 +738,6 @@ uses an external `tar' program."
   (unless dir
     (setq dir default-directory))
 
-  (require 'tar-mode)
   (with-current-buffer buf
     (let ((default-directory dir))
       (if (fboundp 'tar-untar-buffer)
@@ -1145,7 +1144,6 @@ The file must match one of the extensions in `package-types'."
 This does not touch the package metadata at all (such as the fact
 that the package is no longer installed), so that must be done
 separately."
-  (require 'dired)          ; for dired-delete-file
   (dired-delete-file (package-install-directory pkg)
                      ;; FIXME: query user?
                      'always))
