@@ -63,7 +63,6 @@
                                      :version-raw "2.0"
                                      :authors '(("Sally Smith" . "ssmith@example.com"))
                                      :maintainer '("Sally Smith" . "ssmith@example.com")
-                                     :requires-hard '(())
                                      :provides '(deppy)
                                      :homepage "deppy.example.com"
                                      :wikipage "deppy.el")
@@ -161,6 +160,7 @@
             (setup-test (&rest options)
                         (dolist (op options)
                           (case op
+                            (basic (setf (package-requires-hard dep-pkg) nil))
                             (test-dir (make-directory test-dir t)
                                       (setq test-dir-created t))
                             (tarty
@@ -171,6 +171,7 @@
                                                ("info.epkg" . ,(cl-merge-pp tarty 'package))))))))))
        (prog1
            (progn
+             (setup-test 'basic)
              ,@body)
          (when test-dir-created
            (require 'dired)
@@ -226,6 +227,12 @@
     (package-split-filename "package-test-0.1.this-is-a-bad-name_#-" "" nil))
   (expect nil
     (package-split-filename "package-test-0.1.this-is-a-bad-name_#-" "" t))
+
+  (desc "package-required-packages")
+  (expect (package (list dep-pkg))
+    (package-required-packages test-pkg1))
+  (expect (package nil)
+    (package-required-packages dep-pkg))
 
   (desc "package-find")
   (expect (package (list test-pkg1 test-pkg2))

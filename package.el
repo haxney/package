@@ -857,12 +857,10 @@ hard, soft, or both. Its behavior is as follows:
  * 'hard: Return a list of only the hard requirements.
 
  * 'soft: Return a list of only the soft requirements."
-  (let ((hard (loop for (name provides)
-                    in (package-requires-hard pkg)
+  (let ((hard (loop for (name . provides) in (package-requires-hard pkg)
                     collect (package-find-latest
                              name nil :provides provides)))
-        (soft (loop for (name provides)
-                    in (package-requires-soft pkg)
+        (soft (loop for (name . provides) in (package-requires-soft pkg)
                     collect (package-find-latest
                              name nil :provides provides))))
     (cond
