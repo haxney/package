@@ -1150,32 +1150,32 @@ separately."
                      ;; FIXME: query user?
                      'always))
 
-;; TODO: CL-CHECK
-(defun package--download-one-archive (archive file)
+(defun package--download-one-archive (archive)
   "Download a single archive file and cache it locally.
 
-Downloads the archive index from ARCHIVE and stores it in FILE."
-  (let* ((archive-name (symbol-name (car archive)))
-         (archive-url (cdr archive))
-         (buf (url-retrieve-synchronously (concat archive-url file))))
+Downloads the archive index from ARCHIVE and store it according
+to ARCHIVE's local path."
+  (let* ((archive-url (concat (package-archive-url archive)
+                              package-archive-contents-filename))
+         (buf (url-retrieve-synchronously archive-url))
+         str)
     (package-handle-response buf)
-    (make-directory (concat (file-name-as-directory package-user-dir)
-                            "archives/" archive-name) t)
-    (setq buffer-file-name (concat (file-name-as-directory package-user-dir)
-                                   "archives/" archive-name "/" file))
-    (let ((version-control 'never))
-      (save-buffer))
+    (with-current-buffer buf
+      (setq str (buffer-substring-no-properties (point-min) (point-max))))
+    (make-directory (file-name-directory (package-archive-content-file archive)) t)
+    (with-temp-file (package-archive-content-file archive)
+      (insert str))
     (kill-buffer buf)))
 
-;; TODO: CL-CHECK
 (defun package-refresh-contents ()
-  "Download the ELPA archive description if needed.
-Invoking this will ensure that Emacs knows about the latest versions
-of all packages.  This will let Emacs make them available for
-download."
+  "Download the archive descriptions if needed.
+
+Invoking this will ensure that Emacs knows about the latest
+versions of all packages. This will let Emacs make them available
+for download."
   (interactive)
-  (dolist (archive package-archives)
-    (package--download-one-archive archive "archive-contents"))
+  (loop for (archive ign) in package-archives
+        do (package--download-one-archive archive))
   (package-read-all-archive-contents))
 
 (defun package-activate-all-installed ()
