@@ -1560,9 +1560,9 @@ RESULT is the list to which to add the package."
     (setq package-menu-sort-key col))
   (package-list-packages-internal))
 
-;; TODO: CL-CHECK
 (defun package--list-packages ()
   "Display a list of packages.
+
 Helper function that does all the work for the user-facing functions."
   (with-current-buffer (package-list-packages-internal)
     (package-menu-mode)
@@ -1601,21 +1601,15 @@ Helper function that does all the work for the user-facing functions."
     ;; them.
     (pop-to-buffer (current-buffer))))
 
-;; TODO: CL-CHECK
-(defun package-list-packages ()
+(defun package-list-packages (refresh)
   "Display a list of packages.
-Fetches the updated list of packages before displaying.
-The list is displayed in a buffer named `*Packages*'."
-  (interactive)
-  (package-refresh-contents)
-  (package--list-packages))
 
-;; TODO: CL-CHECK
-(defun package-list-packages-no-fetch ()
-  "Display a list of packages.
-Does not fetch the updated list of packages before displaying.
-The list is displayed in a buffer named `*Packages*'."
-  (interactive)
+Does not refresh the list of packages before displaying unless a
+prefix argument is supplied. The list is displayed in a buffer
+named `*Packages*'."
+  (interactive "P")
+  (when refresh
+   (package-refresh-contents))
   (package--list-packages))
 
 ;; Make it appear on the menu.
