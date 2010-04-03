@@ -235,6 +235,8 @@
   (desc "package-required-packages")
   (expect (package (list dep-pkg))
     (package-required-packages test-pkg1))
+  (expect (package (list dep-pkg))
+    (package-required-packages test-pkg2))
   (expect (package nil)
     (package-required-packages dep-pkg))
 
@@ -277,17 +279,21 @@
                          :provides '(deppy)
                          :wikipage "deppy.el"))
 
-  ;; Re-enable this later
   (desc "package-compute-transaction")
-  ;; (expect (package (package (list test-pkg2 dep-pkg)))
-  ;;   (package-compute-transaction (list test-pkg2) (package-required-packages test-pkg2)))
+  (expect (package (list test-pkg2))
+    (package-compute-transaction (list test-pkg2) nil))
+  (expect (package (list dep-pkg))
+    (package-compute-transaction nil (package-required-packages test-pkg2)))
+  (expect (package (list dep-pkg))
+    (package-compute-transaction (list dep-pkg) nil))
+  (expect (package (list dep-pkg test-pkg2))
+    (package-compute-transaction (list test-pkg2) (package-required-packages test-pkg2)))
 
   (desc "package-info-file")
   (expect (package (concat test-dir "package-test-1.2.3/info.epkg"))
     (package-info-file (make-package :name 'package-test
                                      :version '(1 2 3)
                                      :archive 'manual)))
-
   (expect (package "package-test-1.2.3/info.epkg")
     (package-info-file (make-package :name 'package-test
                                      :version '(1 2 3)

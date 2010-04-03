@@ -873,7 +873,6 @@ hard, soft, or both. Its behavior is as follows:
      (t
       (error "TYPE must be 'hard, 'soft, 'both, or nil; '%s' received" type)))))
 
-;; TODO: Currently broken.
 (defun package-compute-transaction (result requirements)
   "Recursively prepare a transaction, resolving dependencies.
 
@@ -884,10 +883,11 @@ before passing it up to the caller.
 REQUIREMENTS is a list of required packages, to be recursively
 processed to resolve all dependencies (if possible)."
   (loop for req in requirements
-        append (package-compute-transaction result
-                                            (package-required-packages req))
+        unless (member req result) append (package-compute-transaction
+                                           (append (list req) result)
+                                           (package-required-packages req))
         into temp
-        finally return (append temp result)))
+        finally return (remove-duplicates (append temp result))))
 
 (defun package-read-from-string (str)
   "Read a Lisp expression from STR.
