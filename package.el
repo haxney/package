@@ -887,7 +887,8 @@ processed to resolve all dependencies (if possible)."
                                            (append (list req) result)
                                            (package-required-packages req))
         into temp
-        finally return (remove-duplicates (append temp result))))
+        finally return (remove-duplicates (append temp result)
+                                          :from-end t)))
 
 (defun package-read-from-string (str)
   "Read a Lisp expression from STR.
