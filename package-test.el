@@ -451,6 +451,26 @@
     (with-temp-buffer
       (insert "I test-pkg            1.1         act     Simple package system for Emacs\n")
       (package-menu-parse-line nil (point-min))))
+
+  (desc "package-menu-make-pkg")
+  (expect (make-package :name 'test-pkg
+                        :version '(1 1)
+                        :status 'activated
+                        :summary "Simple package system for Emacs")
+    (package-menu-make-pkg '(:command "I"
+                                      :name "test-pkg"
+                                      :version "1.1"
+                                      :status "act"
+                                      :summary "Simple package system for Emacs")))
+  (expect (make-package :name 'builtin-pkg
+                        :version '(2 1 -3 2)
+                        :status 'installed
+                        :summary "Simple package system for Emacs")
+    (package-menu-make-pkg '(:command "I"
+                                      :name "builtin-pkg"
+                                      :version "2.1alpha2"
+                                      :status "inst"
+                                      :summary "Simple package system for Emacs")))
   )
 
 (provide 'package-test)

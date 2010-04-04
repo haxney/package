@@ -1503,6 +1503,22 @@ Advances point to the end of the line."
             append (list (intern (format ":%s" attr)) stripped)
             do (goto-char end-pos)))))
 
+(defun package-menu-make-pkg (plist)
+  "Create a package structure from PLIST.
+
+This should be a plist as returned from
+`package-menu-parse-line'."
+  (loop for key in plist by 'cddr
+        for val = (plist-get plist key)
+        do (setq val (case key
+                       (:command nil)
+                       (:name (intern val))
+                       (:version (version-to-list val))
+                       (:status (car (find val package-statuses :key 'cdr :test 'equal)))
+                       (:summary val)))
+        unless (eq key :command) append (list key val) into result
+        finally return (apply 'make-package result)))
+
 ;; TODO: CL-CHECK
 (defun package-list-maybe-add (package status result)
   "Add PACKAGE to the list if it is not already there.
