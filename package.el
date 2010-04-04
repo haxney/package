@@ -1442,7 +1442,7 @@ Emacs."
     (forward-line))
   (package-menu-revert))
 
-(defvar package-menu-line-format "  %-18s%-10s%-6s%.60s"
+(defconst package-menu-line-format "  %-20.18s%-12.10s%-8.6s%.60s"
   "The format for a single package line.
 
 It expects the following arguments to be given in the `format'
