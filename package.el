@@ -1459,6 +1459,14 @@ Used for parsing a package description line. Is an alist of the
 format (NAME . WIDTH), where NAME is the symbol name of the
 attribute and WIDTH is the integer width of the attribute.")
 
+(defconst package-menu-commands '((package-install . "I")
+                                  (package-delete  . "D"))
+  "Commands available in the package menu.
+
+This is an alist of the form (FUNC . STR), where FUNC is the
+symbol name of the function to run and STR is the string from the
+package status buffer which represents the command.")
+
 (defun package-print-package (pkg &optional newline)
   "Print out a single PKG line for the menu buffer.
 
@@ -1518,6 +1526,13 @@ This should be a plist as returned from
                        (:summary val)))
         unless (eq key :command) append (list key val) into result
         finally return (apply 'make-package result)))
+
+(defun package-menu-get-command (plist)
+  "Get the function specified by the command in PLIST.
+
+Uses the variable `package-menu-commands' to decode the command
+string."
+  (car (find (plist-get plist :command) package-menu-commands :key 'cdr :test 'equal)))
 
 ;; TODO: CL-CHECK
 (defun package-list-maybe-add (package status result)

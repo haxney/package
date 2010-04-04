@@ -471,6 +471,20 @@
                                       :version "2.1alpha2"
                                       :status "inst"
                                       :summary "Simple package system for Emacs")))
+
+  (desc "package-menu-get-command")
+  (expect 'package-install
+    (package-menu-get-command '(:command "I"
+                                         :name "builtin-pkg"
+                                         :version "2.1alpha2"
+                                         :status "inst"
+                                         :summary "Simple package system for Emacs")))
+  (expect 'package-delete
+    (package-menu-get-command '(:command "D"
+                                         :name "builtin-pkg"
+                                         :version "2.1alpha2"
+                                         :status "inst"
+                                         :summary "Simple package system for Emacs")))
   )
 
 (provide 'package-test)
