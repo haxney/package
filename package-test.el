@@ -493,6 +493,29 @@
                                          :version "2.1alpha2"
                                          :status "inst"
                                          :summary "Simple package system for Emacs")))
+
+  (desc "package-list-packages-internal")
+  (expect (package "  dep-pkg             2.0         avail   Simple package system for Emacs
+  internal-pkg        2.0beta2    act     Simple package system for Emacs
+  tarty               1.5alpha3   act     Simple package system for Emacs
+  test-pkg            1.0         obs     Simple package system for Emacs
+  test-pkg            1.1         act     Simple package system for Emacs
+")
+    (with-output-to-string
+     (with-temp-buffer
+       (package-list-packages-internal (current-buffer))
+       (buffer-substring (point-min) (point-max)))))
+  ;; Cheat and use `package-print-package' to simplify.
+  (expect (package (mapconcat '(lambda (item) (with-output-to-string (package-print-package item t)))
+                              (list test-pkg1
+                                    test-pkg2
+                                    tarty
+                                    internal-pkg
+                                    dep-pkg) ""))
+    (with-output-to-string
+     (with-temp-buffer
+       (package-list-packages-internal (current-buffer) 'version)
+       (buffer-substring (point-min) (point-max)))))
   )
 
 (provide 'package-test)

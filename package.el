@@ -1564,63 +1564,40 @@ RESULT is the list to which to add the package."
 ;; This decides how we should sort; nil means by package name.
 (defvar package-menu-sort-key nil)
 
-;; TODO: CL-CHECK
-(defun package-list-packages-internal ()
-  "List the available and installed packages."
-  (package-initialize)          ; FIXME: do this here?
-  (with-current-buffer (get-buffer-create "*Packages*")
+(defun* package-list-packages-internal (&optional (buf (get-buffer-create "*Packages*"))
+                                                  (selector 'name))
+  "List the available and installed packages.
+
+Inserts the contents into BUF, or a new buffer called
+\"*Packages*\" if BUF is nil. The packages are ordered according to SELECTOR
+
+This function does not initialize or refresh the list of
+packages, so that must be done separately."
+  (with-current-buffer buf
     (setq buffer-read-only nil)
     (erase-buffer)
-    (let ((info-list))
-      (mapc (lambda (elt)
-              (setq info-list
-                    (package-list-maybe-add (cdr elt)
-                                            ;; FIXME: it turns out to
-                                            ;; be tricky to see if
-                                            ;; this package is
-                                            ;; presently activated.
-                                            ;; That is lame!
-                                            "installed"
-                                            info-list)))
-            package-installed-alist)
-      (mapc (lambda (elt)
-              (setq info-list
-                    (package-list-maybe-add (cdr elt)
-                                            "available"
-                                            info-list)))
-            package-available-alist)
-      (mapc (lambda (elt)
-              (mapc (lambda (inner-elt)
-                      (setq info-list
-                            (package-list-maybe-add (cdr inner-elt)
-                                                    "obsolete"
-                                                    info-list)))
-                    (cdr elt)))
-            package-obsolete-alist)
-      (let ((selector (cond
-                       ((string= package-menu-sort-key "Version")
-                        ;; FIXME this doesn't work.
-                        #'(lambda (e) (cdr (car e))))
-                       ((string= package-menu-sort-key "Status")
-                        #'(lambda (e) (car (cdr e))))
-                       ((string= package-menu-sort-key "Description")
-                        #'(lambda (e) (car (cdr (cdr e)))))
-                       (t ; "Package" is default.
-                        #'(lambda (e) (symbol-name (car (car e))))))))
-        (setq info-list
-              (sort info-list
-                    (lambda (left right)
-                      (let ((vleft (funcall selector left))
-                            (vright (funcall selector right)))
-                        (string< vleft vright))))))
-      (mapc (lambda (elt)
-              (package-print-package (car (car elt))
-                                     (cdr (car elt))
-                                     (car (cdr elt))
-                                     (car (cdr (cdr elt)))))
-            info-list))
-    (goto-char (point-min))
-    (current-buffer)))
+    (let* ((select-comp
+            (case selector
+              (name (cons '(symbol-name (package-name pkg)) 'string<))
+              (version (cons '(package-version pkg) 'version-list-<))
+              (status (cons '(symbol-name (package-status pkg)) 'string<))
+              (summary (cons '(package-summary pkg) 'string<))))
+           ;; Yeah, this is a hack, but it's better than having separate `case'
+           ;; statements for the selector and comparator.
+           (selector (car select-comp))
+           (comparator (cdr select-comp))
+           sort-pred)
+      (macrolet ((selector (pack)
+                           `(let ((pkg ,pack)) ,(car select-comp))))
+        (setq sort-pred '(lambda (left right)
+                         (let ((vleft (selector left))
+                               (vright (selector right)))
+                           (funcall comparator vleft vright)))))
+
+      (loop for pkg in (sort (package-registry-flat) sort-pred)
+            do (package-print-package pkg t)))
+    (goto-char (point-min)))
+  buf)
 
 ;; TODO: CL-CHECK
 (defun package-menu-sort-by-column (&optional e)
