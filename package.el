@@ -275,11 +275,17 @@ doesn't have an extension, since it will never be independently
 downloaded or dealt with in any way aside from resolving
 dependencies.")
 
-(defconst package-statuses '(available installed activated obsolete)
-  "Possible statuses of a package.
+(defconst package-statuses '((available . "avail")
+                             (installed . "inst")
+                             (activated . "act")
+                             (obsolete  . "obs"))
+  "Possible statuses of a package with abbreviations.
 
-At any time, a package is in exactly one of these states. The
-mean of each status is described below:
+At any time, a package is in exactly one of these states. This is
+an alist of the form (STATUS . ABBREV), where STATUS is the
+package status (as a symbol) and ABBREV is the string
+abbreviation of the status. The mean of each status is described
+below:
 
  - `available': The package exists within an archive and is
    available to be downloaded and installed.
@@ -1436,7 +1442,7 @@ Emacs."
     (forward-line))
   (package-menu-revert))
 
-(defvar package-menu-line-format "  %-18s%-10s%-6.4s%.60s"
+(defvar package-menu-line-format "  %-18s%-10s%-6s%.60s"
   "The format for a single package line.
 
 It expects the following arguments to be given in the `format'
@@ -1458,7 +1464,7 @@ If NEWLINE is non-nil, print a newline after PKG."
         (line (format package-menu-line-format
                       (package-name pkg)
                       (package-version-canonical pkg)
-                      (package-status pkg)
+                      (aget package-statuses (package-status pkg))
                       (package-summary pkg))))
     (princ (propertize line 'font-lock-face face))
     (when newline

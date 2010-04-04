@@ -413,16 +413,16 @@
     (file-directory-p (package-install-directory tarty)))
 
   (desc "package-print-package")
-  (expect (package "  test-pkg            1.0       obso  Simple package system for Emacs")
+  (expect (package "  test-pkg            1.0       obs   Simple package system for Emacs")
     (with-output-to-string
       (package-print-package test-pkg1)))
-  (expect (package "  test-pkg            1.1       acti  Simple package system for Emacs")
+  (expect (package "  test-pkg            1.1       act   Simple package system for Emacs")
     (with-output-to-string
       (package-print-package test-pkg2)))
-  (expect (package "  test-pkg            1.1       acti  Simple package system for Emacs")
+  (expect (package "  test-pkg            1.1       act   Simple package system for Emacs")
     (with-output-to-string
       (package-print-package test-pkg2)))
-  (expect (package "  test-pkg            1.1       acti  Simple package system for Emacs\n")
+  (expect (package "  test-pkg            1.1       act   Simple package system for Emacs\n")
     (with-output-to-string
       (package-print-package test-pkg2 t)))
   )
