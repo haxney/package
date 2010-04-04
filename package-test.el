@@ -202,6 +202,14 @@
   (expect (package '((dep-pkg deppy)))
     (package-requires-hard test-pkg1))
 
+  (desc "package-registry-flat")
+  (expect (package (list test-pkg1
+                         test-pkg2
+                         dep-pkg
+                         tarty
+                         internal-pkg))
+    (package-registry-flat))
+
   (desc "package-split-filename")
   (expect (package '(package . (0 1 1)))
     (package-split-filename "package-0.1.1"))

@@ -390,6 +390,14 @@ More than one package is allowed for each name, since there may
 be multiple versions of a package available or two archives
 may each have different versions of a package available.")
 
+(defun package-registry-flat ()
+  "Returns a flattened version of `package-registry'.
+
+Sometimes, it is useful to have a flattened list of packages, so
+this function provides that."
+  (loop for (name . pkgs) in package-registry
+        append pkgs))
+
 (defun* package-find (name &key version
                            version-raw
                            summary
