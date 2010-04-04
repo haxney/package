@@ -47,7 +47,8 @@
                       :wikipage "test-pkg.el"
                       :commentary "This is a completely great testing package"
                       :archive 'elpa
-                      :type 'single))
+                      :type 'single
+                      :status 'obsolete))
           (test-pkg2 (cl-merge-struct 'package
                                       (copy-package test-pkg1)
                                       (make-package
@@ -56,7 +57,8 @@
                                                   ("Fred Jones" . "fjones@example.com"))
                                        :version-raw "1.1"
                                        :created "10 Mar 2008"
-                                       :updated "10 Mar 2008")))
+                                       :updated "10 Mar 2008"
+                                       :status 'activated)))
           (dep-pkg (cl-merge-struct 'package
                                     (copy-package test-pkg1)
                                     (make-package
@@ -67,8 +69,8 @@
                                      :maintainer '("Sally Smith" . "ssmith@example.com")
                                      :provides '(deppy)
                                      :homepage "deppy.example.com"
-                                     :wikipage "deppy.el")
-                                    ))
+                                     :wikipage "deppy.el"
+                                     :status 'available)))
           (tarty (cl-merge-struct 'package
                                   (copy-package test-pkg1)
                                   (make-package
@@ -82,7 +84,8 @@
                                    :homepage "tarty.example.com"
                                    :wikipage "tarty.el"
                                    :type 'tar
-                                   :archive 'manual)
+                                   :archive 'manual
+                                   :status 'activated)
                                   ))
           (internal-pkg (cl-merge-struct 'package
                                          (copy-package test-pkg1)
@@ -96,7 +99,8 @@
                                           :provides '(internal-pkg)
                                           :homepage "internal.example.com"
                                           :wikipage "internal-pkg.el"
-                                          :type 'builtin)
+                                          :type 'builtin
+                                          :status 'activated)
                                          ))
           tarty-file
           (simple-file ";;; simple-file.el --- A simple Elisp file for testing.
@@ -407,6 +411,20 @@
     (setup-test 'test-dir 'tarty)
     (package-delete tarty)
     (file-directory-p (package-install-directory tarty)))
+
+  (desc "package-print-package")
+  (expect (package "  test-pkg            1.0       obso  Simple package system for Emacs")
+    (with-output-to-string
+      (package-print-package test-pkg1)))
+  (expect (package "  test-pkg            1.1       acti  Simple package system for Emacs")
+    (with-output-to-string
+      (package-print-package test-pkg2)))
+  (expect (package "  test-pkg            1.1       acti  Simple package system for Emacs")
+    (with-output-to-string
+      (package-print-package test-pkg2)))
+  (expect (package "  test-pkg            1.1       acti  Simple package system for Emacs\n")
+    (with-output-to-string
+      (package-print-package test-pkg2 t)))
   )
 
 (provide 'package-test)

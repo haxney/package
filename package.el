@@ -1436,36 +1436,33 @@ Emacs."
     (forward-line))
   (package-menu-revert))
 
-;; TODO: CL-CHECK
-(defun package-print-package (package version key desc)
-  "Print out a single PACKAGE line for the menu buffer.
+(defvar package-menu-line-format "  %-18s%-10s%-6.4s%.60s"
+  "The format for a single package line.
 
-PACKAGE is the package name as a symbol.
+It expects the following arguments to be given in the `format'
+call (in order): package, version, status, description.")
 
-VERSION is the version as an integer vector.
+(defun package-print-package (pkg &optional newline)
+  "Print out a single PKG line for the menu buffer.
 
-KEY is the installation status of the package; either
-\"available\" or \"installed\".
-
-DESC is the short description of the package."
+If NEWLINE is non-nil, print a newline after PKG."
   (let ((face
-         (cond ((eq package 'emacs) 'font-lock-builtin-face)
-               ((string= key "available") 'default)
-               ((string= key "installed") 'font-lock-comment-face)
-               (t ; obsolete, but also the default.
+         (if (eq (package-type pkg) 'builtin)
+             'font-lock-builtin-face
+           (case (package-status pkg)
+             (available 'default)
+             ((installed activated) 'font-lock-comment-face)
+             (t ; obsolete, but also the default.
                                         ; is warning ok?
-                'font-lock-warning-face))))
-    (insert (propertize "  " 'font-lock-face face))
-    (insert (propertize (symbol-name package) 'font-lock-face face))
-    (indent-to 20 1)
-    (insert (propertize (package-version-join version) 'font-lock-face face))
-    (indent-to 30 1)
-    (insert (propertize key 'font-lock-face face))
-    ;; FIXME: this 'when' is bogus...
-    (when desc
-      (indent-to 41 1)
-      (insert (propertize desc 'font-lock-face face)))
-    (insert "\n")))
+              'font-lock-warning-face))))
+        (line (format package-menu-line-format
+                      (package-name pkg)
+                      (package-version-canonical pkg)
+                      (package-status pkg)
+                      (package-summary pkg))))
+    (princ (propertize line 'font-lock-face face))
+    (when newline
+      (princ "\n"))))
 
 ;; TODO: CL-CHECK
 (defun package-list-maybe-add (package status result)
