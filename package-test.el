@@ -425,6 +425,32 @@
   (expect (package "  test-pkg            1.1         act     Simple package system for Emacs\n")
     (with-output-to-string
       (package-print-package test-pkg2 t)))
+
+  (desc "package-menu-parse-line")
+  (expect '(:command ""
+                     :name "test-pkg"
+                     :version "1.1"
+                     :status "act"
+                     :summary "Simple package system for Emacs")
+    (with-temp-buffer
+      (insert "  test-pkg            1.1         act     Simple package system for Emacs\n")
+      (package-menu-parse-line nil (point-min))))
+  (expect '(:command ""
+                     :name "test-pkg"
+                     :version "1.1"
+                     :status "act"
+                     :summary "Simple package system for Emacs")
+    (with-temp-buffer
+      (insert "  test-pkg            1.1         act     Simple package system for Emacs")
+      (package-menu-parse-line nil (point-min))))
+  (expect '(:command "I"
+                     :name "test-pkg"
+                     :version "1.1"
+                     :status "act"
+                     :summary "Simple package system for Emacs")
+    (with-temp-buffer
+      (insert "I test-pkg            1.1         act     Simple package system for Emacs\n")
+      (package-menu-parse-line nil (point-min))))
   )
 
 (provide 'package-test)

@@ -1448,6 +1448,17 @@ Emacs."
 It expects the following arguments to be given in the `format'
 call (in order): package, version, status, description.")
 
+(defconst package-menu-attr-widths '((command . 2)
+                                     (name . 20)
+                                     (version . 12)
+                                     (status . 8)
+                                     (summary . 60))
+  "The widths of each of the attributes of a line in the package menu.
+
+Used for parsing a package description line. Is an alist of the
+format (NAME . WIDTH), where NAME is the symbol name of the
+attribute and WIDTH is the integer width of the attribute.")
+
 (defun package-print-package (pkg &optional newline)
   "Print out a single PKG line for the menu buffer.
 
@@ -1469,6 +1480,28 @@ If NEWLINE is non-nil, print a newline after PKG."
     (princ (propertize line 'font-lock-face face))
     (when newline
       (princ "\n"))))
+
+(defun package-menu-parse-line (&optional buf pos)
+  "Parses a package line into a plist.
+
+BUF is the buffer and POS is the starting position at which to
+begin parsing. If BUF and POS are not supplied, they default to
+the current position in the current buffer.
+
+Advances point to the end of the line."
+  (setq buf (or buf (current-buffer))
+        pos (or pos (point)))
+  (with-current-buffer buf
+    (save-excursion
+      (goto-char pos)
+      (loop for (attr . width) in package-menu-attr-widths
+            for end-pos = (min (+ (point) width) (line-end-position))
+            for raw-val = (buffer-substring-no-properties (point)
+                                                          end-pos)
+            for stripped = (replace-regexp-in-string
+                            "\\(^[[:space:]\\n]*\\|[[:space:]\\n]*$\\)" "" raw-val)
+            append (list (intern (format ":%s" attr)) stripped)
+            do (goto-char end-pos)))))
 
 ;; TODO: CL-CHECK
 (defun package-list-maybe-add (package status result)
