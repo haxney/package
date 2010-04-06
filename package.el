@@ -1639,7 +1639,7 @@ Helper function that does all the work for the user-facing functions."
              (2 . "Package")
              (20 . "Version")
              (30 . "Status")
-             (41 . "Description"))
+             (41 . "Summary"))
            ""))
 
     ;; It's okay to use pop-to-buffer here.  The package menu buffer
