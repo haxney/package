@@ -1561,9 +1561,6 @@ RESULT is the list to which to add the package."
                          result))))
   result)
 
-;; This decides how we should sort; nil means by package name.
-(defvar package-menu-sort-key nil)
-
 (defun* package-list-packages-internal (&optional (buf (get-buffer-create "*Packages*"))
                                                   (selector 'name))
   "List the available and installed packages.
@@ -1599,7 +1596,6 @@ packages, so that must be done separately."
     (goto-char (point-min)))
   buf)
 
-;; TODO: CL-CHECK
 (defun package-menu-sort-by-column (&optional e)
   "Sort the package menu by the last column clicked, E."
   (interactive (list last-input-event))
@@ -1609,8 +1605,7 @@ packages, so that must be done separately."
          (col (if obj
                   (get-text-property (cdr obj) 'column-name (car obj))
                 (get-text-property (posn-point pos) 'column-name))))
-    (setq package-menu-sort-key col))
-  (package-list-packages-internal))
+    (package-list-packages-internal nil col)))
 
 (defun package--list-packages ()
   "Display a list of packages.
