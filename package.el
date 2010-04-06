@@ -1467,6 +1467,84 @@ Used for parsing a package description line. Is an alist of the
 format (NAME . WIDTH), where NAME is the symbol name of the
 attribute and WIDTH is the integer width of the attribute.")
 
+(defun package-symbol-lessp (s1 s2)
+  "Compare the `symbol-name's of two symbols.
+
+Actual comparison is done with `string-lessp'."
+  (string< (symbol-name s1) (symbol-name s2)))
+
+(defsubst package-rassoc-car (item list)
+  "Returns the car of an `rassoc' for ITEM in LIST."
+  (car (rassoc item list)))
+
+(defsubst package-assoc-cdr (item list)
+  "Returns the cdr of an `assoc' for ITEM in LIST."
+  (cdr (assoc item list)))
+
+(defstruct package-menu-col
+  "Specification of a single column in the package list buffer.
+
+The following slots are defined:
+
+NAME: The human-readable name of the column.
+
+TYPE: The name of the column, as a symbol.
+
+WIDTH: The maximum width of the column. This includes padding, so
+       the number of printed characters will be strictly less
+       than this.
+
+READER: Function to use to read a Lisp object from the buffer
+        line. A function which receives a single string argument
+        and returns a value appropriate for assignment to a
+        package structure.
+
+WRITER: Function to write the column to a string. Takes a single
+        argument, a package structure, and returns a string
+        representation of the column information.
+
+COMPARATOR: Function to compare two package structures according
+            to this column. used for sorting."
+  name
+  type
+  width
+  reader
+  writer
+  comparator)
+
+(defconst package-menu-columns
+  (mapcar 'make-package-menu-col
+          '((:name ""
+                   :type command
+                   :width 2
+                   :reader nil
+                   :writer nil
+                   :comparator nil)
+            (:name "Package"
+                   :type name
+                   :width 20
+                   :reader intern
+                   :writer package-name
+                   :comparator package-symbol-lessp)
+            (:name "Version"
+                   :type version
+                   :width 12
+                   :reader version-to-list
+                   :writer elx-version-canonical
+                   :comparator version-list-<)
+            (:name "Status"
+                   :type status
+                   :width 8
+                   :reader package-rassoc-car
+                   :writer package-assoc-cdr
+                   :comparator string-lessp)
+            (:name "Summary"
+                   :type summary
+                   :width 60
+                   :reader identity
+                   :writer identity
+                   :comparator string-lessp))))
+
 (defconst package-menu-commands '((package-install . "I")
                                   (package-delete  . "D"))
   "Commands available in the package menu.
