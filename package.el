@@ -353,6 +353,10 @@ arguments are supported by keys."
 Simply passes it through `elx-version-canonical'."
   (elx-version-canonical (package-version pkg)))
 
+(defsubst package-status-string (pkg)
+  "Return the string representation of the status of PKG."
+  (cdr (assoc (package-status pkg) package-statuses)))
+
 (defun package-suffix (pkg &optional noerror)
   "Gets the download suffix for PKG.
 
@@ -1507,7 +1511,7 @@ COMPARATOR: Function to compare two package structures according
   comparator)
 
 (defconst package-menu-columns
-  (mapcar 'make-package-menu-col
+  (mapcar '(lambda (spec) (apply 'make-package-menu-col spec))
           '((:name ""
                    :type command
                    :width 2
@@ -1524,19 +1528,19 @@ COMPARATOR: Function to compare two package structures according
                    :type version
                    :width 12
                    :reader version-to-list
-                   :writer elx-version-canonical
+                   :writer package-version-canonical
                    :comparator version-list-<)
             (:name "Status"
                    :type status
                    :width 8
                    :reader package-rassoc-car
-                   :writer package-assoc-cdr
+                   :writer package-status-string
                    :comparator string-lessp)
             (:name "Summary"
                    :type summary
                    :width 60
                    :reader identity
-                   :writer identity
+                   :writer package-summary
                    :comparator string-lessp))))
 
 (defconst package-menu-commands '((package-install . "I")
@@ -1560,11 +1564,15 @@ If NEWLINE is non-nil, print a newline after PKG."
              (t ; obsolete, but also the default.
                                         ; is warning ok?
               'font-lock-warning-face))))
-        (line (format package-menu-line-format
-                      (package-name pkg)
-                      (package-version-canonical pkg)
-                      (aget package-statuses (package-status pkg))
-                      (package-summary pkg))))
+        (line (loop for col in package-menu-columns
+                    for writer-func = (package-menu-col-writer col)
+                    for width = (package-menu-col-width col)
+                    for col-str = (if writer-func (funcall writer-func pkg) "")
+                    concat (format (format "%%-%d.%ds" width (1- width)) col-str) into tmp
+
+                    ;; Delete trailing whitespace (due to summary).
+                    finally return (replace-regexp-in-string "[[:space:]\\n]*$" "" tmp))))
+
     (princ (propertize line 'font-lock-face face))
     (when newline
       (princ "\n"))))
