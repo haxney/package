@@ -308,25 +308,25 @@ below:
   "Status to assign to packages which don't provide their own.")
 
 (defstruct (package (:include elx-pkg)
-                         (:constructor inherit-package
-                                       (pkg
-                                        &key archive type status
-                                        &aux (name (elx-pkg-name pkg))
-                                        (version (elx-pkg-version pkg))
-                                        (version-raw (elx-pkg-version-raw pkg))
-                                        (summary (elx-pkg-summary pkg))
-                                        (created (elx-pkg-created pkg))
-                                        (updated (elx-pkg-updated pkg))
-                                        (license (elx-pkg-license pkg))
-                                        (authors (elx-pkg-authors pkg))
-                                        (maintainer (elx-pkg-maintainer pkg))
-                                        (provides (elx-pkg-provides pkg))
-                                        (requires-hard (elx-pkg-requires-hard pkg))
-                                        (requires-soft (elx-pkg-requires-soft pkg))
-                                        (keywords (elx-pkg-keywords pkg))
-                                        (homepage (elx-pkg-homepage pkg))
-                                        (wikipage (elx-pkg-wikipage pkg))
-                                        (commentary (elx-pkg-commentary pkg)))))
+                    (:constructor inherit-package
+                                  (pkg
+                                   &key archive type status
+                                   &aux (name (elx-pkg-name pkg))
+                                   (version (elx-pkg-version pkg))
+                                   (version-raw (elx-pkg-version-raw pkg))
+                                   (summary (elx-pkg-summary pkg))
+                                   (created (elx-pkg-created pkg))
+                                   (updated (elx-pkg-updated pkg))
+                                   (license (elx-pkg-license pkg))
+                                   (authors (elx-pkg-authors pkg))
+                                   (maintainer (elx-pkg-maintainer pkg))
+                                   (provides (elx-pkg-provides pkg))
+                                   (requires-hard (elx-pkg-requires-hard pkg))
+                                   (requires-soft (elx-pkg-requires-soft pkg))
+                                   (keywords (elx-pkg-keywords pkg))
+                                   (homepage (elx-pkg-homepage pkg))
+                                   (wikipage (elx-pkg-wikipage pkg))
+                                   (commentary (elx-pkg-commentary pkg)))))
   "Extends the `elx-pkg' structure with archive-specific information.
 
 This contains the complete info about a package as contained in
@@ -359,7 +359,7 @@ Simply passes it through `elx-version-canonical'."
 If PKG is a builtin package, signals an error unless NOERROR is
 non-nil."
   (let* ((type (package-type pkg))
-        (suffix (aget package-types type t)))
+         (suffix (aget package-types type t)))
     (if (and (eq type 'builtin) (not noerror))
         (error "Package is a builtin, and therefore does not have a suffix")
       suffix)))
@@ -461,7 +461,7 @@ will be."
     (setq keys (plist-put keys :version nil)))
 
   (let* ((pkgs (apply 'package-find name keys))
-        (result (car-safe pkgs)))
+         (result (car-safe pkgs)))
     (dolist (pkg (cdr-safe pkgs))
       (when (version-list-< (package-version result) (package-version pkg))
         (setq result pkg)))
@@ -479,8 +479,8 @@ an archive URL is meaningless for them.
 
 Each archive in `package-archives' is checked."
   (when (eq archive 'builtin)
-      (unless noerror
-        (error "Builtin archive does not have a download URL")))
+    (unless noerror
+      (error "Builtin archive does not have a download URL")))
   (nth 0 (aget package-archives archive)))
 
 (defun package-archive-localpath (archive)
@@ -531,8 +531,8 @@ Returns nil if PKG was already in the list or PKG if it was not."
         (existing-pkgs (aget package-registry pkg-name)))
     (when existing-pkgs
       (unless (member pkg existing-pkgs)
-       (nconc existing-pkgs (list pkg))
-       pkg))))
+        (nconc existing-pkgs (list pkg))
+        pkg))))
 
 (defsubst package-load-descriptor (pkg)
   "Return information the info file of PKG.
@@ -598,7 +598,7 @@ version."
          (file-info (package-split-filename file
                                             (aget package-types type t)
                                             noerror))
-        archive)
+         archive)
     (loop for (arch info) in package-archives
           for arch-path = (package-archive-localpath arch)
           for path-len = (length arch-path)
@@ -730,7 +730,7 @@ Recursively activates all dependencies of PKG."
 (defun package-generate-autoloads (pkg)
   "Generate autoload definitions for PKG."
   (let ((generated-autoload-file (package-autoload-file pkg))
-         (version-control 'never))
+        (version-control 'never))
     (update-directory-autoloads pkg-dir)))
 
 (defsubst package-parent-directory (dir)
@@ -820,24 +820,24 @@ the buffer."
   (let ((type (url-type url-current-object))
         (buf (or buf (current-buffer))))
     (with-current-buffer buf
-     (cond
-      ((equal type "http")
-       (let ((response (url-http-parse-response))
-             header-end)
-         (unless (eq (/ response 100) 2)
-           (display-buffer (current-buffer))
-           (error "Error during download request:%s"
-                  (buffer-substring-no-properties (point) (progn
-                                                            (end-of-line)
-                                                            (point)))))
-         ;; Strip HTTP headers
-         (ietf-drums-narrow-to-header)
-         (setq header-end (1+ (point-max)))
-         (widen)
-         (delete-region (point-min) header-end)
-         (goto-char (point-min))))
-      ((equal type "file")
-       nil)))))
+      (cond
+       ((equal type "http")
+        (let ((response (url-http-parse-response))
+              header-end)
+          (unless (eq (/ response 100) 2)
+            (display-buffer (current-buffer))
+            (error "Error during download request:%s"
+                   (buffer-substring-no-properties (point) (progn
+                                                             (end-of-line)
+                                                             (point)))))
+          ;; Strip HTTP headers
+          (ietf-drums-narrow-to-header)
+          (setq header-end (1+ (point-max)))
+          (widen)
+          (delete-region (point-min) header-end)
+          (goto-char (point-min))))
+       ((equal type "file")
+        nil)))))
 
 (defun package-download (pkg)
   "Download and install PKG.
@@ -979,7 +979,7 @@ Interactively, prompts for the package name."
    (list (intern (completing-read "Install package: "
                                   (loop for (name . pkgs) in package-registry
                                         collect (symbol-name name))
-                                 nil t))))
+                                  nil t))))
   (unless version
     (setq version (package-version (package-find-latest name))))
 
@@ -1008,8 +1008,8 @@ BUF must be an Emacs Lisp source code file which is parseable by
   (with-current-buffer buf
     (condition-case err
         (progn
-            (tar-mode)
-            'tar)
+          (tar-mode)
+          'tar)
       (error (emacs-lisp-mode)
              'single))))
 
@@ -1049,12 +1049,12 @@ BUF is a buffer containing raw tar data. If there is a problem,
 then an error is signaled unless NOERROR is non-nil."
   (let* ((items (package-tar-items buf))
          (dir-hdr (find-if '(lambda (item)
-                          (and (package-split-filename (car item) nil t)
-                               ;; 5 is the tar link-type for a directory
-                               (eq (cdr item) 5)))
-                       items
-                       :key '(lambda (item) (cons (tar-header-name item)
-                                                  (tar-header-link-type item)))))
+                              (and (package-split-filename (car item) nil t)
+                                   ;; 5 is the tar link-type for a directory
+                                   (eq (cdr item) 5)))
+                           items
+                           :key '(lambda (item) (cons (tar-header-name item)
+                                                      (tar-header-link-type item)))))
          ;; Check that we actually received successfully found dir-hdr
          (name-vers (package-split-filename (tar-header-name dir-hdr)))
          (pkg-skel (make-package :name (car name-vers)
@@ -1064,8 +1064,8 @@ then an error is signaled unless NOERROR is non-nil."
                                  :archive 'manual))
          (info-file (package-info-file pkg-skel t))
          (pkg-hdr (find info-file items
-                         :key 'tar-header-name
-                         :test 'equal))
+                        :key 'tar-header-name
+                        :test 'equal))
          (start (tar-header-data-start pkg-hdr))
          (end (+ start (tar-header-size pkg-hdr)))
          (pkg-data (with-current-buffer buf
@@ -1088,9 +1088,9 @@ FILE is the path to a tar archive."
   (let* ((pkg (package-from-filename file))
 
          (pkg-info (shell-command-to-string
-                            ;; Requires GNU tar.
-                            (concat "tar -xOf " file " "
-                                    (package-info-file pkg t))))
+                    ;; Requires GNU tar.
+                    (concat "tar -xOf " file " "
+                            (package-info-file pkg t))))
          (pkg-new (apply 'make-package (package-read-from-string pkg-info))))
 
     ;; TODO: Maybe add some more sanity checks... Use a hook to avoid having to
@@ -1195,8 +1195,8 @@ for download."
   "Activate all installed packages."
   (loop for (name . pkgs) in package-registry
         do (loop for pkg in pkgs
-            when (eq (package-status pkg) 'installed)
-            do (package-activate pkg))))
+                 when (eq (package-status pkg) 'installed)
+                 do (package-activate pkg))))
 
 (defun package-initialize ()
   "Load all packages and activate as many as possible."
@@ -1210,7 +1210,7 @@ for download."
 
 (defvar package-menu-mode-map
   (let ((map (make-keymap))
-	(menu-map (make-sparse-keymap "Package")))
+        (menu-map (make-sparse-keymap "Package")))
     (suppress-keymap map)
     (define-key map "q" 'quit-window)
     (define-key map "n" 'next-line)
@@ -1228,50 +1228,50 @@ for download."
     (define-key map [menu-bar package-menu] (cons "Package" menu-map))
     (define-key menu-map [mq]
       '(menu-item "Quit" quit-window
-		  :help "Quit package selection"))
+                  :help "Quit package selection"))
     (define-key menu-map [s1] '("--"))
     (define-key menu-map [mn]
       '(menu-item "Next" next-line
-		  :help "Next Line"))
+                  :help "Next Line"))
     (define-key menu-map [mp]
       '(menu-item "Previous" previous-line
-		  :help "Previous Line"))
+                  :help "Previous Line"))
     (define-key menu-map [s2] '("--"))
     (define-key menu-map [mu]
       '(menu-item "Unmark" package-menu-mark-unmark
-		  :help "Clear any marks on a package and move to the next line"))
+                  :help "Clear any marks on a package and move to the next line"))
     (define-key menu-map [munm]
       '(menu-item "Unmark backwards" package-menu-backup-unmark
-		  :help "Back up one line and clear any marks on that package"))
+                  :help "Back up one line and clear any marks on that package"))
     (define-key menu-map [md]
       '(menu-item "Mark for deletion" package-menu-mark-delete
-		  :help "Mark a package for deletion and move to the next line"))
+                  :help "Mark a package for deletion and move to the next line"))
     (define-key menu-map [mi]
       '(menu-item "Mark for install" package-menu-mark-install
-		  :help "Mark a package for installation and move to the next line"))
+                  :help "Mark a package for installation and move to the next line"))
     (define-key menu-map [s3] '("--"))
     (define-key menu-map [mg]
       '(menu-item "Update package list" package-menu-revert
-		  :help "Update the list of packages"))
+                  :help "Update the list of packages"))
     (define-key menu-map [mr]
       '(menu-item "Refresh package list" package-menu-refresh
-		  :help "Download the ELPA archive"))
+                  :help "Download the ELPA archive"))
     (define-key menu-map [s4] '("--"))
     (define-key menu-map [mt]
       '(menu-item "Mark obsolete packages" package-menu-mark-obsolete-for-deletion
-		  :help "Mark all obsolete packages for deletion"))
+                  :help "Mark all obsolete packages for deletion"))
     (define-key menu-map [mx]
       '(menu-item "Execute actions" package-menu-execute
-		  :help "Perform all the marked actions"))
+                  :help "Perform all the marked actions"))
     (define-key menu-map [s5] '("--"))
     (define-key menu-map [mh]
       '(menu-item "Help" package-menu-quick-help
-		  :help "Show short key binding help for package-menu-mode"))
+                  :help "Show short key binding help for package-menu-mode"))
     (define-key menu-map [mc]
       '(menu-item "View Commentary" package-menu-view-commentary
-		  :help "Display information about this package"))
+                  :help "Display information about this package"))
     map)
-   "Local keymap for `package-menu-mode' buffers.")
+  "Local keymap for `package-menu-mode' buffers.")
 
 (defvar package-menu-sort-button-map
   (let ((map (make-sparse-keymap)))
@@ -1662,9 +1662,9 @@ packages, so that must be done separately."
       (macrolet ((selector (pack)
                            `(let ((pkg ,pack)) ,(car select-comp))))
         (setq sort-pred '(lambda (left right)
-                         (let ((vleft (selector left))
-                               (vright (selector right)))
-                           (funcall comparator vleft vright)))))
+                           (let ((vleft (selector left))
+                                 (vright (selector right)))
+                             (funcall comparator vleft vright)))))
 
       (loop for pkg in (sort (package-registry-flat) sort-pred)
             do (package-print-package pkg t)))
@@ -1733,7 +1733,7 @@ prefix argument is supplied. The list is displayed in a buffer
 named `*Packages*'."
   (interactive "P")
   (when refresh
-   (package-refresh-contents))
+    (package-refresh-contents))
   (package--list-packages))
 
 ;; Make it appear on the menu.
