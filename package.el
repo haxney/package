@@ -1467,12 +1467,6 @@ Used for parsing a package description line. Is an alist of the
 format (NAME . WIDTH), where NAME is the symbol name of the
 attribute and WIDTH is the integer width of the attribute.")
 
-(defun package-symbol-lessp (s1 s2)
-  "Compare the `symbol-name's of two symbols.
-
-Actual comparison is done with `string-lessp'."
-  (string< (symbol-name s1) (symbol-name s2)))
-
 (defsubst package-rassoc-car (item list)
   "Returns the car of an `rassoc' for ITEM in LIST."
   (car (rassoc item list)))
@@ -1525,7 +1519,7 @@ COMPARATOR: Function to compare two package structures according
                    :width 20
                    :reader intern
                    :writer package-name
-                   :comparator package-symbol-lessp)
+                   :comparator string-lessp)
             (:name "Version"
                    :type version
                    :width 12
