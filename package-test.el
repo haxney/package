@@ -522,22 +522,40 @@
           (package-menu-compute-header-line))
   (expect '(space :align-to 2)
           (get-text-property 0 'display (package-menu-compute-header-line)))
-  ;; The `help-echo' property stands in for the multiple properties which are
-  ;; set for column text
-  (expect "mouse-1: sort by column"
-          (get-text-property 1 'help-echo (package-menu-compute-header-line)))
+  (expect (make-package-menu-col :name "Package"
+                                 :type 'name
+                                 :width 20
+                                 :reader 'intern
+                                 :writer 'package-name
+                                 :comparator 'string-lessp)
+          (get-text-property 1 'package-menu-col (package-menu-compute-header-line)))
   (expect '(space :align-to 22)
           (get-text-property 8 'display (package-menu-compute-header-line)))
-  (expect "mouse-1: sort by column"
-          (get-text-property 9 'help-echo (package-menu-compute-header-line)))
+  (expect (make-package-menu-col :name "Version"
+                                 :type 'version
+                                 :width 12
+                                 :reader 'version-to-list
+                                 :writer 'package-version-canonical
+                                 :comparator 'version-list-<)
+          (get-text-property 9 'package-menu-col (package-menu-compute-header-line)))
   (expect '(space :align-to 34)
           (get-text-property 16 'display (package-menu-compute-header-line)))
-  (expect "mouse-1: sort by column"
-          (get-text-property 17 'help-echo (package-menu-compute-header-line)))
+  (expect (make-package-menu-col :name "Status"
+                                 :type 'status
+                                 :width 8
+                                 :reader 'package-status-symbol
+                                 :writer 'package-status-string
+                                 :comparator 'string-lessp)
+          (get-text-property 17 'package-menu-col (package-menu-compute-header-line)))
   (expect '(space :align-to 42)
           (get-text-property 23 'display (package-menu-compute-header-line)))
-  (expect "mouse-1: sort by column"
-          (get-text-property 24 'help-echo (package-menu-compute-header-line)))
+  (expect (make-package-menu-col :name "Summary"
+                                 :type 'summary
+                                 :width 60
+                                 :reader 'identity
+                                 :writer 'package-summary
+                                 :comparator 'string-lessp)
+          (get-text-property 24 'package-menu-col (package-menu-compute-header-line)))
   )
 
 (provide 'package-test)
