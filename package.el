@@ -357,6 +357,12 @@ Simply passes it through `elx-version-canonical'."
   "Return the string representation of the status of PKG."
   (cdr (assoc (package-status pkg) package-statuses)))
 
+(defun package-status-symbol (str)
+  "Return the package status symbol corresponding to STR.
+
+More or less the reverse of `package-status-string'."
+  (car (rassoc str package-statuses)))
+
 (defun package-suffix (pkg &optional noerror)
   "Gets the download suffix for PKG.
 
@@ -1471,14 +1477,6 @@ Used for parsing a package description line. Is an alist of the
 format (NAME . WIDTH), where NAME is the symbol name of the
 attribute and WIDTH is the integer width of the attribute.")
 
-(defsubst package-rassoc-car (item list)
-  "Returns the car of an `rassoc' for ITEM in LIST."
-  (car (rassoc item list)))
-
-(defsubst package-assoc-cdr (item list)
-  "Returns the cdr of an `assoc' for ITEM in LIST."
-  (cdr (assoc item list)))
-
 (defstruct package-menu-col
   "Specification of a single column in the package list buffer.
 
@@ -1502,13 +1500,17 @@ WRITER: Function to write the column to a string. Takes a single
         representation of the column information.
 
 COMPARATOR: Function to compare two package structures according
-            to this column. used for sorting."
+            to this column. used for sorting.
+
+SKIP-STRUCT: Skip adding this column to the package structure.
+             Skips adding the column if this slot is non-nil."
   name
   type
   width
   reader
   writer
-  comparator)
+  comparator
+  skip-struct)
 
 (defconst package-menu-columns
   (mapcar '(lambda (spec) (apply 'make-package-menu-col spec))
@@ -1517,7 +1519,8 @@ COMPARATOR: Function to compare two package structures according
                    :width 2
                    :reader nil
                    :writer nil
-                   :comparator nil)
+                   :comparator nil
+                   :skip-struct t)
             (:name "Package"
                    :type name
                    :width 20
@@ -1533,7 +1536,7 @@ COMPARATOR: Function to compare two package structures according
             (:name "Status"
                    :type status
                    :width 8
-                   :reader package-rassoc-car
+                   :reader package-status-symbol
                    :writer package-status-string
                    :comparator string-lessp)
             (:name "Summary"
@@ -1606,13 +1609,12 @@ This should be a plist as returned from
 `package-menu-parse-line'."
   (loop for key in plist by 'cddr
         for val = (plist-get plist key)
-        do (setq val (case key
-                       (:command nil)
-                       (:name (intern val))
-                       (:version (version-to-list val))
-                       (:status (car (find val package-statuses :key 'cdr :test 'equal)))
-                       (:summary val)))
-        unless (eq key :command) append (list key val) into result
+        ;; Strip the leading colon from the key name.
+        for search-key = (intern (replace-regexp-in-string "^:" "" (symbol-name key)))
+        for col = (find search-key package-menu-columns :key 'package-menu-col-type)
+        for reader = (package-menu-col-reader col)
+        unless (package-menu-col-skip-struct col)
+          append (list key (funcall reader val)) into result
         finally return (apply 'make-package result)))
 
 (defun package-menu-get-command (plist)
