@@ -1584,7 +1584,7 @@ Advances point to the end of the line."
                                                           end-pos)
             for stripped = (replace-regexp-in-string
                             "\\(^[[:space:]\\n]*\\|[[:space:]\\n]*$\\)" "" raw-val)
-            append (list (intern (format ":%s" attr)) stripped)
+            append (list attr stripped)
             do (goto-char end-pos)))))
 
 (defun package-menu-make-pkg (plist)
@@ -1593,21 +1593,23 @@ Advances point to the end of the line."
 This should be a plist as returned from
 `package-menu-parse-line'."
   (loop for key in plist by 'cddr
+        for struct-key = (intern (concat ":" (symbol-name key)))
         for val = (plist-get plist key)
-        ;; Strip the leading colon from the key name.
-        for search-key = (intern (replace-regexp-in-string "^:" "" (symbol-name key)))
-        for col = (find search-key package-menu-columns :key 'package-menu-col-type)
+        for col = (find key package-menu-columns :key 'package-menu-col-type)
         for reader = (package-menu-col-reader col)
         unless (package-menu-col-skip-struct col)
-          append (list key (funcall reader val)) into result
+          append (list struct-key (funcall reader val)) into result
         finally return (apply 'make-package result)))
 
 (defun package-menu-get-command (plist)
-  "Get the function specified by the command in PLIST.
+  "Get the function specified by the command property in PLIST.
 
 Uses the variable `package-menu-commands' to decode the command
 string."
-  (car (find (plist-get plist :command) package-menu-commands :key 'cdr :test 'equal)))
+  (car (find (plist-get plist 'command)
+             package-menu-commands
+             :key 'cdr
+             :test 'equal)))
 
 ;; TODO: CL-CHECK
 (defun package-list-maybe-add (package status result)
