@@ -1460,23 +1460,6 @@ Emacs."
     (forward-line))
   (package-menu-revert))
 
-(defconst package-menu-line-format "  %-20.18s%-12.10s%-8.6s%.60s"
-  "The format for a single package line.
-
-It expects the following arguments to be given in the `format'
-call (in order): package, version, status, description.")
-
-(defconst package-menu-attr-widths '((command . 2)
-                                     (name . 20)
-                                     (version . 12)
-                                     (status . 8)
-                                     (summary . 60))
-  "The widths of each of the attributes of a line in the package menu.
-
-Used for parsing a package description line. Is an alist of the
-format (NAME . WIDTH), where NAME is the symbol name of the
-attribute and WIDTH is the integer width of the attribute.")
-
 (defstruct package-menu-col
   "Specification of a single column in the package list buffer.
 
@@ -1593,7 +1576,9 @@ Advances point to the end of the line."
   (with-current-buffer buf
     (save-excursion
       (goto-char pos)
-      (loop for (attr . width) in package-menu-attr-widths
+      (loop for col in package-menu-columns
+            for attr = (package-menu-col-type col)
+            for width = (package-menu-col-width col)
             for end-pos = (min (+ (point) width) (line-end-position))
             for raw-val = (buffer-substring-no-properties (point)
                                                           end-pos)
