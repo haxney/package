@@ -517,44 +517,27 @@
        (package-list-packages-internal (current-buffer) 'version)
        (buffer-substring (point-min) (point-max)))))
 
-  (desc "package-menu-set-header-line")
+  (desc "package-menu-compute-header-line")
   (expect " Package Version Status Summary "
-          (with-temp-buffer
-            (package-menu-set-header-line)))
+          (package-menu-compute-header-line))
   (expect '(space :align-to 2)
-          (with-temp-buffer
-            (package-menu-set-header-line)
-            (get-text-property 0 'display header-line-format)))
+          (get-text-property 0 'display (package-menu-compute-header-line)))
   ;; The `help-echo' property stands in for the multiple properties which are
   ;; set for column text
   (expect "mouse-1: sort by column"
-          (with-temp-buffer
-            (package-menu-set-header-line)
-            (get-text-property 1 'help-echo header-line-format)))
+          (get-text-property 1 'help-echo (package-menu-compute-header-line)))
   (expect '(space :align-to 22)
-          (with-temp-buffer
-            (package-menu-set-header-line)
-            (get-text-property 8 'display header-line-format)))
+          (get-text-property 8 'display (package-menu-compute-header-line)))
   (expect "mouse-1: sort by column"
-          (with-temp-buffer
-            (package-menu-set-header-line)
-            (get-text-property 9 'help-echo header-line-format)))
+          (get-text-property 9 'help-echo (package-menu-compute-header-line)))
   (expect '(space :align-to 34)
-          (with-temp-buffer
-            (package-menu-set-header-line)
-            (get-text-property 16 'display header-line-format)))
+          (get-text-property 16 'display (package-menu-compute-header-line)))
   (expect "mouse-1: sort by column"
-          (with-temp-buffer
-            (package-menu-set-header-line)
-            (get-text-property 17 'help-echo header-line-format)))
+          (get-text-property 17 'help-echo (package-menu-compute-header-line)))
   (expect '(space :align-to 42)
-          (with-temp-buffer
-            (package-menu-set-header-line)
-            (get-text-property 23 'display header-line-format)))
+          (get-text-property 23 'display (package-menu-compute-header-line)))
   (expect "mouse-1: sort by column"
-          (with-temp-buffer
-            (package-menu-set-header-line)
-            (get-text-property 24 'help-echo header-line-format)))
+          (get-text-property 24 'help-echo (package-menu-compute-header-line)))
   )
 
 (provide 'package-test)

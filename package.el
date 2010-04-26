@@ -1681,18 +1681,21 @@ packages, so that must be done separately."
     (setq package-menu-sort-key col))
   (package-list-packages-internal))
 
-(defun package-menu-set-header-line ()
-  "Set the `header-line-format' according to `package-menu-columns'."
-  (setq header-line-format (loop for col in package-menu-columns
-                                 for name = (package-menu-col-name col)
-                                 for width = (+ (or width 0) (package-menu-col-width col))
-                                 concat (propertize name
-                                                    'package-menu-col col
-                                                    'help-echo "mouse-1: sort by column"
-                                                    'mouse-face 'highlight
-                                                    'keymap package-menu-sort-button-map)
-                                 concat (propertize " " 'display (list 'space :align-to width)
-                                                    'face 'fixed-pitch))))
+(defun package-menu-compute-header-line ()
+  "Compute a header format according to `package-menu-columns'.
+
+This does not actually set the header line, it only creates and
+returns a value suitable for `header-line-format'."
+  (loop for col in package-menu-columns
+        for name = (package-menu-col-name col)
+        for width = (+ (or width 0) (package-menu-col-width col))
+        concat (propertize name
+                           'package-menu-col col
+                           'help-echo "mouse-1: sort by column"
+                           'mouse-face 'highlight
+                           'keymap package-menu-sort-button-map)
+        concat (propertize " " 'display (list 'space :align-to width)
+                           'face 'fixed-pitch)))
 
 (defun package--list-packages ()
   "Display a list of packages.
@@ -1700,7 +1703,7 @@ packages, so that must be done separately."
 Helper function that does all the work for the user-facing functions."
   (with-current-buffer (package-list-packages-internal)
     (package-menu-mode)
-    (package-menu-set-header-line)
+    (setq header-line-format (package-menu-compute-header-line))
 
     ;; It's okay to use pop-to-buffer here.  The package menu buffer
     ;; has keybindings, and the user just typed 'M-x
