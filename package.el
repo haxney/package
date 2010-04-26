@@ -1681,40 +1681,26 @@ packages, so that must be done separately."
     (setq package-menu-sort-key col))
   (package-list-packages-internal))
 
+(defun package-menu-set-header-line ()
+  "Set the `header-line-format' according to `package-menu-columns'."
+  (setq header-line-format (loop for col in package-menu-columns
+                                 for name = (package-menu-col-name col)
+                                 for width = (+ (or width 0) (package-menu-col-width col))
+                                 concat (propertize name
+                                                    'package-menu-col col
+                                                    'help-echo "mouse-1: sort by column"
+                                                    'mouse-face 'highlight
+                                                    'keymap package-menu-sort-button-map)
+                                 concat (propertize " " 'display (list 'space :align-to width)
+                                                    'face 'fixed-pitch))))
+
 (defun package--list-packages ()
   "Display a list of packages.
 
 Helper function that does all the work for the user-facing functions."
   (with-current-buffer (package-list-packages-internal)
     (package-menu-mode)
-    ;; Set up the header line.
-    (setq header-line-format
-          (mapconcat
-           (lambda (pair)
-             (let ((column (car pair))
-                   (name (cdr pair)))
-               (concat
-                ;; Insert a space that aligns the button properly.
-                (propertize " " 'display (list 'space :align-to column)
-                            'face 'fixed-pitch)
-                ;; Set up the column button.
-                (if (string= name "Version")
-                    name
-                  (propertize name
-                              'column-name name
-                              'help-echo "mouse-1: sort by column"
-                              'mouse-face 'highlight
-                              'keymap package-menu-sort-button-map)))))
-           ;; We take a trick from buff-menu and have a dummy leading
-           ;; space to align the header line with the beginning of the
-           ;; text.  This doesn't really work properly on Emacs 21,
-           ;; but it is close enough.
-           '((0 . "")
-             (2 . "Package")
-             (20 . "Version")
-             (30 . "Status")
-             (41 . "Description"))
-           ""))
+    (package-menu-set-header-line)
 
     ;; It's okay to use pop-to-buffer here.  The package menu buffer
     ;; has keybindings, and the user just typed 'M-x

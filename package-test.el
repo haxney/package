@@ -516,6 +516,45 @@
      (with-temp-buffer
        (package-list-packages-internal (current-buffer) 'version)
        (buffer-substring (point-min) (point-max)))))
+
+  (desc "package-menu-set-header-line")
+  (expect " Package Version Status Summary "
+          (with-temp-buffer
+            (package-menu-set-header-line)))
+  (expect '(space :align-to 2)
+          (with-temp-buffer
+            (package-menu-set-header-line)
+            (get-text-property 0 'display header-line-format)))
+  ;; The `help-echo' property stands in for the multiple properties which are
+  ;; set for column text
+  (expect "mouse-1: sort by column"
+          (with-temp-buffer
+            (package-menu-set-header-line)
+            (get-text-property 1 'help-echo header-line-format)))
+  (expect '(space :align-to 22)
+          (with-temp-buffer
+            (package-menu-set-header-line)
+            (get-text-property 8 'display header-line-format)))
+  (expect "mouse-1: sort by column"
+          (with-temp-buffer
+            (package-menu-set-header-line)
+            (get-text-property 9 'help-echo header-line-format)))
+  (expect '(space :align-to 34)
+          (with-temp-buffer
+            (package-menu-set-header-line)
+            (get-text-property 16 'display header-line-format)))
+  (expect "mouse-1: sort by column"
+          (with-temp-buffer
+            (package-menu-set-header-line)
+            (get-text-property 17 'help-echo header-line-format)))
+  (expect '(space :align-to 42)
+          (with-temp-buffer
+            (package-menu-set-header-line)
+            (get-text-property 23 'display header-line-format)))
+  (expect "mouse-1: sort by column"
+          (with-temp-buffer
+            (package-menu-set-header-line)
+            (get-text-property 24 'help-echo header-line-format)))
   )
 
 (provide 'package-test)
