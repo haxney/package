@@ -493,6 +493,18 @@
                                          version "2.1alpha2"
                                          status "inst"
                                          summary "Simple package system for Emacs")))
+  (expect nil
+          (package-menu-get-command '(command ""
+                                              name "builtin-pkg"
+                                              version "2.1alpha2"
+                                              status "inst"
+                                              summary "Simple package system for Emacs")))
+  (expect nil
+          (package-menu-get-command '(command " "
+                                              name "builtin-pkg"
+                                              version "2.1alpha2"
+                                              status "inst"
+                                              summary "Simple package system for Emacs")))
 
   (desc "package-list-packages-internal")
   (expect (package "  dep-pkg             2.0         avail   Simple package system for Emacs
