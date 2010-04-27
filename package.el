@@ -1460,10 +1460,33 @@ Emacs."
     (forward-line))
   (package-menu-revert))
 
-(defstruct package-menu-col
+(defstruct (package-menu-col (:type list))
   "Specification of a single column in the package list buffer.
 
-The following slots are defined:
+See `package-menu-columns' for a description of the slot types."
+  name
+  type
+  width
+  reader
+  writer
+  comparator
+  skip-struct)
+
+(defcustom package-menu-columns
+  ;; Name       Type     W  Reader                Writer                    Comparator     Skip-struct
+  '((""         command  2  ignore                ignore                    ignore         t)
+    ("Package"  name     20 intern                package-name              string-lessp   nil)
+    ("Version"  version  12 version-to-list       package-version-canonical version-list-< nil)
+    ("Status"   status   8  package-status-symbol package-status-string     string-lessp   nil)
+    ("Summary"  summary  60 identity              package-summary           string-lessp   nil))
+  "Specification of columns shown in the package menu.
+
+Columns are displayed in the order in which they appear in this
+variable. Note that the \"command\", \"name\" and \"version\"
+columns are required to resolve a package and determine the
+operation to perform on it.
+
+Each column has the following properties:
 
 NAME: The human-readable name of the column.
 
@@ -1487,47 +1510,15 @@ COMPARATOR: Function to compare two package structures according
 
 SKIP-STRUCT: Skip adding this column to the package structure.
              Skips adding the column if this slot is non-nil."
-  name
-  type
-  width
-  reader
-  writer
-  comparator
-  skip-struct)
-
-(defconst package-menu-columns
-  (mapcar '(lambda (spec) (apply 'make-package-menu-col spec))
-          '((:name ""
-                   :type command
-                   :width 2
-                   :reader nil
-                   :writer nil
-                   :comparator nil
-                   :skip-struct t)
-            (:name "Package"
-                   :type name
-                   :width 20
-                   :reader intern
-                   :writer package-name
-                   :comparator string-lessp)
-            (:name "Version"
-                   :type version
-                   :width 12
-                   :reader version-to-list
-                   :writer package-version-canonical
-                   :comparator version-list-<)
-            (:name "Status"
-                   :type status
-                   :width 8
-                   :reader package-status-symbol
-                   :writer package-status-string
-                   :comparator string-lessp)
-            (:name "Summary"
-                   :type summary
-                   :width 60
-                   :reader identity
-                   :writer package-summary
-                   :comparator string-lessp))))
+  :group 'package
+  :type '(repeat (list :tag "Column Definition"
+                       (string :tag "Name")
+                       (symbol :tag "Type")
+                       (integer :tag "Width")
+                       (function :tag "Reader")
+                       (function :tag "Writer")
+                       (function :tag "Comparator")
+                       (boolean :tag "Skip Struct"))))
 
 (defconst package-menu-commands '((package-install . "I")
                                   (package-delete  . "D"))
@@ -1553,7 +1544,7 @@ If NEWLINE is non-nil, print a newline after PKG."
         (line (loop for col in package-menu-columns
                     for writer-func = (package-menu-col-writer col)
                     for width = (package-menu-col-width col)
-                    for col-str = (if writer-func (funcall writer-func pkg) "")
+                    for col-str = (or (funcall writer-func pkg) "")
                     concat (format (format "%%-%d.%ds" width (1- width)) col-str) into tmp
 
                     ;; Delete trailing whitespace (due to summary).
