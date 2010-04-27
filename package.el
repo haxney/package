@@ -347,6 +347,11 @@ arguments are supported by keys."
   type
   status)
 
+(defun package-property-get (pkg prop)
+  "Returns the PROP property of PKG"
+  (let ((func (intern (format "package-%s" prop))))
+    (funcall func pkg)))
+
 (defsubst package-version-canonical (pkg)
   "Return the canonical version of PKG.
 
@@ -1661,26 +1666,15 @@ packages, so that must be done separately."
   (with-current-buffer buf
     (setq buffer-read-only nil)
     (erase-buffer)
-    (let* ((select-comp
-            (case selector
-              (name (cons '(symbol-name (package-name pkg)) 'string<))
-              (version (cons '(package-version pkg) 'version-list-<))
-              (status (cons '(symbol-name (package-status pkg)) 'string<))
-              (summary (cons '(package-summary pkg) 'string<))))
-           ;; Yeah, this is a hack, but it's better than having separate `case'
-           ;; statements for the selector and comparator.
-           (selector (car select-comp))
-           (comparator (cdr select-comp))
-           sort-pred)
-      (macrolet ((selector (pack)
-                           `(let ((pkg ,pack)) ,(car select-comp))))
-        (setq sort-pred '(lambda (left right)
-                           (let ((vleft (selector left))
-                                 (vright (selector right)))
-                             (funcall comparator vleft vright)))))
-
+    (let* ((col (find selector package-menu-columns :key 'package-menu-col-type))
+           (comparator (package-menu-col-comparator col))
+           (sort-pred '(lambda (left right)
+                         (let ((vleft (package-property-get left selector))
+                               (vright (package-property-get right selector)))
+                           (funcall comparator vleft vright)))))
       (loop for pkg in (sort (package-registry-flat) sort-pred)
             do (package-print-package pkg t)))
+    (setq buffer-read-only t)
     (goto-char (point-min)))
   buf)
 
