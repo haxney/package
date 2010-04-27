@@ -569,6 +569,22 @@
                                  :writer 'package-summary
                                  :comparator 'string-lessp)
           (get-text-property 24 'package-menu-col (package-menu-compute-header-line)))
+
+  (desc "package-install")
+  (expect (package 'completed)
+          (mocklet (((package-download-transaction (list tarty))))
+                   (package-install (make-package :name 'tarty))
+                   'completed))
+  (expect (package 'completed)
+          (mocklet (((package-download-transaction (list tarty))))
+                   (package-install (make-package :name 'tarty :version '(1 5 -3 3)))
+                   'completed))
+  (expect (package '(mock-error not-called))
+          (condition-case err
+              (mocklet (((package-download-transaction (list tarty))))
+                       (package-install (make-package :name 'not-found))
+                       'completed)
+            (error err)))
   )
 
 (provide 'package-test)

@@ -981,27 +981,26 @@ package's :archive field does not match ARCHIVE."
   (loop for pkg in transaction
         do (package-download pkg)))
 
-(defun package-install (name &optional version)
-  "Install the package named NAME at VERSION.
-
-NAME must be a symbol.
-
-If VERSION is not given, it defaults to the most recent version
-according to `package-find-latest'.
+(defun package-install (pkg)
+  "Install the package PKG.
 
 Interactively, prompts for the package name."
   (interactive
-   (list (intern (completing-read "Install package: "
-                                  (loop for (name . pkgs) in package-registry
-                                        collect (symbol-name name))
-                                  nil t))))
-  (unless version
-    (setq version (package-version (package-find-latest name))))
-
-  (let ((pkg (package-find name :version version)))
+   (list (package-find-latest (intern (completing-read "Install package: "
+                                   (loop for (name . pkgs) in package-registry
+                                         collect (symbol-name name))
+                                   nil t))
+                              nil)))
+  ;; TODO: Don't loop twice through package list. Make a `package-find' variant
+  ;; which takes a package and looks for a total match in `package-registry'.
+  (let* ((name (package-name pkg))
+         (version (or (package-version pkg)
+                      (package-version (package-find-latest name))))
+         (pkg (car (package-find name :version version))))
     (unless pkg
       (error "Package '%s', version '%s' not available for installation"
              name version))
+    ;; TODO: Make a function which combines these two steps.
     (let ((transaction
            (package-compute-transaction (list pkg)
                                         (package-requires-hard pkg))))
