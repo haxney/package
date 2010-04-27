@@ -1631,6 +1631,17 @@ string."
              :key 'cdr
              :test 'equal)))
 
+(defun package-menu-column-offset (col)
+  "Get the offset from the beginning of the line of COL.
+
+The offset is dependent on the current value of
+`package-menu-columns', so this must be recomputed each time it
+is used."
+  (let ((offset 0))
+   (loop for current in package-menu-columns
+         when (equal current col) return offset
+         do (setq offset (+ offset (package-menu-col-width current))))))
+
 ;; TODO: CL-CHECK
 (defun package-list-maybe-add (package status result)
   "Add PACKAGE to the list if it is not already there.

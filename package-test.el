@@ -585,6 +585,22 @@
                        (package-install (make-package :name 'not-found))
                        'completed)
             (error err)))
+
+  (desc "package-menu-column-offset")
+  (expect 0
+          (package-menu-column-offset package-menu-column-command))
+  (expect 2
+          (package-menu-column-offset package-menu-column-name))
+  (expect 22
+          (package-menu-column-offset package-menu-column-version))
+  (expect 0
+          (let ((package-menu-columns (list package-menu-column-name
+                                            package-menu-column-command)))
+            (package-menu-column-offset package-menu-column-name)))
+  (expect 20
+          (let ((package-menu-columns (list package-menu-column-name
+                                            package-menu-column-command)))
+            (package-menu-column-offset package-menu-column-command)))
   )
 
 (provide 'package-test)
