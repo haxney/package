@@ -72,14 +72,15 @@
                                      :wikipage "deppy.el"
                                      :status 'available)))
           (tarty (cl-merge-struct 'package
-                                  (copy-package test-pkg1)
+                                  (let ((tmp (copy-package test-pkg1)))
+                                    (setf (package-requires-hard tmp) nil)
+                                    tmp)
                                   (make-package
                                    :name 'tarty
                                    :version '(1 5 -3 3)
                                    :version-raw "1.5alpha3"
                                    :authors '(("George Tarterson" . "jtart@example.com"))
                                    :maintainer '("George Tarterson" . "jtart@example.com")
-                                   :requires-hard '(())
                                    :provides '(tarty)
                                    :homepage "tarty.example.com"
                                    :wikipage "tarty.el"
