@@ -308,25 +308,25 @@ below:
   "Status to assign to packages which don't provide their own.")
 
 (defstruct (package (:include elx-pkg)
-                         (:constructor inherit-package
-                                       (pkg
-                                        &key archive type status
-                                        &aux (name (elx-pkg-name pkg))
-                                        (version (elx-pkg-version pkg))
-                                        (version-raw (elx-pkg-version-raw pkg))
-                                        (summary (elx-pkg-summary pkg))
-                                        (created (elx-pkg-created pkg))
-                                        (updated (elx-pkg-updated pkg))
-                                        (license (elx-pkg-license pkg))
-                                        (authors (elx-pkg-authors pkg))
-                                        (maintainer (elx-pkg-maintainer pkg))
-                                        (provides (elx-pkg-provides pkg))
-                                        (requires-hard (elx-pkg-requires-hard pkg))
-                                        (requires-soft (elx-pkg-requires-soft pkg))
-                                        (keywords (elx-pkg-keywords pkg))
-                                        (homepage (elx-pkg-homepage pkg))
-                                        (wikipage (elx-pkg-wikipage pkg))
-                                        (commentary (elx-pkg-commentary pkg)))))
+                    (:constructor inherit-package
+                                  (pkg
+                                   &key archive type status
+                                   &aux (name (elx-pkg-name pkg))
+                                   (version (elx-pkg-version pkg))
+                                   (version-raw (elx-pkg-version-raw pkg))
+                                   (summary (elx-pkg-summary pkg))
+                                   (created (elx-pkg-created pkg))
+                                   (updated (elx-pkg-updated pkg))
+                                   (license (elx-pkg-license pkg))
+                                   (authors (elx-pkg-authors pkg))
+                                   (maintainer (elx-pkg-maintainer pkg))
+                                   (provides (elx-pkg-provides pkg))
+                                   (requires-hard (elx-pkg-requires-hard pkg))
+                                   (requires-soft (elx-pkg-requires-soft pkg))
+                                   (keywords (elx-pkg-keywords pkg))
+                                   (homepage (elx-pkg-homepage pkg))
+                                   (wikipage (elx-pkg-wikipage pkg))
+                                   (commentary (elx-pkg-commentary pkg)))))
   "Extends the `elx-pkg' structure with archive-specific information.
 
 This contains the complete info about a package as contained in
@@ -347,11 +347,26 @@ arguments are supported by keys."
   type
   status)
 
+(defun package-property-get (pkg prop)
+  "Returns the PROP property of PKG"
+  (let ((func (intern (format "package-%s" prop))))
+    (funcall func pkg)))
+
 (defsubst package-version-canonical (pkg)
   "Return the canonical version of PKG.
 
 Simply passes it through `elx-version-canonical'."
   (elx-version-canonical (package-version pkg)))
+
+(defsubst package-status-string (pkg)
+  "Return the string representation of the status of PKG."
+  (cdr (assoc (package-status pkg) package-statuses)))
+
+(defun package-status-symbol (str)
+  "Return the package status symbol corresponding to STR.
+
+More or less the reverse of `package-status-string'."
+  (car (rassoc str package-statuses)))
 
 (defun package-suffix (pkg &optional noerror)
   "Gets the download suffix for PKG.
@@ -359,7 +374,7 @@ Simply passes it through `elx-version-canonical'."
 If PKG is a builtin package, signals an error unless NOERROR is
 non-nil."
   (let* ((type (package-type pkg))
-        (suffix (aget package-types type t)))
+         (suffix (aget package-types type t)))
     (if (and (eq type 'builtin) (not noerror))
         (error "Package is a builtin, and therefore does not have a suffix")
       suffix)))
@@ -440,7 +455,7 @@ number \"0.9.5\", if any exist."
                             :key (intern (concat "package-" (symbol-name slot)))))))))
 
 ;; TODO: Resolve multiple matches using archive priority?
-(defun package-find-latest (name noerror &rest keys)
+(defun package-find-latest (name &optional noerror &rest keys)
   "Find the newest version of package NAME.
 
 If NOERROR is nil, signal an error when no matching package is
@@ -461,7 +476,7 @@ will be."
     (setq keys (plist-put keys :version nil)))
 
   (let* ((pkgs (apply 'package-find name keys))
-        (result (car-safe pkgs)))
+         (result (car-safe pkgs)))
     (dolist (pkg (cdr-safe pkgs))
       (when (version-list-< (package-version result) (package-version pkg))
         (setq result pkg)))
@@ -479,8 +494,8 @@ an archive URL is meaningless for them.
 
 Each archive in `package-archives' is checked."
   (when (eq archive 'builtin)
-      (unless noerror
-        (error "Builtin archive does not have a download URL")))
+    (unless noerror
+      (error "Builtin archive does not have a download URL")))
   (nth 0 (aget package-archives archive)))
 
 (defun package-archive-localpath (archive)
@@ -531,8 +546,8 @@ Returns nil if PKG was already in the list or PKG if it was not."
         (existing-pkgs (aget package-registry pkg-name)))
     (when existing-pkgs
       (unless (member pkg existing-pkgs)
-       (nconc existing-pkgs (list pkg))
-       pkg))))
+        (nconc existing-pkgs (list pkg))
+        pkg))))
 
 (defsubst package-load-descriptor (pkg)
   "Return information the info file of PKG.
@@ -598,7 +613,7 @@ version."
          (file-info (package-split-filename file
                                             (aget package-types type t)
                                             noerror))
-        archive)
+         archive)
     (loop for (arch info) in package-archives
           for arch-path = (package-archive-localpath arch)
           for path-len = (length arch-path)
@@ -730,7 +745,7 @@ Recursively activates all dependencies of PKG."
 (defun package-generate-autoloads (pkg)
   "Generate autoload definitions for PKG."
   (let ((generated-autoload-file (package-autoload-file pkg))
-         (version-control 'never))
+        (version-control 'never))
     (update-directory-autoloads pkg-dir)))
 
 (defsubst package-parent-directory (dir)
@@ -820,24 +835,24 @@ the buffer."
   (let ((type (url-type url-current-object))
         (buf (or buf (current-buffer))))
     (with-current-buffer buf
-     (cond
-      ((equal type "http")
-       (let ((response (url-http-parse-response))
-             header-end)
-         (unless (eq (/ response 100) 2)
-           (display-buffer (current-buffer))
-           (error "Error during download request:%s"
-                  (buffer-substring-no-properties (point) (progn
-                                                            (end-of-line)
-                                                            (point)))))
-         ;; Strip HTTP headers
-         (ietf-drums-narrow-to-header)
-         (setq header-end (1+ (point-max)))
-         (widen)
-         (delete-region (point-min) header-end)
-         (goto-char (point-min))))
-      ((equal type "file")
-       nil)))))
+      (cond
+       ((equal type "http")
+        (let ((response (url-http-parse-response))
+              header-end)
+          (unless (eq (/ response 100) 2)
+            (display-buffer (current-buffer))
+            (error "Error during download request:%s"
+                   (buffer-substring-no-properties (point) (progn
+                                                             (end-of-line)
+                                                             (point)))))
+          ;; Strip HTTP headers
+          (ietf-drums-narrow-to-header)
+          (setq header-end (1+ (point-max)))
+          (widen)
+          (delete-region (point-min) header-end)
+          (goto-char (point-min))))
+       ((equal type "file")
+        nil)))))
 
 (defun package-download (pkg)
   "Download and install PKG.
@@ -966,27 +981,26 @@ package's :archive field does not match ARCHIVE."
   (loop for pkg in transaction
         do (package-download pkg)))
 
-(defun package-install (name &optional version)
-  "Install the package named NAME at VERSION.
-
-NAME must be a symbol.
-
-If VERSION is not given, it defaults to the most recent version
-according to `package-find-latest'.
+(defun package-install (pkg)
+  "Install the package PKG.
 
 Interactively, prompts for the package name."
   (interactive
-   (list (intern (completing-read "Install package: "
-                                  (loop for (name . pkgs) in package-registry
-                                        collect (symbol-name name))
-                                 nil t))))
-  (unless version
-    (setq version (package-version (package-find-latest name))))
-
-  (let ((pkg (package-find name :version version)))
+   (list (package-find-latest (intern (completing-read "Install package: "
+                                   (loop for (name . pkgs) in package-registry
+                                         collect (symbol-name name))
+                                   nil t))
+                              nil)))
+  ;; TODO: Don't loop twice through package list. Make a `package-find' variant
+  ;; which takes a package and looks for a total match in `package-registry'.
+  (let* ((name (package-name pkg))
+         (version (or (package-version pkg)
+                      (package-version (package-find-latest name))))
+         (pkg (car (package-find name :version version))))
     (unless pkg
       (error "Package '%s', version '%s' not available for installation"
              name version))
+    ;; TODO: Make a function which combines these two steps.
     (let ((transaction
            (package-compute-transaction (list pkg)
                                         (package-requires-hard pkg))))
@@ -1008,8 +1022,8 @@ BUF must be an Emacs Lisp source code file which is parseable by
   (with-current-buffer buf
     (condition-case err
         (progn
-            (tar-mode)
-            'tar)
+          (tar-mode)
+          'tar)
       (error (emacs-lisp-mode)
              'single))))
 
@@ -1049,12 +1063,12 @@ BUF is a buffer containing raw tar data. If there is a problem,
 then an error is signaled unless NOERROR is non-nil."
   (let* ((items (package-tar-items buf))
          (dir-hdr (find-if '(lambda (item)
-                          (and (package-split-filename (car item) nil t)
-                               ;; 5 is the tar link-type for a directory
-                               (eq (cdr item) 5)))
-                       items
-                       :key '(lambda (item) (cons (tar-header-name item)
-                                                  (tar-header-link-type item)))))
+                              (and (package-split-filename (car item) nil t)
+                                   ;; 5 is the tar link-type for a directory
+                                   (eq (cdr item) 5)))
+                           items
+                           :key '(lambda (item) (cons (tar-header-name item)
+                                                      (tar-header-link-type item)))))
          ;; Check that we actually received successfully found dir-hdr
          (name-vers (package-split-filename (tar-header-name dir-hdr)))
          (pkg-skel (make-package :name (car name-vers)
@@ -1064,8 +1078,8 @@ then an error is signaled unless NOERROR is non-nil."
                                  :archive 'manual))
          (info-file (package-info-file pkg-skel t))
          (pkg-hdr (find info-file items
-                         :key 'tar-header-name
-                         :test 'equal))
+                        :key 'tar-header-name
+                        :test 'equal))
          (start (tar-header-data-start pkg-hdr))
          (end (+ start (tar-header-size pkg-hdr)))
          (pkg-data (with-current-buffer buf
@@ -1088,9 +1102,9 @@ FILE is the path to a tar archive."
   (let* ((pkg (package-from-filename file))
 
          (pkg-info (shell-command-to-string
-                            ;; Requires GNU tar.
-                            (concat "tar -xOf " file " "
-                                    (package-info-file pkg t))))
+                    ;; Requires GNU tar.
+                    (concat "tar -xOf " file " "
+                            (package-info-file pkg t))))
          (pkg-new (apply 'make-package (package-read-from-string pkg-info))))
 
     ;; TODO: Maybe add some more sanity checks... Use a hook to avoid having to
@@ -1195,8 +1209,8 @@ for download."
   "Activate all installed packages."
   (loop for (name . pkgs) in package-registry
         do (loop for pkg in pkgs
-            when (eq (package-status pkg) 'installed)
-            do (package-activate pkg))))
+                 when (eq (package-status pkg) 'installed)
+                 do (package-activate pkg))))
 
 (defun package-initialize ()
   "Load all packages and activate as many as possible."
@@ -1210,7 +1224,7 @@ for download."
 
 (defvar package-menu-mode-map
   (let ((map (make-keymap))
-	(menu-map (make-sparse-keymap "Package")))
+        (menu-map (make-sparse-keymap "Package")))
     (suppress-keymap map)
     (define-key map "q" 'quit-window)
     (define-key map "n" 'next-line)
@@ -1228,50 +1242,50 @@ for download."
     (define-key map [menu-bar package-menu] (cons "Package" menu-map))
     (define-key menu-map [mq]
       '(menu-item "Quit" quit-window
-		  :help "Quit package selection"))
+                  :help "Quit package selection"))
     (define-key menu-map [s1] '("--"))
     (define-key menu-map [mn]
       '(menu-item "Next" next-line
-		  :help "Next Line"))
+                  :help "Next Line"))
     (define-key menu-map [mp]
       '(menu-item "Previous" previous-line
-		  :help "Previous Line"))
+                  :help "Previous Line"))
     (define-key menu-map [s2] '("--"))
     (define-key menu-map [mu]
       '(menu-item "Unmark" package-menu-mark-unmark
-		  :help "Clear any marks on a package and move to the next line"))
+                  :help "Clear any marks on a package and move to the next line"))
     (define-key menu-map [munm]
       '(menu-item "Unmark backwards" package-menu-backup-unmark
-		  :help "Back up one line and clear any marks on that package"))
+                  :help "Back up one line and clear any marks on that package"))
     (define-key menu-map [md]
       '(menu-item "Mark for deletion" package-menu-mark-delete
-		  :help "Mark a package for deletion and move to the next line"))
+                  :help "Mark a package for deletion and move to the next line"))
     (define-key menu-map [mi]
       '(menu-item "Mark for install" package-menu-mark-install
-		  :help "Mark a package for installation and move to the next line"))
+                  :help "Mark a package for installation and move to the next line"))
     (define-key menu-map [s3] '("--"))
     (define-key menu-map [mg]
       '(menu-item "Update package list" package-menu-revert
-		  :help "Update the list of packages"))
+                  :help "Update the list of packages"))
     (define-key menu-map [mr]
       '(menu-item "Refresh package list" package-menu-refresh
-		  :help "Download the ELPA archive"))
+                  :help "Download the ELPA archive"))
     (define-key menu-map [s4] '("--"))
     (define-key menu-map [mt]
       '(menu-item "Mark obsolete packages" package-menu-mark-obsolete-for-deletion
-		  :help "Mark all obsolete packages for deletion"))
+                  :help "Mark all obsolete packages for deletion"))
     (define-key menu-map [mx]
       '(menu-item "Execute actions" package-menu-execute
-		  :help "Perform all the marked actions"))
+                  :help "Perform all the marked actions"))
     (define-key menu-map [s5] '("--"))
     (define-key menu-map [mh]
       '(menu-item "Help" package-menu-quick-help
-		  :help "Show short key binding help for package-menu-mode"))
+                  :help "Show short key binding help for package-menu-mode"))
     (define-key menu-map [mc]
       '(menu-item "View Commentary" package-menu-view-commentary
-		  :help "Display information about this package"))
+                  :help "Display information about this package"))
     map)
-   "Local keymap for `package-menu-mode' buffers.")
+  "Local keymap for `package-menu-mode' buffers.")
 
 (defvar package-menu-sort-button-map
   (let ((map (make-sparse-keymap)))
@@ -1309,21 +1323,18 @@ available for download."
   (package-refresh-contents)
   (package-list-packages-internal))
 
-(defun package-menu-revert ()
-  "Update the list of packages."
-  (interactive)
-  (package-list-packages-internal))
-
-(defun package-menu-mark-internal (what)
+(defun* package-menu-mark-command (what &optional (pos (point)))
   "Internal function to mark a package.
 
-WHAT is the character used to mark the line."
-  (unless (eobp)
-    (let ((buffer-read-only nil))
-      (beginning-of-line)
-      (delete-char 1)
-      (insert what)
-      (forward-line))))
+WHAT is the character used to mark the line at POS."
+  (save-excursion
+    (goto-char pos)
+    (unless (eobp)
+     (let ((buffer-read-only nil))
+       (beginning-of-line)
+       (forward-char (package-menu-column-offset package-menu-column-command))
+       (delete-char 1)
+       (insert what)))))
 
 (defun package-menu-mark-delete (&optional arg)
   "Mark a package for deletion and move to the next line.
@@ -1418,54 +1429,105 @@ For larger packages, shows the README file."
         (match-string 1)
       "")))
 
-;; TODO: CL-CHECK
 (defun package-menu-execute ()
   "Perform all the marked actions.
+
 Packages marked for installation will be downloaded and
-installed.  Packages marked for deletion will be removed.
-Note that after installing packages you will want to restart
-Emacs."
+installed. Packages marked for deletion will be removed. Note
+that after installing packages you will want to restart Emacs."
   (interactive)
   (goto-char (point-min))
-  (forward-line 2)
-  (while (not (eobp))
-    (let ((cmd (char-after))
-          (pkg-name (package-menu-get-package))
-          (pkg-vers (package-menu-get-version))
-          (pkg-status (package-menu-get-status)))
-      (cond
-       ((eq cmd ?D)
-        (when (and (string= pkg-status "installed")
-                   (string= pkg-name "package"))
-          ;; FIXME: actually, we could be tricky and remove all info.
-          ;; But that is drastic and the user can do that instead.
-          (error "Can't delete most recent version of `package'"))
-        ;; Ask for confirmation here?  Maybe if package status is ""?
-        ;; Or if any lisp from package is actually loaded?
-        (message "Deleting %s-%s..." pkg-name pkg-vers)
-        (package-delete pkg-name pkg-vers)
-        (message "Deleting %s-%s... done" pkg-name pkg-vers))
-       ((eq cmd ?I)
-        (package-install (intern pkg-name) (version-to-list pkg-vers)))))
-    (forward-line))
-  (package-menu-revert))
+  (loop until (eobp)
+        for info = (package-menu-parse-line)
+        for pkg = (package-menu-make-pkg info)
+        for cmd = (package-menu-get-command info)
+        when cmd do (funcall cmd pkg))
+  (package-list-packages-internal))
 
-(defconst package-menu-line-format "  %-20.18s%-12.10s%-8.6s%.60s"
-  "The format for a single package line.
+(defstruct (package-menu-col (:type list))
+  "Specification of a single column in the package list buffer.
 
-It expects the following arguments to be given in the `format'
-call (in order): package, version, status, description.")
+See `package-menu-columns' for a description of the slot types."
+  name
+  type
+  width
+  reader
+  writer
+  comparator
+  skip-struct)
 
-(defconst package-menu-attr-widths '((command . 2)
-                                     (name . 20)
-                                     (version . 12)
-                                     (status . 8)
-                                     (summary . 60))
-  "The widths of each of the attributes of a line in the package menu.
+(defconst package-menu-column-command
+  '(""        command   2  ignore                ignore                    ignore         t)
+  "Menu definition for the \"Command\" column.")
 
-Used for parsing a package description line. Is an alist of the
-format (NAME . WIDTH), where NAME is the symbol name of the
-attribute and WIDTH is the integer width of the attribute.")
+(defconst package-menu-column-name
+  '("Package"  name     20 intern                package-name              string-lessp   nil)
+  "Menu definition for the \"Package\" column.")
+
+(defconst package-menu-column-version
+  '("Version"  version  12 version-to-list       package-version-canonical version-list-< nil)
+  "Menu definition for the \"Version\" column.")
+
+(defconst package-menu-column-status
+  '("Status"   status   8  package-status-symbol package-status-string     string-lessp   nil)
+  "Menu definition for the \"Status\" column.")
+
+(defconst package-menu-column-summary
+  '("Summary"  summary  60 identity              package-summary           string-lessp   nil)
+  "Menu definition for the \"Summary\" column.")
+
+(defcustom package-menu-columns
+  (list package-menu-column-command
+        package-menu-column-name
+        package-menu-column-version
+        package-menu-column-status
+        package-menu-column-summary)
+  "Specification of columns shown in the package menu.
+
+Columns are displayed in the order in which they appear in this
+variable. Note that the \"command\", \"name\" and \"version\"
+columns are required to resolve a package and determine the
+operation to perform on it.
+
+Each column has the following properties:
+
+NAME: The human-readable name of the column.
+
+TYPE: The name of the column, as a symbol.
+
+WIDTH: The maximum width of the column. This includes padding, so
+       the number of printed characters will be strictly less
+       than this.
+
+READER: Function to use to read a Lisp object from the buffer
+        line. A function which receives a single string argument
+        and returns a value appropriate for assignment to a
+        package structure.
+
+WRITER: Function to write the column to a string. Takes a single
+        argument, a package structure, and returns a string
+        representation of the column information.
+
+COMPARATOR: Function to compare two package structures according
+            to this column. used for sorting.
+
+SKIP-STRUCT: Skip adding this column to the package structure.
+             Skips adding the column if this slot is non-nil."
+  :group 'package
+  :type `(repeat (choice
+                  (const :tag "Command"      ,package-menu-column-command)
+                  (const :tag "Package name" ,package-menu-column-name)
+                  (const :tag "Version"      ,package-menu-column-version)
+                  (const :tag "Status"       ,package-menu-column-status)
+                  (const :tag "Summary"      ,package-menu-column-summary)
+                  (list  :tag "Custom Definition"
+                         (string   :tag "Name")
+                         (symbol   :tag "Type")
+                         (integer  :tag "Width")
+                         (function :tag "Reader")
+                         (function :tag "Writer")
+                         (function :tag "Comparator")
+                         (boolean  :tag "Skip Struct")))))
 
 (defconst package-menu-commands '((package-install . "I")
                                   (package-delete  . "D"))
@@ -1488,11 +1550,13 @@ If NEWLINE is non-nil, print a newline after PKG."
              (t ; obsolete, but also the default.
                                         ; is warning ok?
               'font-lock-warning-face))))
-        (line (format package-menu-line-format
-                      (package-name pkg)
-                      (package-version-canonical pkg)
-                      (aget package-statuses (package-status pkg))
-                      (package-summary pkg))))
+        (line (loop for col in package-menu-columns
+                    for writer-func = (package-menu-col-writer col)
+                    for width = (package-menu-col-width col)
+                    for col-str = (or (funcall writer-func pkg) "")
+                    concat (format (format "%%-%d.%ds" width (1- width)) col-str))))
+
+    ;; TODO: Make this `insert' instead?
     (princ (propertize line 'font-lock-face face))
     (when newline
       (princ "\n"))))
@@ -1508,16 +1572,19 @@ Advances point to the end of the line."
   (setq buf (or buf (current-buffer))
         pos (or pos (point)))
   (with-current-buffer buf
-    (save-excursion
-      (goto-char pos)
-      (loop for (attr . width) in package-menu-attr-widths
-            for end-pos = (min (+ (point) width) (line-end-position))
-            for raw-val = (buffer-substring-no-properties (point)
-                                                          end-pos)
-            for stripped = (replace-regexp-in-string
-                            "\\(^[[:space:]\\n]*\\|[[:space:]\\n]*$\\)" "" raw-val)
-            append (list (intern (format ":%s" attr)) stripped)
-            do (goto-char end-pos)))))
+    (goto-char pos)
+    (beginning-of-line)
+    (loop for col in package-menu-columns
+          for attr = (package-menu-col-type col)
+          for width = (package-menu-col-width col)
+          for end-pos = (min (+ (point) width) (line-end-position))
+          for raw-val = (buffer-substring-no-properties (point)
+                                                        end-pos)
+          for stripped = (replace-regexp-in-string
+                          "\\(^[[:space:]\\n]*\\|[[:space:]\\n]*$\\)" "" raw-val)
+          append (list attr stripped)
+          do (goto-char end-pos)
+          finally do (forward-line 1))))
 
 (defun package-menu-make-pkg (plist)
   "Create a package structure from PLIST.
@@ -1525,22 +1592,34 @@ Advances point to the end of the line."
 This should be a plist as returned from
 `package-menu-parse-line'."
   (loop for key in plist by 'cddr
+        for struct-key = (intern (concat ":" (symbol-name key)))
         for val = (plist-get plist key)
-        do (setq val (case key
-                       (:command nil)
-                       (:name (intern val))
-                       (:version (version-to-list val))
-                       (:status (car (find val package-statuses :key 'cdr :test 'equal)))
-                       (:summary val)))
-        unless (eq key :command) append (list key val) into result
+        for col = (find key package-menu-columns :key 'package-menu-col-type)
+        for reader = (package-menu-col-reader col)
+        unless (package-menu-col-skip-struct col)
+          append (list struct-key (funcall reader val)) into result
         finally return (apply 'make-package result)))
 
 (defun package-menu-get-command (plist)
-  "Get the function specified by the command in PLIST.
+  "Get the function specified by the command property in PLIST.
 
 Uses the variable `package-menu-commands' to decode the command
 string."
-  (car (find (plist-get plist :command) package-menu-commands :key 'cdr :test 'equal)))
+  (car (find (plist-get plist 'command)
+             package-menu-commands
+             :key 'cdr
+             :test 'equal)))
+
+(defun package-menu-column-offset (col)
+  "Get the offset from the beginning of the line of COL.
+
+The offset is dependent on the current value of
+`package-menu-columns', so this must be recomputed each time it
+is used."
+  (let ((offset 0))
+   (loop for current in package-menu-columns
+         when (equal current col) return offset
+         do (setq offset (+ offset (package-menu-col-width current))))))
 
 ;; TODO: CL-CHECK
 (defun package-list-maybe-add (package status result)
@@ -1566,33 +1645,27 @@ RESULT is the list to which to add the package."
   "List the available and installed packages.
 
 Inserts the contents into BUF, or a new buffer called
-\"*Packages*\" if BUF is nil. The packages are ordered according to SELECTOR
+\"*Packages*\" if BUF is nil. The packages are ordered according
+to SELECTOR, which is either the symbol name of a column or a
+complete column specification as described by
+`package-menu-columns'.
 
 This function does not initialize or refresh the list of
 packages, so that must be done separately."
   (with-current-buffer buf
     (setq buffer-read-only nil)
     (erase-buffer)
-    (let* ((select-comp
-            (case selector
-              (name (cons '(symbol-name (package-name pkg)) 'string<))
-              (version (cons '(package-version pkg) 'version-list-<))
-              (status (cons '(symbol-name (package-status pkg)) 'string<))
-              (summary (cons '(package-summary pkg) 'string<))))
-           ;; Yeah, this is a hack, but it's better than having separate `case'
-           ;; statements for the selector and comparator.
-           (selector (car select-comp))
-           (comparator (cdr select-comp))
-           sort-pred)
-      (macrolet ((selector (pack)
-                           `(let ((pkg ,pack)) ,(car select-comp))))
-        (setq sort-pred '(lambda (left right)
-                         (let ((vleft (selector left))
-                               (vright (selector right)))
+    (let* ((col (if (listp selector)
+                    selector
+                  (find selector package-menu-columns :key 'package-menu-col-type)))
+           (comparator (package-menu-col-comparator col))
+           (sort-pred '(lambda (left right)
+                         (let ((vleft (package-property-get left selector))
+                               (vright (package-property-get right selector)))
                            (funcall comparator vleft vright)))))
-
       (loop for pkg in (sort (package-registry-flat) sort-pred)
             do (package-print-package pkg t)))
+    (setq buffer-read-only t)
     (goto-char (point-min)))
   buf)
 
@@ -1603,9 +1676,25 @@ packages, so that must be done separately."
   (let* ((pos (event-start e))
          (obj (posn-object pos))
          (col (if obj
-                  (get-text-property (cdr obj) 'column-name (car obj))
-                (get-text-property (posn-point pos) 'column-name))))
-    (package-list-packages-internal nil col)))
+                  (get-text-property (cdr obj) 'package-menu-col (car obj))
+                (get-text-property (posn-point pos) 'package-menu-col)))))
+  (package-list-packages-internal nil col))
+
+(defun package-menu-compute-header-line ()
+  "Compute a header format according to `package-menu-columns'.
+
+This does not actually set the header line, it only creates and
+returns a value suitable for `header-line-format'."
+  (loop for col in package-menu-columns
+        for name = (package-menu-col-name col)
+        for width = (+ (or width 0) (package-menu-col-width col))
+        concat (propertize name
+                           'package-menu-col col
+                           'help-echo "mouse-1: sort by column"
+                           'mouse-face 'highlight
+                           'keymap package-menu-sort-button-map)
+        concat (propertize " " 'display (list 'space :align-to width)
+                           'face 'fixed-pitch)))
 
 (defun package--list-packages ()
   "Display a list of packages.
@@ -1613,34 +1702,7 @@ packages, so that must be done separately."
 Helper function that does all the work for the user-facing functions."
   (with-current-buffer (package-list-packages-internal)
     (package-menu-mode)
-    ;; Set up the header line.
-    (setq header-line-format
-          (mapconcat
-           (lambda (pair)
-             (let ((column (car pair))
-                   (name (cdr pair)))
-               (concat
-                ;; Insert a space that aligns the button properly.
-                (propertize " " 'display (list 'space :align-to column)
-                            'face 'fixed-pitch)
-                ;; Set up the column button.
-                (if (string= name "Version")
-                    name
-                  (propertize name
-                              'column-name name
-                              'help-echo "mouse-1: sort by column"
-                              'mouse-face 'highlight
-                              'keymap package-menu-sort-button-map)))))
-           ;; We take a trick from buff-menu and have a dummy leading
-           ;; space to align the header line with the beginning of the
-           ;; text.  This doesn't really work properly on Emacs 21,
-           ;; but it is close enough.
-           '((0 . "")
-             (2 . "Package")
-             (20 . "Version")
-             (30 . "Status")
-             (41 . "Summary"))
-           ""))
+    (setq header-line-format (package-menu-compute-header-line))
 
     ;; It's okay to use pop-to-buffer here.  The package menu buffer
     ;; has keybindings, and the user just typed 'M-x
@@ -1656,7 +1718,7 @@ prefix argument is supplied. The list is displayed in a buffer
 named `*Packages*'."
   (interactive "P")
   (when refresh
-   (package-refresh-contents))
+    (package-refresh-contents))
   (package--list-packages))
 
 ;; Make it appear on the menu.

@@ -72,14 +72,15 @@
                                      :wikipage "deppy.el"
                                      :status 'available)))
           (tarty (cl-merge-struct 'package
-                                  (copy-package test-pkg1)
+                                  (let ((tmp (copy-package test-pkg1)))
+                                    (setf (package-requires-hard tmp) nil)
+                                    tmp)
                                   (make-package
                                    :name 'tarty
                                    :version '(1 5 -3 3)
                                    :version-raw "1.5alpha3"
                                    :authors '(("George Tarterson" . "jtart@example.com"))
                                    :maintainer '("George Tarterson" . "jtart@example.com")
-                                   :requires-hard '(())
                                    :provides '(tarty)
                                    :homepage "tarty.example.com"
                                    :wikipage "tarty.el"
@@ -421,90 +422,121 @@
     (file-directory-p (package-install-directory tarty)))
 
   (desc "package-print-package")
-  (expect (package "  test-pkg            1.0         obs     Simple package system for Emacs")
-    (with-output-to-string
-      (package-print-package test-pkg1)))
-  (expect (package "  test-pkg            1.1         act     Simple package system for Emacs")
-    (with-output-to-string
-      (package-print-package test-pkg2)))
-  (expect (package "  test-pkg            1.1         act     Simple package system for Emacs")
-    (with-output-to-string
-      (package-print-package test-pkg2)))
-  (expect (package "  test-pkg            1.1         act     Simple package system for Emacs\n")
-    (with-output-to-string
-      (package-print-package test-pkg2 t)))
+  (expect (regexp "  test-pkg            1.0         obs     Simple package system for Emacs *")
+          (with-output-to-string
+            (with-package-test
+             (package-print-package test-pkg1))))
+  (expect (regexp "  test-pkg            1.1         act     Simple package system for Emacs *")
+          (with-output-to-string
+            (with-package-test
+             (package-print-package test-pkg2))))
+  (expect (regexp "  test-pkg            1.1         act     Simple package system for Emacs *")
+          (with-output-to-string
+            (with-package-test
+             (package-print-package test-pkg2))))
+  (expect (regexp "  test-pkg            1.1         act     Simple package system for Emacs *\n")
+          (with-output-to-string
+            (with-package-test
+             (package-print-package test-pkg2 t))))
+
+  (expect "test-pkg            act     1.1           \n"
+          (with-output-to-string
+            (with-package-test
+             (let ((package-menu-columns (list package-menu-column-name
+                                               package-menu-column-status
+                                               package-menu-column-version
+                                               package-menu-column-command)))
+               (package-print-package test-pkg2 t)))))
 
   (desc "package-menu-parse-line")
-  (expect '(:command ""
-                     :name "test-pkg"
-                     :version "1.1"
-                     :status "act"
-                     :summary "Simple package system for Emacs")
+  (expect '(command ""
+                     name "test-pkg"
+                     version "1.1"
+                     status "act"
+                     summary "Simple package system for Emacs")
     (with-temp-buffer
       (insert "  test-pkg            1.1         act     Simple package system for Emacs\n")
       (package-menu-parse-line nil (point-min))))
-  (expect '(:command ""
-                     :name "test-pkg"
-                     :version "1.1"
-                     :status "act"
-                     :summary "Simple package system for Emacs")
+  (expect '(command ""
+                     name "test-pkg"
+                     version "1.1"
+                     status "act"
+                     summary "Simple package system for Emacs")
     (with-temp-buffer
       (insert "  test-pkg            1.1         act     Simple package system for Emacs")
       (package-menu-parse-line nil (point-min))))
-  (expect '(:command "I"
-                     :name "test-pkg"
-                     :version "1.1"
-                     :status "act"
-                     :summary "Simple package system for Emacs")
+  (expect '(command "I"
+                     name "test-pkg"
+                     version "1.1"
+                     status "act"
+                     summary "Simple package system for Emacs")
     (with-temp-buffer
       (insert "I test-pkg            1.1         act     Simple package system for Emacs\n")
       (package-menu-parse-line nil (point-min))))
+  (expect 75
+          (with-temp-buffer
+            (insert "I test-pkg            1.1         act     Simple package system for Emacs\n")
+            (package-menu-parse-line nil (point-min))
+            (point)))
 
   (desc "package-menu-make-pkg")
   (expect (make-package :name 'test-pkg
                         :version '(1 1)
                         :status 'activated
                         :summary "Simple package system for Emacs")
-    (package-menu-make-pkg '(:command "I"
-                                      :name "test-pkg"
-                                      :version "1.1"
-                                      :status "act"
-                                      :summary "Simple package system for Emacs")))
+    (package-menu-make-pkg '(command "I"
+                                      name "test-pkg"
+                                      version "1.1"
+                                      status "act"
+                                      summary "Simple package system for Emacs")))
   (expect (make-package :name 'builtin-pkg
                         :version '(2 1 -3 2)
                         :status 'installed
                         :summary "Simple package system for Emacs")
-    (package-menu-make-pkg '(:command "I"
-                                      :name "builtin-pkg"
-                                      :version "2.1alpha2"
-                                      :status "inst"
-                                      :summary "Simple package system for Emacs")))
+    (package-menu-make-pkg '(command "I"
+                                      name "builtin-pkg"
+                                      version "2.1alpha2"
+                                      status "inst"
+                                      summary "Simple package system for Emacs")))
 
   (desc "package-menu-get-command")
   (expect 'package-install
-    (package-menu-get-command '(:command "I"
-                                         :name "builtin-pkg"
-                                         :version "2.1alpha2"
-                                         :status "inst"
-                                         :summary "Simple package system for Emacs")))
+    (package-menu-get-command '(command "I"
+                                         name "builtin-pkg"
+                                         version "2.1alpha2"
+                                         status "inst"
+                                         summary "Simple package system for Emacs")))
   (expect 'package-delete
-    (package-menu-get-command '(:command "D"
-                                         :name "builtin-pkg"
-                                         :version "2.1alpha2"
-                                         :status "inst"
-                                         :summary "Simple package system for Emacs")))
+    (package-menu-get-command '(command "D"
+                                         name "builtin-pkg"
+                                         version "2.1alpha2"
+                                         status "inst"
+                                         summary "Simple package system for Emacs")))
+  (expect nil
+          (package-menu-get-command '(command ""
+                                              name "builtin-pkg"
+                                              version "2.1alpha2"
+                                              status "inst"
+                                              summary "Simple package system for Emacs")))
+  (expect nil
+          (package-menu-get-command '(command " "
+                                              name "builtin-pkg"
+                                              version "2.1alpha2"
+                                              status "inst"
+                                              summary "Simple package system for Emacs")))
 
   (desc "package-list-packages-internal")
-  (expect (package "  dep-pkg             2.0         avail   Simple package system for Emacs
-  internal-pkg        2.0beta2    act     Simple package system for Emacs
-  tarty               1.5alpha3   act     Simple package system for Emacs
-  test-pkg            1.0         obs     Simple package system for Emacs
-  test-pkg            1.1         act     Simple package system for Emacs
-")
-    (with-output-to-string
-     (with-temp-buffer
-       (package-list-packages-internal (current-buffer))
-       (buffer-substring (point-min) (point-max)))))
+  (expect (regexp "  dep-pkg             2.0         avail   Simple package system for Emacs *
+  internal-pkg        2.0beta2    act     Simple package system for Emacs *
+  tarty               1.5alpha3   act     Simple package system for Emacs *
+  test-pkg            1.0         obs     Simple package system for Emacs *
+  test-pkg            1.1         act     Simple package system for Emacs *\n")
+          (with-package-test
+           (with-output-to-string
+             (with-temp-buffer
+
+               (package-list-packages-internal (current-buffer))
+               (buffer-string)))))
   ;; Cheat and use `package-print-package' to simplify.
   (expect (package (mapconcat '(lambda (item) (with-output-to-string (package-print-package item t)))
                               (list test-pkg1
@@ -516,6 +548,120 @@
      (with-temp-buffer
        (package-list-packages-internal (current-buffer) 'version)
        (buffer-substring (point-min) (point-max)))))
+
+  (desc "package-menu-compute-header-line")
+  (expect " Package Version Status Summary "
+          (package-menu-compute-header-line))
+  (expect '(space :align-to 2)
+          (get-text-property 0 'display (package-menu-compute-header-line)))
+  (expect (make-package-menu-col :name "Package"
+                                 :type 'name
+                                 :width 20
+                                 :reader 'intern
+                                 :writer 'package-name
+                                 :comparator 'string-lessp)
+          (get-text-property 1 'package-menu-col (package-menu-compute-header-line)))
+  (expect '(space :align-to 22)
+          (get-text-property 8 'display (package-menu-compute-header-line)))
+  (expect (make-package-menu-col :name "Version"
+                                 :type 'version
+                                 :width 12
+                                 :reader 'version-to-list
+                                 :writer 'package-version-canonical
+                                 :comparator 'version-list-<)
+          (get-text-property 9 'package-menu-col (package-menu-compute-header-line)))
+  (expect '(space :align-to 34)
+          (get-text-property 16 'display (package-menu-compute-header-line)))
+  (expect (make-package-menu-col :name "Status"
+                                 :type 'status
+                                 :width 8
+                                 :reader 'package-status-symbol
+                                 :writer 'package-status-string
+                                 :comparator 'string-lessp)
+          (get-text-property 17 'package-menu-col (package-menu-compute-header-line)))
+  (expect '(space :align-to 42)
+          (get-text-property 23 'display (package-menu-compute-header-line)))
+  (expect (make-package-menu-col :name "Summary"
+                                 :type 'summary
+                                 :width 60
+                                 :reader 'identity
+                                 :writer 'package-summary
+                                 :comparator 'string-lessp)
+          (get-text-property 24 'package-menu-col (package-menu-compute-header-line)))
+
+  (desc "package-install")
+  (expect (package 'completed)
+          (mocklet (((package-download-transaction (list tarty))))
+                   (package-install (make-package :name 'tarty))
+                   'completed))
+  (expect (package 'completed)
+          (mocklet (((package-download-transaction (list tarty))))
+                   (package-install (make-package :name 'tarty :version '(1 5 -3 3)))
+                   'completed))
+  (expect (package '(mock-error not-called))
+          (condition-case err
+              (mocklet (((package-download-transaction (list tarty))))
+                       (package-install (make-package :name 'not-found))
+                       'completed)
+            (error err)))
+
+  (desc "package-menu-column-offset")
+  (expect 0
+          (package-menu-column-offset package-menu-column-command))
+  (expect 2
+          (package-menu-column-offset package-menu-column-name))
+  (expect 22
+          (package-menu-column-offset package-menu-column-version))
+  (expect 0
+          (let ((package-menu-columns (list package-menu-column-name
+                                            package-menu-column-command)))
+            (package-menu-column-offset package-menu-column-name)))
+  (expect 20
+          (let ((package-menu-columns (list package-menu-column-name
+                                            package-menu-column-command)))
+            (package-menu-column-offset package-menu-column-command)))
+
+  (desc "package-menu-mark-command")
+  (expect 'package-delete
+          (with-temp-buffer
+            (insert (with-output-to-string
+                     (package-print-package (make-package :name 'irrelevant :version '(1 2 3)))))
+            (package-menu-mark-command "D" (point-min))
+            (package-menu-get-command (package-menu-parse-line nil (point-min)))))
+  (expect 'package-install
+          (with-temp-buffer
+            (insert (with-output-to-string
+                     (package-print-package (make-package :name 'irrelevant :version '(1 2 3)))))
+            (package-menu-mark-command "I" (point-min))
+            (package-menu-get-command (package-menu-parse-line nil (point-min)))))
+  (expect nil
+          (with-temp-buffer
+            (insert (with-output-to-string
+                     (package-print-package (make-package :name 'irrelevant :version '(1 2 3)))))
+            (package-menu-get-command (package-menu-parse-line nil (point-min)))))
+  (expect 'package-install
+          (let ((package-menu-columns (list package-menu-column-name
+                                            package-menu-column-version
+                                            package-menu-column-status
+                                            package-menu-column-command)))
+            (with-temp-buffer
+            (insert (with-output-to-string
+                      (package-print-package (make-package :name 'irrelevant :version '(1 2 3)) t)))
+            (package-menu-mark-command "I" (point-min))
+            (package-menu-get-command (package-menu-parse-line nil (point-min))))))
+
+  (desc "package-menu-execute")
+  (expect (package 'completed)
+          (with-temp-buffer
+            (condition-case err
+                (mocklet (((package-install *)))
+                         (loop for pkg in (list test-pkg1 dep-pkg)
+                               do (progn (insert (with-output-to-string
+                                                   (package-print-package pkg t)))
+                                         (package-menu-mark-command "I" (line-beginning-position -1))))
+                         (package-menu-execute)
+                         'completed)
+              (error err))))
   )
 
 (provide 'package-test)
