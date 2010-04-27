@@ -1323,11 +1323,6 @@ available for download."
   (package-refresh-contents)
   (package-list-packages-internal))
 
-(defun package-menu-revert ()
-  "Update the list of packages."
-  (interactive)
-  (package-list-packages-internal))
-
 (defun* package-menu-mark-command (what &optional (pos (point)))
   "Internal function to mark a package.
 
@@ -1434,37 +1429,20 @@ For larger packages, shows the README file."
         (match-string 1)
       "")))
 
-;; TODO: CL-CHECK
 (defun package-menu-execute ()
   "Perform all the marked actions.
+
 Packages marked for installation will be downloaded and
-installed.  Packages marked for deletion will be removed.
-Note that after installing packages you will want to restart
-Emacs."
+installed. Packages marked for deletion will be removed. Note
+that after installing packages you will want to restart Emacs."
   (interactive)
   (goto-char (point-min))
-  (forward-line 2)
-  (while (not (eobp))
-    (let ((cmd (char-after))
-          (pkg-name (package-menu-get-package))
-          (pkg-vers (package-menu-get-version))
-          (pkg-status (package-menu-get-status)))
-      (cond
-       ((eq cmd ?D)
-        (when (and (string= pkg-status "installed")
-                   (string= pkg-name "package"))
-          ;; FIXME: actually, we could be tricky and remove all info.
-          ;; But that is drastic and the user can do that instead.
-          (error "Can't delete most recent version of `package'"))
-        ;; Ask for confirmation here?  Maybe if package status is ""?
-        ;; Or if any lisp from package is actually loaded?
-        (message "Deleting %s-%s..." pkg-name pkg-vers)
-        (package-delete pkg-name pkg-vers)
-        (message "Deleting %s-%s... done" pkg-name pkg-vers))
-       ((eq cmd ?I)
-        (package-install (intern pkg-name) (version-to-list pkg-vers)))))
-    (forward-line))
-  (package-menu-revert))
+  (loop until (eobp)
+        for info = (package-menu-parse-line)
+        for pkg = (package-menu-make-pkg info)
+        for cmd = (package-menu-get-command info)
+        when cmd do (funcall cmd pkg))
+  (package-list-packages-internal))
 
 (defstruct (package-menu-col (:type list))
   "Specification of a single column in the package list buffer.

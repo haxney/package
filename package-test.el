@@ -649,6 +649,19 @@
                       (package-print-package (make-package :name 'irrelevant :version '(1 2 3)) t)))
             (package-menu-mark-command "I" (point-min))
             (package-menu-get-command (package-menu-parse-line nil (point-min))))))
+
+  (desc "package-menu-execute")
+  (expect (package 'completed)
+          (with-temp-buffer
+            (condition-case err
+                (mocklet (((package-install *)))
+                         (loop for pkg in (list test-pkg1 dep-pkg)
+                               do (progn (insert (with-output-to-string
+                                                   (package-print-package pkg t)))
+                                         (package-menu-mark-command "I" (line-beginning-position -1))))
+                         (package-menu-execute)
+                         'completed)
+              (error err))))
   )
 
 (provide 'package-test)
