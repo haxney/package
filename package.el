@@ -1594,18 +1594,19 @@ Advances point to the end of the line."
   (setq buf (or buf (current-buffer))
         pos (or pos (point)))
   (with-current-buffer buf
-    (save-excursion
-      (goto-char pos)
-      (loop for col in package-menu-columns
-            for attr = (package-menu-col-type col)
-            for width = (package-menu-col-width col)
-            for end-pos = (min (+ (point) width) (line-end-position))
-            for raw-val = (buffer-substring-no-properties (point)
-                                                          end-pos)
-            for stripped = (replace-regexp-in-string
-                            "\\(^[[:space:]\\n]*\\|[[:space:]\\n]*$\\)" "" raw-val)
-            append (list attr stripped)
-            do (goto-char end-pos)))))
+    (goto-char pos)
+    (beginning-of-line)
+    (loop for col in package-menu-columns
+          for attr = (package-menu-col-type col)
+          for width = (package-menu-col-width col)
+          for end-pos = (min (+ (point) width) (line-end-position))
+          for raw-val = (buffer-substring-no-properties (point)
+                                                        end-pos)
+          for stripped = (replace-regexp-in-string
+                          "\\(^[[:space:]\\n]*\\|[[:space:]\\n]*$\\)" "" raw-val)
+          append (list attr stripped)
+          do (goto-char end-pos)
+          finally do (forward-line 1))))
 
 (defun package-menu-make-pkg (plist)
   "Create a package structure from PLIST.

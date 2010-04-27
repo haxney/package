@@ -473,6 +473,11 @@
     (with-temp-buffer
       (insert "I test-pkg            1.1         act     Simple package system for Emacs\n")
       (package-menu-parse-line nil (point-min))))
+  (expect 75
+          (with-temp-buffer
+            (insert "I test-pkg            1.1         act     Simple package system for Emacs\n")
+            (package-menu-parse-line nil (point-min))
+            (point)))
 
   (desc "package-menu-make-pkg")
   (expect (make-package :name 'test-pkg
