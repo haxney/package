@@ -455,7 +455,7 @@ number \"0.9.5\", if any exist."
                             :key (intern (concat "package-" (symbol-name slot)))))))))
 
 ;; TODO: Resolve multiple matches using archive priority?
-(defun package-find-latest (name noerror &rest keys)
+(defun package-find-latest (name &optional noerror &rest keys)
   "Find the newest version of package NAME.
 
 If NOERROR is nil, signal an error when no matching package is
