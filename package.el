@@ -1472,13 +1472,32 @@ See `package-menu-columns' for a description of the slot types."
   comparator
   skip-struct)
 
+(defconst package-menu-column-command
+  '(""        command   2  ignore                ignore                    ignore         t)
+  "Menu definition for the \"Command\" column.")
+
+(defconst package-menu-column-name
+  '("Package"  name     20 intern                package-name              string-lessp   nil)
+  "Menu definition for the \"Package\" column.")
+
+(defconst package-menu-column-version
+  '("Version"  version  12 version-to-list       package-version-canonical version-list-< nil)
+  "Menu definition for the \"Version\" column.")
+
+(defconst package-menu-column-status
+  '("Status"   status   8  package-status-symbol package-status-string     string-lessp   nil)
+  "Menu definition for the \"Status\" column.")
+
+(defconst package-menu-column-summary
+  '("Summary"  summary  60 identity              package-summary           string-lessp   nil)
+  "Menu definition for the \"Summary\" column.")
+
 (defcustom package-menu-columns
-  ;; Name       Type     W  Reader                Writer                    Comparator     Skip-struct
-  '((""         command  2  ignore                ignore                    ignore         t)
-    ("Package"  name     20 intern                package-name              string-lessp   nil)
-    ("Version"  version  12 version-to-list       package-version-canonical version-list-< nil)
-    ("Status"   status   8  package-status-symbol package-status-string     string-lessp   nil)
-    ("Summary"  summary  60 identity              package-summary           string-lessp   nil))
+  (list package-menu-column-command
+        package-menu-column-name
+        package-menu-column-version
+        package-menu-column-status
+        package-menu-column-summary)
   "Specification of columns shown in the package menu.
 
 Columns are displayed in the order in which they appear in this
@@ -1511,14 +1530,20 @@ COMPARATOR: Function to compare two package structures according
 SKIP-STRUCT: Skip adding this column to the package structure.
              Skips adding the column if this slot is non-nil."
   :group 'package
-  :type '(repeat (list :tag "Column Definition"
-                       (string :tag "Name")
-                       (symbol :tag "Type")
-                       (integer :tag "Width")
-                       (function :tag "Reader")
-                       (function :tag "Writer")
-                       (function :tag "Comparator")
-                       (boolean :tag "Skip Struct"))))
+  :type `(repeat (choice
+                  (const :tag "Command"      ,package-menu-column-command)
+                  (const :tag "Package name" ,package-menu-column-name)
+                  (const :tag "Version"      ,package-menu-column-version)
+                  (const :tag "Status"       ,package-menu-column-status)
+                  (const :tag "Summary"      ,package-menu-column-summary)
+                  (list  :tag "Custom Definition"
+                         (string   :tag "Name")
+                         (symbol   :tag "Type")
+                         (integer  :tag "Width")
+                         (function :tag "Reader")
+                         (function :tag "Writer")
+                         (function :tag "Comparator")
+                         (boolean  :tag "Skip Struct")))))
 
 (defconst package-menu-commands '((package-install . "I")
                                   (package-delete  . "D"))
