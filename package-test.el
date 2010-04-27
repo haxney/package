@@ -422,18 +422,31 @@
     (file-directory-p (package-install-directory tarty)))
 
   (desc "package-print-package")
-  (expect (package "  test-pkg            1.0         obs     Simple package system for Emacs")
-    (with-output-to-string
-      (package-print-package test-pkg1)))
-  (expect (package "  test-pkg            1.1         act     Simple package system for Emacs")
-    (with-output-to-string
-      (package-print-package test-pkg2)))
-  (expect (package "  test-pkg            1.1         act     Simple package system for Emacs")
-    (with-output-to-string
-      (package-print-package test-pkg2)))
-  (expect (package "  test-pkg            1.1         act     Simple package system for Emacs\n")
-    (with-output-to-string
-      (package-print-package test-pkg2 t)))
+  (expect (regexp "  test-pkg            1.0         obs     Simple package system for Emacs *")
+          (with-output-to-string
+            (with-package-test
+             (package-print-package test-pkg1))))
+  (expect (regexp "  test-pkg            1.1         act     Simple package system for Emacs *")
+          (with-output-to-string
+            (with-package-test
+             (package-print-package test-pkg2))))
+  (expect (regexp "  test-pkg            1.1         act     Simple package system for Emacs *")
+          (with-output-to-string
+            (with-package-test
+             (package-print-package test-pkg2))))
+  (expect (regexp "  test-pkg            1.1         act     Simple package system for Emacs *\n")
+          (with-output-to-string
+            (with-package-test
+             (package-print-package test-pkg2 t))))
+
+  (expect "test-pkg            act     1.1           \n"
+          (with-output-to-string
+            (with-package-test
+             (let ((package-menu-columns (list package-menu-column-name
+                                               package-menu-column-status
+                                               package-menu-column-version
+                                               package-menu-column-command)))
+               (package-print-package test-pkg2 t)))))
 
   (desc "package-menu-parse-line")
   (expect '(command ""
@@ -508,16 +521,17 @@
                                               summary "Simple package system for Emacs")))
 
   (desc "package-list-packages-internal")
-  (expect (package "  dep-pkg             2.0         avail   Simple package system for Emacs
-  internal-pkg        2.0beta2    act     Simple package system for Emacs
-  tarty               1.5alpha3   act     Simple package system for Emacs
-  test-pkg            1.0         obs     Simple package system for Emacs
-  test-pkg            1.1         act     Simple package system for Emacs
-")
-    (with-output-to-string
-     (with-temp-buffer
-       (package-list-packages-internal (current-buffer))
-       (buffer-substring (point-min) (point-max)))))
+  (expect (regexp "  dep-pkg             2.0         avail   Simple package system for Emacs *
+  internal-pkg        2.0beta2    act     Simple package system for Emacs *
+  tarty               1.5alpha3   act     Simple package system for Emacs *
+  test-pkg            1.0         obs     Simple package system for Emacs *
+  test-pkg            1.1         act     Simple package system for Emacs *\n")
+          (with-package-test
+           (with-output-to-string
+             (with-temp-buffer
+
+               (package-list-packages-internal (current-buffer))
+               (buffer-string)))))
   ;; Cheat and use `package-print-package' to simplify.
   (expect (package (mapconcat '(lambda (item) (with-output-to-string (package-print-package item t)))
                               (list test-pkg1

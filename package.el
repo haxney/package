@@ -1574,11 +1574,9 @@ If NEWLINE is non-nil, print a newline after PKG."
                     for writer-func = (package-menu-col-writer col)
                     for width = (package-menu-col-width col)
                     for col-str = (or (funcall writer-func pkg) "")
-                    concat (format (format "%%-%d.%ds" width (1- width)) col-str) into tmp
+                    concat (format (format "%%-%d.%ds" width (1- width)) col-str))))
 
-                    ;; Delete trailing whitespace (due to summary).
-                    finally return (replace-regexp-in-string "[[:space:]\\n]*$" "" tmp))))
-
+    ;; TODO: Make this `insert' instead?
     (princ (propertize line 'font-lock-face face))
     (when newline
       (princ "\n"))))
