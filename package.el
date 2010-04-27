@@ -1659,14 +1659,19 @@ RESULT is the list to which to add the package."
   "List the available and installed packages.
 
 Inserts the contents into BUF, or a new buffer called
-\"*Packages*\" if BUF is nil. The packages are ordered according to SELECTOR
+\"*Packages*\" if BUF is nil. The packages are ordered according
+to SELECTOR, which is either the symbol name of a column or a
+complete column specification as described by
+`package-menu-columns'.
 
 This function does not initialize or refresh the list of
 packages, so that must be done separately."
   (with-current-buffer buf
     (setq buffer-read-only nil)
     (erase-buffer)
-    (let* ((col (find selector package-menu-columns :key 'package-menu-col-type))
+    (let* ((col (if (listp selector)
+                    selector
+                  (find selector package-menu-columns :key 'package-menu-col-type)))
            (comparator (package-menu-col-comparator col))
            (sort-pred '(lambda (left right)
                          (let ((vleft (package-property-get left selector))
@@ -1678,7 +1683,6 @@ packages, so that must be done separately."
     (goto-char (point-min)))
   buf)
 
-;; TODO: CL-CHECK
 (defun package-menu-sort-by-column (&optional e)
   "Sort the package menu by the last column clicked, E."
   (interactive (list last-input-event))
@@ -1686,10 +1690,9 @@ packages, so that must be done separately."
   (let* ((pos (event-start e))
          (obj (posn-object pos))
          (col (if obj
-                  (get-text-property (cdr obj) 'column-name (car obj))
-                (get-text-property (posn-point pos) 'column-name))))
-    (setq package-menu-sort-key col))
-  (package-list-packages-internal))
+                  (get-text-property (cdr obj) 'package-menu-col (car obj))
+                (get-text-property (posn-point pos) 'package-menu-col)))))
+  (package-list-packages-internal nil col))
 
 (defun package-menu-compute-header-line ()
   "Compute a header format according to `package-menu-columns'.
