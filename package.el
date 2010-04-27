@@ -1328,16 +1328,18 @@ available for download."
   (interactive)
   (package-list-packages-internal))
 
-(defun package-menu-mark-internal (what)
+(defun* package-menu-mark-command (what &optional (pos (point)))
   "Internal function to mark a package.
 
-WHAT is the character used to mark the line."
-  (unless (eobp)
-    (let ((buffer-read-only nil))
-      (beginning-of-line)
-      (delete-char 1)
-      (insert what)
-      (forward-line))))
+WHAT is the character used to mark the line at POS."
+  (save-excursion
+    (goto-char pos)
+    (unless (eobp)
+     (let ((buffer-read-only nil))
+       (beginning-of-line)
+       (forward-char (package-menu-column-offset package-menu-column-command))
+       (delete-char 1)
+       (insert what)))))
 
 (defun package-menu-mark-delete (&optional arg)
   "Mark a package for deletion and move to the next line.

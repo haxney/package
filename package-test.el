@@ -615,6 +615,35 @@
           (let ((package-menu-columns (list package-menu-column-name
                                             package-menu-column-command)))
             (package-menu-column-offset package-menu-column-command)))
+
+  (desc "package-menu-mark-command")
+  (expect 'package-delete
+          (with-temp-buffer
+            (insert (with-output-to-string
+                     (package-print-package (make-package :name 'irrelevant :version '(1 2 3)))))
+            (package-menu-mark-command "D" (point-min))
+            (package-menu-get-command (package-menu-parse-line nil (point-min)))))
+  (expect 'package-install
+          (with-temp-buffer
+            (insert (with-output-to-string
+                     (package-print-package (make-package :name 'irrelevant :version '(1 2 3)))))
+            (package-menu-mark-command "I" (point-min))
+            (package-menu-get-command (package-menu-parse-line nil (point-min)))))
+  (expect nil
+          (with-temp-buffer
+            (insert (with-output-to-string
+                     (package-print-package (make-package :name 'irrelevant :version '(1 2 3)))))
+            (package-menu-get-command (package-menu-parse-line nil (point-min)))))
+  (expect 'package-install
+          (let ((package-menu-columns (list package-menu-column-name
+                                            package-menu-column-version
+                                            package-menu-column-status
+                                            package-menu-column-command)))
+            (with-temp-buffer
+            (insert (with-output-to-string
+                      (package-print-package (make-package :name 'irrelevant :version '(1 2 3)) t)))
+            (package-menu-mark-command "I" (point-min))
+            (package-menu-get-command (package-menu-parse-line nil (point-min))))))
   )
 
 (provide 'package-test)
