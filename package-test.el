@@ -425,19 +425,19 @@
   (expect (regexp "  test-pkg            1.0         obs     Simple package system for Emacs *")
           (with-output-to-string
             (with-package-test
-             (package-print-package test-pkg1))))
+             (package-print-package test-pkg1 nil standard-output))))
   (expect (regexp "  test-pkg            1.1         act     Simple package system for Emacs *")
           (with-output-to-string
             (with-package-test
-             (package-print-package test-pkg2))))
+             (package-print-package test-pkg2 nil standard-output))))
   (expect (regexp "  test-pkg            1.1         act     Simple package system for Emacs *")
           (with-output-to-string
             (with-package-test
-             (package-print-package test-pkg2))))
+             (package-print-package test-pkg2 nil standard-output))))
   (expect (regexp "  test-pkg            1.1         act     Simple package system for Emacs *\n")
           (with-output-to-string
             (with-package-test
-             (package-print-package test-pkg2 t))))
+             (package-print-package test-pkg2 t standard-output))))
 
   (expect "test-pkg            act     1.1           \n"
           (with-output-to-string
@@ -446,7 +446,7 @@
                                                package-menu-column-status
                                                package-menu-column-version
                                                package-menu-column-command)))
-               (package-print-package test-pkg2 t)))))
+               (package-print-package test-pkg2 t standard-output)))))
 
   (desc "package-menu-parse-line")
   (expect '(command ""
@@ -532,22 +532,19 @@
   test-pkg            1.0         obs     Simple package system for Emacs *
   test-pkg            1.1         act     Simple package system for Emacs *\n")
           (with-package-test
-           (with-output-to-string
-             (with-temp-buffer
-
-               (package-list-packages-internal (current-buffer))
-               (buffer-string)))))
+           (with-temp-buffer
+             (package-list-packages-internal (current-buffer))
+             (buffer-string))))
   ;; Cheat and use `package-print-package' to simplify.
-  (expect (package (mapconcat '(lambda (item) (with-output-to-string (package-print-package item t)))
+  (expect (package (mapconcat '(lambda (item) (with-output-to-string (package-print-package item t standard-output)))
                               (list test-pkg1
                                     test-pkg2
                                     tarty
                                     internal-pkg
                                     dep-pkg) ""))
-    (with-output-to-string
-     (with-temp-buffer
-       (package-list-packages-internal (current-buffer) 'version)
-       (buffer-substring (point-min) (point-max)))))
+          (with-temp-buffer
+            (package-list-packages-internal (current-buffer) 'version)
+            (buffer-string)))
 
   (desc "package-menu-compute-header-line")
   (expect " Package Version Status Summary "
@@ -624,20 +621,17 @@
   (desc "package-menu-mark-internal")
   (expect 'package-delete
           (with-temp-buffer
-            (insert (with-output-to-string
-                     (package-print-package (make-package :name 'irrelevant :version '(1 2 3)))))
+            (package-print-package (make-package :name 'irrelevant :version '(1 2 3)))
             (package-menu-mark-internal "D" (point-min))
             (package-menu-get-command (package-menu-parse-line nil (point-min)))))
   (expect 'package-install
           (with-temp-buffer
-            (insert (with-output-to-string
-                     (package-print-package (make-package :name 'irrelevant :version '(1 2 3)))))
+            (package-print-package (make-package :name 'irrelevant :version '(1 2 3)))
             (package-menu-mark-internal "I" (point-min))
             (package-menu-get-command (package-menu-parse-line nil (point-min)))))
   (expect nil
           (with-temp-buffer
-            (insert (with-output-to-string
-                     (package-print-package (make-package :name 'irrelevant :version '(1 2 3)))))
+            (package-print-package (make-package :name 'irrelevant :version '(1 2 3)))
             (package-menu-get-command (package-menu-parse-line nil (point-min)))))
   (expect 'package-install
           (let ((package-menu-columns (list package-menu-column-name
@@ -645,8 +639,7 @@
                                             package-menu-column-status
                                             package-menu-column-command)))
             (with-temp-buffer
-            (insert (with-output-to-string
-                      (package-print-package (make-package :name 'irrelevant :version '(1 2 3)) t)))
+              (package-print-package (make-package :name 'irrelevant :version '(1 2 3)) t)
             (package-menu-mark-internal "I" (point-min))
             (package-menu-get-command (package-menu-parse-line nil (point-min))))))
 
@@ -656,8 +649,7 @@
             (condition-case err
                 (mocklet (((package-install *)))
                          (loop for pkg in (list test-pkg1 dep-pkg)
-                               do (progn (insert (with-output-to-string
-                                                   (package-print-package pkg t)))
+                               do (progn (package-print-package pkg t)
                                          (package-menu-mark-internal "I" (line-beginning-position -1))))
                          (package-menu-execute)
                          'completed)
@@ -680,8 +672,7 @@
   (expect (package "Package information for test-pkg\n\nThis is a completely great testing package")
           (let (wind)
             (with-temp-buffer
-              (insert (with-output-to-string
-                        (package-print-package test-pkg1)))
+              (package-print-package test-pkg1)
 
               (setq wind (package-menu-view-commentary)))
             (with-current-buffer (window-buffer wind)
@@ -689,8 +680,7 @@
   (expect (package t)
           (let (wind)
             (with-temp-buffer
-              (insert (with-output-to-string
-                        (package-print-package test-pkg1)))
+              (package-print-package test-pkg1)
 
               (setq wind (package-menu-view-commentary)))
             (with-current-buffer (window-buffer wind)
@@ -698,8 +688,7 @@
   (expect (package nil)
           (let (wind)
             (with-temp-buffer
-              (insert (with-output-to-string
-                        (package-print-package test-pkg1)))
+              (package-print-package test-pkg1)
 
               (setq wind (package-menu-view-commentary)))
             (with-current-buffer (window-buffer wind)

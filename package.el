@@ -1529,10 +1529,11 @@ This is an alist of the form (FUNC . STR), where FUNC is the
 symbol name of the function to run and STR is the string from the
 package status buffer which represents the command.")
 
-(defun package-print-package (pkg &optional newline)
-  "Print out a single PKG line for the menu buffer.
+(defun* package-print-package (pkg &optional newline (print-func (current-buffer)))
+  "Insert a single PKG line for the menu buffer.
 
-If NEWLINE is non-nil, print a newline after PKG."
+If NEWLINE is non-nil, print a newline after PKG. PRINT-FUNC is
+passes as the second argument of `princ', which see."
   (let ((face
          (if (eq (package-type pkg) 'builtin)
              'font-lock-builtin-face
@@ -1549,9 +1550,9 @@ If NEWLINE is non-nil, print a newline after PKG."
                     concat (format (format "%%-%d.%ds" width (1- width)) col-str))))
 
     ;; TODO: Make this `insert' instead?
-    (princ (propertize line 'font-lock-face face))
+    (princ (propertize line 'font-lock-face face) print-func)
     (when newline
-      (princ "\n"))))
+      (princ "\n" print-func))))
 
 (defun package-menu-parse-line (&optional buf pos)
   "Parses a package line into a plist.
