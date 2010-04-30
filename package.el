@@ -1322,24 +1322,12 @@ for download."
     map)
   "Local keymap for package menu sort buttons.")
 
-(put 'package-menu-mode 'mode-class 'special)
-
-;; TODO: CL-CHECK
-(defun package-menu-mode ()
+(define-derived-mode package-menu-mode special-mode "Package Menu"
   "Major mode for browsing a list of packages.
-Letters do not insert themselves; instead, they are commands.
-\\<package-menu-mode-map>
-\\{package-menu-mode-map}"
-  (kill-all-local-variables)
-  (use-local-map package-menu-mode-map)
-  (setq major-mode 'package-menu-mode)
-  (setq mode-name "Package Menu")
-  (setq truncate-lines t)
-  (setq buffer-read-only t)
-  ;; Support Emacs 21.
-  (if (fboundp 'run-mode-hooks)
-      (run-mode-hooks 'package-menu-mode-hook)
-    (run-hooks 'package-menu-mode-hook)))
+
+Letters do not insert themselves; instead, they are commands."
+  :group 'package-menu
+  (setq truncate-lines t))
 
 (defun package-menu-refresh ()
   "Download the ELPA archive.
