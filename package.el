@@ -1428,28 +1428,6 @@ For larger packages, shows the README file."
       (view-mode))
     (display-buffer buffer t)))
 
-(defun package-menu-get-package ()
-  "Return the name of the package on the current line."
-  (save-excursion
-    (beginning-of-line)
-    (if (looking-at ". \\([^ \t]*\\)")
-        (match-string-no-properties 1))))
-
-;; TODO: CL-CHECK
-(defun package-menu-get-version ()
-  "Return the version of the package on the current line."
-  (save-excursion
-    (beginning-of-line)
-    (if (looking-at ". [^ \t]*[ \t]*\\([0-9.]*\\)")
-        (match-string 1))))
-
-(defun package-menu-get-status ()
-  "Get the status of the current line."
-  (save-excursion
-    (if (looking-at ". [^ \t]*[ \t]*[^ \t]*[ \t]*\\([^ \t]*\\)")
-        (match-string 1)
-      "")))
-
 (defun package-menu-execute ()
   "Perform all the marked actions.
 
@@ -1641,25 +1619,6 @@ is used."
    (loop for current in package-menu-columns
          when (equal current col) return offset
          do (setq offset (+ offset (package-menu-col-width current))))))
-
-;; TODO: CL-CHECK
-(defun package-list-maybe-add (package status result)
-  "Add PACKAGE to the list if it is not already there.
-
-PACKAGE is the package structure.
-
-STATUS is the installation status of the package, either
-\"available\" or \"installed\".
-
-RESULT is the list to which to add the package."
-  (let* ((pkg-name (package-name package))
-         (pkg-version (package-version package))
-         (pkg-summary (package-summary package))
-         (elt (assoc (cons pkg-name pkg-version) result)))
-    (unless elt
-      (setq result (cons (list (cons pkg-name pkg-version) status pkg-summary)
-                         result))))
-  result)
 
 (defun* package-list-packages-internal (&optional (buf (get-buffer-create "*Packages*"))
                                                   (selector 'name))
