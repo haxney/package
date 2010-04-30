@@ -977,38 +977,35 @@ Signal an error if the entire string was not used."
                     :summary (aref vec 2)
                     :type (aref vec 3))))
 
-(defun package--read-archive-file (archive)
-  "Re-read the contents for ARCHIVE.
+(defun package-read-archive-contents (source)
+  "Read the contents for SOURCE.
 
 Will return the data from the file, or nil if the file does not
 exist. Will signal an error if the archive version is not
-supported."
-  (let ((file (package-archive-content-file archive))
-        contents arch-version)
-    (when (file-exists-p file)
-      (with-temp-buffer
-        (insert-file-contents-literally file)
-        (setq contents (package-read-from-string
-                        (buffer-substring-no-properties (point-min)
-                                                        (point-max)))
-              arch-version (car contents)))
-      (unless (eq arch-version package-archive-version)
-        (error "Package archive version %d is not equal to %d - upgrade package.el"
-               arch-version package-archive-version))
-      (cdr contents))))
+supported.
 
-(defun package-read-all-archive-contents ()
+SOURCE is passed directly to `read', so should be a valid input
+for that function."
+  (let* ((contents (read source))
+         (arch-version (car contents)))
+    (unless (memq arch-version package-archive-versions)
+      (error "Package archive version %d is not one of %s"
+             arch-version package-archive-versions))
+    (cdr contents)))
+
+(defun package-register-all-archive-contents ()
   "Read the archive description of each of the archives in `package-archives'."
-  (loop for (archive info) in package-archives
-        do (package-read-archive-contents archive)))
+  (loop for (archive . info) in package-archives
+        do (package-register-archive archive)))
 
-(defun package-read-archive-contents (archive)
+(defun package-register-archive (archive)
   "Re-read `archive-contents' for ARCHIVE.
 
 Will add any new packages found `package-registry'. Will signal
 an error if the archive version is too new or if a
 package's :archive field does not match ARCHIVE."
-  (let ((archive-contents (package--read-archive-file archive)))
+  (let ((archive-contents (package-read-archive-contents
+                           (find-file-noselect (package-archive-content-file archive)))))
     (if archive-contents
         (dolist (pkg archive-contents)
           (unless (eq (package-archive pkg) archive)

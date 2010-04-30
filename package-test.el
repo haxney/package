@@ -588,11 +588,13 @@
 
   (desc "package-install")
   (expect (package 'completed)
-          (mocklet (((package-download-transaction (list tarty))))
+          (mocklet (((package-download-transaction (list tarty)))
+                    (package-initialize))
                    (package-install (make-package :name 'tarty))
                    'completed))
   (expect (package 'completed)
-          (mocklet (((package-download-transaction (list tarty))))
+          (mocklet (((package-download-transaction (list tarty)))
+                    (package-initialize))
                    (package-install (make-package :name 'tarty :version '(1 5 -3 3)))
                    'completed))
   (expect (package '(mock-error not-called))
@@ -743,6 +745,59 @@
            '(htmlize .
                      [(1 37)
                       nil "Convert buffer text and decorations to HTML." single])))
+
+  (desc "package-read-archive-contents")
+  (expect '((smex .
+                  [(1 1)
+                   nil "M-x interface with Ido-style lazy matching." single])
+            (drag-stuff .
+                        [(0 0 2)
+                         nil "Drag stuff (lines, words, region, etc...) around" single]))
+          (package-read-archive-contents "(1 (smex . [(1 1) nil
+       \"M-x interface with Ido-style lazy matching.\" single])
+ (drag-stuff .
+	     [(0 0 2)
+	      nil \"Drag stuff (lines, words, region, etc...) around\" single]))"))
+  (expect '((:name test-pkg
+                   :version (1 0)
+                   :version-raw "1.0"
+                   :summary "Simple package system for Emacs"
+                   :created "10 Mar 2007"
+                   :updated "10 Mar 2007"
+                   :license "gpl3"
+                   :authors (("Joe Bob" . "jbob@example.com"))
+                   :maintainer ("Joe Bob" . "jbob@example.com")
+                   :provides (test-pkg)
+                   :requires-hard ((dep-pkg deppy))
+                   :requires-soft ()
+                   :keywords ("tools" "libraries")
+                   :homepage "www.example.com"
+                   :wikipage "test-pkg.el"
+                   :commentary "This is a completely great testing package"
+                   :archive elpa
+                   :type single
+                   :status obsolete))
+          (package-read-archive-contents "(2 (:name test-pkg
+                   :version (1 0)
+                   :version-raw \"1.0\"
+                   :summary \"Simple package system for Emacs\"
+                   :created \"10 Mar 2007\"
+                   :updated \"10 Mar 2007\"
+                   :license \"gpl3\"
+                   :authors ((\"Joe Bob\" . \"jbob@example.com\"))
+                   :maintainer (\"Joe Bob\" . \"jbob@example.com\")
+                   :provides (test-pkg)
+                   :requires-hard ((dep-pkg deppy))
+                   :requires-soft ()
+                   :keywords (\"tools\" \"libraries\")
+                   :homepage \"www.example.com\"
+                   :wikipage \"test-pkg.el\"
+                   :commentary \"This is a completely great testing package\"
+                   :archive elpa
+                   :type single
+                   :status obsolete))"))
+  (expect (error error "Package archive version 3 is not one of (2 1)")
+          (package-read-archive-contents "(3 (package . [stuff]))"))
   )
 
 (provide 'package-test)
