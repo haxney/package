@@ -963,6 +963,18 @@ Signal an error if the entire string was not used."
         (error "Can't read whole string")
       (car read-data))))
 
+(defun package-from-version-1 (old-spec)
+  "Reads a version 1 package from OLD-SPEC into a v2 package."
+  (let ((name (car old-spec))
+        (vec (cdr old-spec)))
+      (make-package :name name
+                    :version (aref vec 0)
+                    ;; TODO: Convert require spec
+                    :requires-hard (aref vec 1)
+                    :summary (aref vec 2)
+                    :type (aref vec 3))
+    ))
+
 (defun package--read-archive-file (archive)
   "Re-read the contents for ARCHIVE.
 
