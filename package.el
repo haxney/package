@@ -1293,8 +1293,8 @@ for download."
                   :help "Mark a package for installation and move to the next line"))
     (define-key menu-map [s3] '("--"))
     (define-key menu-map [mg]
-      '(menu-item "Update package list" package-menu-revert
-                  :help "Update the list of packages"))
+      '(menu-item "Reload package list" package-menu-revert
+                  :help "Reload the list of packages"))
     (define-key menu-map [mr]
       '(menu-item "Refresh package list" package-menu-refresh
                   :help "Download the ELPA archive"))
@@ -1337,6 +1337,11 @@ package menu.  This lets you see what new packages are
 available for download."
   (interactive)
   (package-refresh-contents)
+  (package-list-packages-internal))
+
+(defun package-menu-revert ()
+  "Update the list of packages."
+  (interactive)
   (package-list-packages-internal))
 
 (defun* package-menu-mark-internal (what &optional (pos (point)))
