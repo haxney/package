@@ -675,6 +675,35 @@
           (package-find-rest (make-package :name 'test-pkg) t))
   (expect (package tarty)
           (package-find-rest (make-package :name 'tarty) t))
+
+  (desc "package-menu-view-commentary")
+  (expect (package "Package information for test-pkg\n\nThis is a completely great testing package")
+          (let (wind)
+            (with-temp-buffer
+              (insert (with-output-to-string
+                        (package-print-package test-pkg1)))
+
+              (setq wind (package-menu-view-commentary)))
+            (with-current-buffer (window-buffer wind)
+              (buffer-string))))
+  (expect (package t)
+          (let (wind)
+            (with-temp-buffer
+              (insert (with-output-to-string
+                        (package-print-package test-pkg1)))
+
+              (setq wind (package-menu-view-commentary)))
+            (with-current-buffer (window-buffer wind)
+              buffer-read-only)))
+  (expect (package nil)
+          (let (wind)
+            (with-temp-buffer
+              (insert (with-output-to-string
+                        (package-print-package test-pkg1)))
+
+              (setq wind (package-menu-view-commentary)))
+            (with-current-buffer (window-buffer wind)
+              (buffer-modified-p))))
   )
 
 (provide 'package-test)

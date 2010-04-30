@@ -1408,32 +1408,25 @@ ARG is a (currently unused) numeric argument."
   (interactive)
   (message "n-ext, i-nstall, d-elete, u-nmark, x-ecute, r-efresh, h-elp ?-view commentary"))
 
-;; TODO: CL-CHECK
 (defun package-menu-view-commentary ()
   "Display information about this package.
 For single-file packages, shows the commentary section from the header.
 For larger packages, shows the README file."
   (interactive)
-  (let* (start-point ok
-                     (pkg-name (package-menu-get-package))
-                     (buffer (url-retrieve-synchronously
-                              (concat (package-archive pkg-name)
-                                      pkg-name "-readme.txt"))))
+  (let ((pkg (package-menu-make-pkg (package-menu-parse-line)))
+         (buffer (get-buffer-create "*Package Info*")))
+    (package-find-rest pkg)
     (with-current-buffer buffer
-      ;; FIXME: it would be nice to work with any URL type.
-      (setq start-point url-http-end-of-headers)
-      (setq ok (eq (url-http-parse-response) 200)))
-    (let ((new-buffer (get-buffer-create "*Package Info*")))
-      (with-current-buffer new-buffer
-        (let ((buffer-read-only nil))
-          (erase-buffer)
-          (insert "Package information for " pkg-name "\n\n")
-          (if ok
-              (insert-buffer-substring buffer start-point)
-            (insert "This package does not have a README file or commentary comment.\n"))
-          (goto-char (point-min))
-          (view-mode)))
-      (display-buffer new-buffer t))))
+      (let ((buffer-read-only nil))
+        (erase-buffer)
+        (insert (format "Package information for %s\n\n%s"
+                        (package-name pkg)
+                        (package-commentary pkg)))
+        (goto-char (point-min)))
+      (setq buffer-read-only t)
+      (set-buffer-modified-p nil)
+      (view-mode))
+    (display-buffer buffer t)))
 
 (defun package-menu-get-package ()
   "Return the name of the package on the current line."
