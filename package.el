@@ -413,7 +413,9 @@ this function provides that."
   (loop for (name . pkgs) in package-registry
         append pkgs))
 
-(defun* package-find (name &key version
+(defun* package-find (basic-name &key
+                           (name basic-name)
+                           version
                            version-raw
                            summary
                            created
@@ -483,6 +485,32 @@ will be."
     (if (or result noerror)
         result
       (error "No package found named '%s' matching parameters '%s'" name keys))))
+
+(defun package-find-rest (pkg &optional noerror)
+  "Fill in the missing information of PKG from `package-registry'.
+
+Searches for a package in `package-registry' which matches all of
+the non-nil slots of PKG and adds any information from the found
+package to PKG.
+
+If more than one matching package is found, an error is signaled
+unless NOERROR is non-nil.
+
+This is used when there is a partial package (say, parsed from a
+menu line), and you want to fill in the rest of the information."
+  (let* ((key-list (cl-merge-mapslots '(lambda (slot accessor val)
+                               (if val
+                                   (list (intern (format ":%s" slot)) val)
+                                 nil)
+                               ) 'package pkg))
+         (keys (loop for elt in (delq nil key-list)
+                     append elt))
+         (found (apply 'package-find (package-name pkg) keys)))
+    (if (eq (length found) 1)
+        (cl-merge-struct 'package pkg (car found))
+      (if noerror
+          nil
+        (error "Expected only a single matching package, %d found" (length found))))))
 
 (defun package-archive-url (archive &optional noerror)
   "Returns the Url containing information about ARCHIVE.

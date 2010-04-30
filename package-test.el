@@ -662,6 +662,19 @@
                          (package-menu-execute)
                          'completed)
               (error err))))
+
+  (desc "package-find-rest")
+  (expect (package test-pkg1)
+          (package-find-rest (make-package :name 'test-pkg :version '(1 0))))
+  (expect (package test-pkg2)
+          (package-find-rest (make-package :name 'test-pkg :version '(1 1))))
+  (expect (error error "Expected only a single matching package, 2 found")
+          (with-package-test
+           (package-find-rest (make-package :name 'test-pkg))))
+  (expect (package nil)
+          (package-find-rest (make-package :name 'test-pkg) t))
+  (expect (package tarty)
+          (package-find-rest (make-package :name 'tarty) t))
   )
 
 (provide 'package-test)
