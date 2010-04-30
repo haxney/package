@@ -244,9 +244,11 @@ The default points to ELPA, the Emacs Lisp Package Archive."
   :group 'package
   :package-version '("package.el" . "0.9.3"))
 
-(defconst package-archive-version 2
-  "Version number of the package archive understood by this file.
-Lower version numbers than this will probably be understood as well.")
+(defconst package-archive-versions '(2 1)
+  "A list of archive version numbers understood by this library.
+
+Versions earlier in the list are preferred to those appearing
+later.")
 
 (defconst package-info-filename "info.epkg"
   "The name of the package metadata file in each package directory.
