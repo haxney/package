@@ -718,6 +718,31 @@
              (with-current-buffer res
                major-mode)
              (kill-buffer res))))
+
+  (desc "package-from-version-1")
+  (expect (make-package :name 'swank-clojure
+                        :version '(1 1 0)
+                        :requires-hard '(((slime-repl . (20091016)))
+                                         ((clojure-mode . (1 6))))
+                        :summary "slime adapter for clojure"
+                        :type 'single)
+          (package-from-version-1
+           '(swank-clojure .
+                           [(1 1 0)
+                            ((slime-repl
+                              (20091016))
+                             (clojure-mode
+                              (1 6)))
+                            "slime adapter for clojure" single])))
+  (expect (make-package :name 'htmlize
+                        :version '(1 37)
+                        :requires-hard nil
+                        :summary "Convert buffer text and decorations to HTML."
+                        :type 'single)
+          (package-from-version-1
+           '(htmlize .
+                     [(1 37)
+                      nil "Convert buffer text and decorations to HTML." single])))
   )
 
 (provide 'package-test)
