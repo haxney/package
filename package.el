@@ -1670,10 +1670,15 @@ returns a value suitable for `header-line-format'."
         concat (propertize " " 'display (list 'space :align-to width)
                            'face 'fixed-pitch)))
 
-(defun package--list-packages ()
+(defun package-list-packages (&optional refresh)
   "Display a list of packages.
 
-Helper function that does all the work for the user-facing functions."
+Does not refresh the list of packages before displaying unless a
+prefix argument is supplied. The list is displayed in a buffer
+named `*Packages*'."
+  (interactive "P")
+  (when refresh
+    (package-refresh-contents))
   (with-current-buffer (package-list-packages-internal)
     (package-menu-mode)
     (setq header-line-format (package-menu-compute-header-line))
@@ -1683,17 +1688,6 @@ Helper function that does all the work for the user-facing functions."
     ;; package-list-packages', suggesting that they might want to use
     ;; them.
     (pop-to-buffer (current-buffer))))
-
-(defun package-list-packages (refresh)
-  "Display a list of packages.
-
-Does not refresh the list of packages before displaying unless a
-prefix argument is supplied. The list is displayed in a buffer
-named `*Packages*'."
-  (interactive "P")
-  (when refresh
-    (package-refresh-contents))
-  (package--list-packages))
 
 ;; Make it appear on the menu.
 (define-key-after menu-bar-options-menu [package]

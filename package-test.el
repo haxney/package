@@ -693,6 +693,31 @@
               (setq wind (package-menu-view-commentary)))
             (with-current-buffer (window-buffer wind)
               (buffer-modified-p))))
+
+  (desc "package-list-packages")
+  (expect (package "*Packages*")
+          (let ((res (package-list-packages)))
+            (prog1
+                (buffer-name res)
+              ;; Hack to make up for lack of cleanup capability.
+              (kill-buffer res))))
+  (expect (regexp "  dep-pkg             2.0         avail   Simple package system for Emacs *
+  internal-pkg        2.0beta2    act     Simple package system for Emacs *
+  tarty               1.5alpha3   act     Simple package system for Emacs *
+  test-pkg            1.0         obs     Simple package system for Emacs *
+  test-pkg            1.1         act     Simple package system for Emacs *\n")
+          (with-package-test
+           (let ((res (package-list-packages)))
+             (prog1
+              (with-current-buffer res
+                (buffer-string))
+              (kill-buffer res)))))
+  (expect (package 'package-menu-mode)
+          (let ((res (package-list-packages)))
+            (prog1
+             (with-current-buffer res
+               major-mode)
+             (kill-buffer res))))
   )
 
 (provide 'package-test)
