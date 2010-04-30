@@ -621,18 +621,18 @@
                                             package-menu-column-command)))
             (package-menu-column-offset package-menu-column-command)))
 
-  (desc "package-menu-mark-command")
+  (desc "package-menu-mark-internal")
   (expect 'package-delete
           (with-temp-buffer
             (insert (with-output-to-string
                      (package-print-package (make-package :name 'irrelevant :version '(1 2 3)))))
-            (package-menu-mark-command "D" (point-min))
+            (package-menu-mark-internal "D" (point-min))
             (package-menu-get-command (package-menu-parse-line nil (point-min)))))
   (expect 'package-install
           (with-temp-buffer
             (insert (with-output-to-string
                      (package-print-package (make-package :name 'irrelevant :version '(1 2 3)))))
-            (package-menu-mark-command "I" (point-min))
+            (package-menu-mark-internal "I" (point-min))
             (package-menu-get-command (package-menu-parse-line nil (point-min)))))
   (expect nil
           (with-temp-buffer
@@ -647,7 +647,7 @@
             (with-temp-buffer
             (insert (with-output-to-string
                       (package-print-package (make-package :name 'irrelevant :version '(1 2 3)) t)))
-            (package-menu-mark-command "I" (point-min))
+            (package-menu-mark-internal "I" (point-min))
             (package-menu-get-command (package-menu-parse-line nil (point-min))))))
 
   (desc "package-menu-execute")
@@ -658,7 +658,7 @@
                          (loop for pkg in (list test-pkg1 dep-pkg)
                                do (progn (insert (with-output-to-string
                                                    (package-print-package pkg t)))
-                                         (package-menu-mark-command "I" (line-beginning-position -1))))
+                                         (package-menu-mark-internal "I" (line-beginning-position -1))))
                          (package-menu-execute)
                          'completed)
               (error err))))

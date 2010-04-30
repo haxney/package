@@ -1351,7 +1351,7 @@ available for download."
   (package-refresh-contents)
   (package-list-packages-internal))
 
-(defun* package-menu-mark-command (what &optional (pos (point)))
+(defun* package-menu-mark-internal (what &optional (pos (point)))
   "Internal function to mark a package.
 
 WHAT is the character used to mark the line at POS."
