@@ -140,6 +140,11 @@
              (dep-pkg . (,dep-pkg))
              (tarty . (,tarty))
              (internal-pkg . (,internal-pkg))))
+          (package-registry-alt `((dep-pkg ,dep-pkg)
+                                  (test-pkg ,test-pkg1
+                                            ,test-pkg2)
+                                  (internal-pkg ,internal-pkg)
+                                  (tarty ,tarty)))
           (test-dir (file-name-as-directory (make-temp-name (expand-file-name "package-test"
                                                                               temporary-file-directory))))
           test-dir-created
@@ -209,7 +214,14 @@
                          dep-pkg
                          tarty
                          internal-pkg))
-    (package-registry-flat))
+          (package-registry-flat))
+  (expect (package (list dep-pkg
+                         test-pkg1
+                         test-pkg2
+                         internal-pkg
+                         tarty))
+          (let ((package-registry package-registry-alt))
+            (package-registry-flat)))
 
   (desc "package-split-filename")
   (expect (package '(package . (0 1 1)))
@@ -273,7 +285,13 @@
   (expect (package nil)
     (package-find 'tarty :archive 'manual :type 'single))
   (expect (package (list dep-pkg))
-    (package-find 'dep-pkg :provides '(deppy)))
+          (package-find 'dep-pkg :provides '(deppy)))
+  (expect (package (list dep-pkg))
+          (let ((package-registry package-registry-alt))
+            (package-find 'dep-pkg :provides '(deppy))))
+  (expect (package (list tarty))
+          (let ((package-registry package-registry-alt))
+            (package-find 'tarty :archive 'manual :type 'tar)))
 
   (desc "package-find-latest")
   (expect (package test-pkg2)

@@ -451,6 +451,9 @@ number \"0.9.5\", if any exist."
   (let ((pkgs (aget package-registry name)))
     (dolist (slot
              ;; This is `cddr' to skip the `name' slot, as well as the cl-tag.
+
+             ;; TODO: Avoid computing slots on every invocation; it (probably)
+             ;; won't change in successive runs
              (cddr (mapcar 'car (get 'package 'cl-struct-slots)))
              pkgs)
       (when (symbol-value slot)
@@ -478,9 +481,9 @@ only one is returned; there is no guarantee of which one that
 will be."
   ;; Ignore the :version keyword; that is the entire point of this function.
   (when (plist-get keys :version)
-    (if noerror
-        (return-from package-find-latest)
-      (error "Version already specified; how do you expect me to find the latest?")))
+    (noreturn (if noerror
+         (noreturn (return-from package-find-latest nil))
+       (error "Version already specified; how do you expect me to find the latest?"))))
 
   (let* ((pkgs (apply 'package-find name keys))
          (result (car-safe pkgs)))
