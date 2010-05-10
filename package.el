@@ -507,10 +507,10 @@ unless NOERROR is non-nil.
 This is used when there is a partial package (say, parsed from a
 menu line), and you want to fill in the rest of the information."
   (let* ((key-list (cl-merge-mapslots '(lambda (slot accessor val)
-                               (if val
-                                   (list (intern (format ":%s" slot)) val)
-                                 nil)
-                               ) 'package pkg))
+                                         (if val
+                                             (list (intern (format ":%s" slot)) val)
+                                           nil))
+                                      'package pkg))
          (keys (loop for elt in (delq nil key-list)
                      append elt))
          (found (apply 'package-find (package-name pkg) keys)))

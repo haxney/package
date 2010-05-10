@@ -296,7 +296,39 @@
   (desc "package-find-latest")
   (expect (package test-pkg2)
     (package-find-latest 'test-pkg nil))
-  (expect (error)
+  (expect (package test-pkg2)
+    (package-find-latest 'test-pkg t))
+  (expect (package test-pkg2)
+          (let ((package-registry `((test-pkg
+                                     ,test-pkg2
+                                     ,(make-package
+                                       :name 'test-pkg
+                                       :version '(0 9)
+                                       :provides '(test-pkg)
+                                       :archive 'elpa
+                                       :type 'single
+                                       :status 'obsolete)
+                                     ,test-pkg1))))
+            (package-find-latest 'test-pkg t)))
+  (expect (package dep-pkg)
+          (let ((package-registry `((dep-pkg
+                                     ,(make-package
+                                       :name 'dep-pkg
+                                       :version '(0 9)
+                                       :provides '(test-pkg)
+                                       :archive 'elpa
+                                       :type 'single
+                                       :status 'obsolete)
+                                     ,dep-pkg
+                                     ,(make-package
+                                       :name 'dep-pkg
+                                       :version '(1 9)
+                                       :provides '(test-pkg)
+                                       :archive 'elpa
+                                       :type 'single
+                                       :status 'obsolete)))))
+            (package-find-latest 'dep-pkg t)))
+  (expect (error error "No package found named 'test-pkg' matching parameters '(:license gpl2)'")
     (with-package-test
      (package-find-latest 'test-pkg nil :license "gpl2")))
   (expect (package nil)
@@ -694,6 +726,30 @@
   (expect (error error "Expected only a single matching package, 2 found")
           (with-package-test
            (package-find-rest (make-package :name 'test-pkg))))
+  (expect (error error "Expected only a single matching package, 3 found")
+          (let ((package-registry `((dep-pkg
+                                     ,(make-package
+                                       :name 'dep-pkg
+                                       :version '(0 9)
+                                       :provides '(test-pkg)
+                                       :archive 'elpa
+                                       :type 'single
+                                       :status 'obsolete)
+                                     ,(make-package
+                                       :name 'dep-pkg
+                                       :version '(0 5)
+                                       :provides '(test-pkg)
+                                       :archive 'elpa
+                                       :type 'single
+                                       :status 'obsolete)
+                                     ,(make-package
+                                       :name 'dep-pkg
+                                       :version '(1 9)
+                                       :provides '(test-pkg)
+                                       :archive 'elpa
+                                       :type 'single
+                                       :status 'obsolete)))))
+           (package-find-rest (make-package :name 'dep-pkg))))
   (expect (package nil)
           (package-find-rest (make-package :name 'test-pkg) t))
   (expect (package tarty)
