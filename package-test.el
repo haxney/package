@@ -291,6 +291,17 @@
     (package-find-latest 'dep-pkg t
                          :provides '(deppy)
                          :wikipage "deppy.el"))
+  (expect (package nil)
+          (package-find-latest 'dep-pkg t
+                               :provides '(deppy)
+                               :wikipage "deppy.el"
+                               :version '(2 0)))
+  (expect (error error "Version already specified; how do you expect me to find the latest?")
+          (with-package-test
+           (package-find-latest 'test-pkg nil
+                                :license "gpl3"
+                                :version '(1 2 3 4))))
+
 
   (desc "package-compute-transaction")
   (expect (package (list test-pkg2))

@@ -459,7 +459,7 @@ number \"0.9.5\", if any exist."
                             :key (intern (concat "package-" (symbol-name slot)))))))))
 
 ;; TODO: Resolve multiple matches using archive priority?
-(defun package-find-latest (name &optional noerror &rest keys)
+(defun* package-find-latest (name &optional noerror &rest keys)
   "Find the newest version of package NAME.
 
 If NOERROR is nil, signal an error when no matching package is
@@ -467,7 +467,8 @@ found, otherwise return nil.
 
 KEYS is a set of keyword arguments to be passed to
 `package-find'. If the :version keyword is present, it is
-ignored.
+considered an error, and an error is signaled unless NOERROR is
+non-nil.
 
 Uses `package-find' to search for packages named NAME matching
 KEYS and returns the one with the greatest version number.
@@ -477,7 +478,9 @@ only one is returned; there is no guarantee of which one that
 will be."
   ;; Ignore the :version keyword; that is the entire point of this function.
   (when (plist-get keys :version)
-    (setq keys (plist-put keys :version nil)))
+    (if noerror
+        (return-from package-find-latest)
+      (error "Version already specified; how do you expect me to find the latest?")))
 
   (let* ((pkgs (apply 'package-find name keys))
          (result (car-safe pkgs)))
