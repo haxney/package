@@ -926,6 +926,20 @@
                      (internal-pkg ,internal-pkg)))
           (package-register test-pkg1)
           package-registry)
+
+  (desc "package-archive-url")
+  (expect (package (concat "file://" test-dir))
+          (package-archive-url 'manual))
+  (expect "http://tromey.com/elpa/"
+          (package-archive-url 'elpa))
+  (expect (error error "Builtin archive does not have a download URL")
+          (package-archive-url 'builtin))
+  (expect nil
+          (package-archive-url 'builtin t))
+
+  (desc "package-archive-content-file")
+  (expect (package (concat test-dir "archive-contents"))
+          (package-archive-content-file 'manual))
   )
 
 (provide 'package-test)
