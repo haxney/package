@@ -798,6 +798,49 @@
                    :status obsolete))"))
   (expect (error error "Package archive version 3 is not one of (2 1)")
           (package-read-archive-contents "(3 (package . [stuff]))"))
+
+  (desc "package-register")
+  (expect (package `((adder ,(make-package :name 'adder
+                                           :version '(1 0)
+                                           :type 'single
+                                           :archive 'manual))
+                     (test-pkg ,test-pkg1 ,test-pkg2)
+                     (dep-pkg ,dep-pkg)
+                     (tarty ,tarty)
+                     (internal-pkg ,internal-pkg)))
+          (package-register (make-package :name 'adder
+                                          :version '(1 0)
+                                          :type 'single
+                                          :archive 'manual))
+          package-registry)
+  (expect `((adder ,(make-package :name 'adder
+                                  :version '(1 0)
+                                  :type 'single
+                                  :archive 'manual)))
+          (let (package-registry)
+            (package-register (make-package :name 'adder
+                                  :version '(1 0)
+                                  :type 'single
+                                  :archive 'manual))
+            package-registry))
+  (expect (package `((test-pkg ,test-pkg1 ,test-pkg2 ,(make-package :name 'test-pkg
+                                                            :version '(2 5)
+                                                            :type 'single
+                                                            :archive 'manual))
+             (dep-pkg ,dep-pkg)
+             (tarty ,tarty)
+             (internal-pkg ,internal-pkg)))
+          (package-register (make-package :name 'test-pkg
+                                          :version '(2 5)
+                                          :type 'single
+                                          :archive 'manual))
+          package-registry)
+  (expect (package `((test-pkg ,test-pkg1 ,test-pkg2)
+                     (dep-pkg ,dep-pkg)
+                     (tarty ,tarty)
+                     (internal-pkg ,internal-pkg)))
+          (package-register test-pkg1)
+          package-registry)
   )
 
 (provide 'package-test)

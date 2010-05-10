@@ -572,12 +572,13 @@ non-nil."
   "Register package PKG if it isn't already in `package-registry'.
 
 Returns nil if PKG was already in the list or PKG if it was not."
-  (let ((pkg-name (package-name pkg))
+  (let* ((pkg-name (package-name pkg))
         (existing-pkgs (aget package-registry pkg-name)))
-    (when existing-pkgs
+    (if existing-pkgs
       (unless (member pkg existing-pkgs)
         (nconc existing-pkgs (list pkg))
-        pkg))))
+        pkg)
+      (aput 'package-registry pkg-name (list pkg)))))
 
 (defsubst package-load-descriptor (pkg)
   "Return information the info file of PKG.
