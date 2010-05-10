@@ -940,6 +940,20 @@
   (desc "package-archive-content-file")
   (expect (package (concat test-dir "archive-contents"))
           (package-archive-content-file 'manual))
+
+  (desc "package-download-url")
+  (expect "http://example.com/elpa/test-pkg-1.0.el"
+          (let ((package-archives '((example "http://example.com/elpa/" "/tmp/"))))
+            (package-download-url (make-package :name 'test-pkg
+                                                :version '(1 0)
+                                                :archive 'example
+                                                :type 'single))))
+  (expect "http://example.com/elpa/tarty-1.0.tar"
+          (let ((package-archives '((example "http://example.com/elpa/" "/tmp/"))))
+            (package-download-url (make-package :name 'tarty
+                                                :version '(1 0)
+                                                :archive 'example
+                                                :type 'tar))))
   )
 
 (provide 'package-test)
