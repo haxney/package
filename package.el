@@ -239,7 +239,9 @@ string.
 
 The default points to ELPA, the Emacs Lisp Package Archive."
   :type '(alist :key-type (symbol :tag "Archive name")
-                :value-type (group (string :tag "Archive URL")
+                :value-type (group (choice :tag "Archive URL"
+                                           (string :tag "URL")
+                                           (const :tag "None" nil))
                                    (string :tag "Local path")))
   :group 'package
   :package-version '("package.el" . "0.9.3"))
