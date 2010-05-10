@@ -550,21 +550,6 @@ Each archive in `package-archives' is checked."
 ARCHIVE must be the symbol name of an archive."
   (concat (package-archive-localpath archive) package-archive-contents-filename))
 
-(defun package-read-file (file &optional noerror)
-  "Read `package' data.
-
-FILE is the file to read. Returns a `package' structure if
-successful. Signals an error if FILE cannot be read unless
-NOERROR is non-nil."
-  (if (and (file-readable-p file)
-           (file-regular-p file))
-      (with-temp-buffer
-        (insert-file-contents file)
-        (package-read-string (buffer-string)))
-    (if noerror
-        nil
-      (error "File %s not readable" file))))
-
 (defun package-read-string (str &optional noerror)
   "Read `package' structure data from STR.
 
@@ -588,14 +573,16 @@ Returns nil if PKG was already in the list or PKG if it was not."
         pkg)
       (aput 'package-registry pkg-name (list pkg)))))
 
-(defsubst package-load-descriptor (pkg)
+(defun package-load-descriptor (pkg)
   "Return information the info file of PKG.
 
 PKG can be a minimal `package' structure; only
 the :name, :version, and :archive fields are needed.
 
 Return nil if the package could not be found."
-  (package-read-file (package-info-file pkg)))
+  (with-temp-buffer
+        (insert-file-contents (package-info-file pkg))
+        (package-read-string (buffer-string))))
 
 (defun package-split-filename (file &optional suffix noerror)
   "Split FILE into a name and version.
