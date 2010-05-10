@@ -1004,10 +1004,12 @@ for that function."
 Will add any new packages found `package-registry'. Will signal
 an error if the archive version is too new or if a
 package's :archive field does not match ARCHIVE."
-  (let ((archive-contents (package-read-archive-contents
-                           (find-file-noselect (package-archive-content-file archive)))))
+  (let* ((buf (find-file-noselect (package-archive-content-file archive)))
+         (archive-contents (package-read-archive-contents buf)))
+    (kill-buffer buf)
     (if archive-contents
         (dolist (pkg archive-contents)
+          ;; TODO: Use a hook for validating packages before they hit the registry?
           (unless (eq (package-archive pkg) archive)
             (error "Package %s lists %s as its archive, but was read from archive %s"
                    (package-name pkg)
