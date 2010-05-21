@@ -1230,22 +1230,21 @@ separately."
                      ;; FIXME: query user?
                      'always))
 
-(defun package--download-one-archive (archive)
-  "Download a single archive file and cache it locally.
+(defun package-download-one-archive (archive)
+  "Download a single archive-contents file and store it locally.
 
 Downloads the archive index from ARCHIVE and store it according
-to ARCHIVE's local path."
+to ARCHIVE's local path. Returns the path of the file written."
   (let* ((archive-url (concat (package-archive-url archive)
                               package-archive-contents-filename))
          (buf (url-retrieve-synchronously archive-url))
-         str)
-    (package-handle-response buf)
-    (with-current-buffer buf
-      (setq str (buffer-substring-no-properties (point-min) (point-max))))
-    (make-directory (file-name-directory (package-archive-content-file archive)) t)
-    (with-temp-file (package-archive-content-file archive)
-      (insert str))
-    (kill-buffer buf)))
+         (local-file (package-archive-content-file archive)))
+    (with-temp-file local-file
+      (insert (with-current-buffer buf
+                (package-handle-response)
+                (buffer-string))))
+    (kill-buffer buf)
+    local-file))
 
 (defun package-refresh-contents ()
   "Download the archive descriptions if needed.
