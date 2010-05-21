@@ -1253,9 +1253,9 @@ Invoking this will ensure that Emacs knows about the latest
 versions of all packages. This will let Emacs make them available
 for download."
   (interactive)
-  (loop for (archive ign) in package-archives
-        do (package--download-one-archive archive))
-  (package-read-all-archive-contents))
+  (loop for (archive url) in package-archives
+        when url do (package-download-one-archive archive))
+  (package-register-all-archive-contents))
 
 (defun package-activate-all-installed ()
   "Activate all installed packages."
@@ -1268,7 +1268,7 @@ for download."
   "Load all packages and activate as many as possible."
   (package-register-all-installed)
   (package-activate-all-installed)
-  (package-read-all-archive-contents))
+  (package-register-all-archive-contents))
 
 
 
