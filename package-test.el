@@ -965,6 +965,35 @@
                                                 :version '(1 0)
                                                 :archive 'example
                                                 :type 'tar))))
+
+  (desc "package-handle-response")
+  (expect (regexp "^<HTML>")
+    (let (str)
+      (with-current-buffer (url-retrieve-synchronously "http://example.com/")
+        (package-handle-response)
+        (setq str (buffer-string))
+        (kill-buffer)
+        str)))
+  (expect nil
+    (let* ((buf (url-retrieve-synchronously "http://example.com/"))
+           (ret (package-handle-response buf)))
+      (kill-buffer buf)
+      ret))
+  (expect (error error "Error during download request: Not Found")
+    (with-current-buffer (url-retrieve-synchronously "http://example.com/404")
+      (condition-case err
+          (package-handle-response)
+        (error (kill-buffer)
+               (signal 'error (cdr err))))))
+  (expect (package "package-handle-response with a file")
+    (setup-test 'test-dir)
+    (with-temp-file (concat test-dir "test-file")
+      (insert "package-handle-response with a file"))
+    (with-current-buffer (url-retrieve-synchronously (concat "file://" test-dir "test-file"))
+      (package-handle-response)
+      (prog1
+          (buffer-string)
+        (kill-buffer))))
   )
 
 (provide 'package-test)

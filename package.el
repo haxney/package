@@ -223,6 +223,8 @@
 (require 'autoload)
 (require 'tar-mode)
 (require 'dired)
+(require 'url)
+(require 'ietf-drums)
 (eval-when-compile (require 'cl))
 
 (defvar package-user-dir
@@ -848,7 +850,22 @@ install PKG."
     (let ((load-path (append (list pkg-dir) load-path)))
       (byte-recompile-directory pkg-dir 0 t))))
 
-(defun package-handle-response (&optional buf)
+(defun* package-kill-url-header (&optional (buf (current-buffer)))
+  "Remove the URL header from BUF.
+
+Multiple different URL types (notably \"file:\" and \"http:\")
+have similarly-structured headers which need to be stripped from
+a buffer before being passed off to other handling functions.
+This function strips a `ietf-drums'-style header from
+BUF (defaulting to the current buffer)."
+  (with-current-buffer buf
+    (ietf-drums-narrow-to-header)
+    (setq header-end (1+ (point-max)))
+    (widen)
+    (delete-region (point-min) header-end)
+    (goto-char (point-min))))
+
+(defun* package-handle-response (&optional (buf (current-buffer)))
   "Handle the response from the server.
 
 Parse the response and signal an error if the download failed.
@@ -858,26 +875,19 @@ from `url-retrieve-synchronously'.
 
 It will remove any headers and move the point to the beginning of
 the buffer."
-  (let ((type (url-type url-current-object))
-        (buf (or buf (current-buffer))))
-    (with-current-buffer buf
+  (with-current-buffer buf
+    (let ((type (url-type url-current-object)))
       (cond
        ((equal type "http")
         (let ((response (url-http-parse-response))
               header-end)
           (unless (eq (/ response 100) 2)
-            (display-buffer (current-buffer))
             (error "Error during download request:%s"
-                   (buffer-substring-no-properties (point) (progn
-                                                             (end-of-line)
-                                                             (point)))))
-          ;; Strip HTTP headers
-          (ietf-drums-narrow-to-header)
-          (setq header-end (1+ (point-max)))
-          (widen)
-          (delete-region (point-min) header-end)
-          (goto-char (point-min))))
+                   (buffer-substring-no-properties (point) (line-end-position))))
+          (package-kill-url-header)
+          nil))
        ((equal type "file")
+        (package-kill-url-header)
         nil)))))
 
 (defun package-download (pkg)
