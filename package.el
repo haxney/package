@@ -552,13 +552,13 @@ Each archive in `package-archives' is checked."
 ARCHIVE must be the symbol name of an archive."
   (concat (package-archive-localpath archive) package-archive-contents-filename))
 
-(defun package-read-string (str &optional noerror)
+(defun package-from-string (str &optional noerror)
   "Read `package' structure data from STR.
 
 Signals an error if something goes wrong unless NOERROR is
 non-nil."
   (condition-case err
-      (apply 'make-package (package-read-from-string str))
+      (apply 'make-package (package-read-sexp str))
     (error (if noerror
                nil
              (signal (car err) (cdr err))))))
@@ -584,7 +584,7 @@ the :name, :version, and :archive fields are needed.
 Return nil if the package could not be found."
   (with-temp-buffer
         (insert-file-contents (package-info-file pkg))
-        (package-read-string (buffer-string))))
+        (package-from-string (buffer-string))))
 
 (defun package-split-filename (file &optional suffix noerror)
   "Split FILE into a name and version.
@@ -955,7 +955,7 @@ processed to resolve all dependencies (if possible)."
         finally return (remove-duplicates (append temp result)
                                           :from-end t)))
 
-(defun package-read-from-string (str)
+(defun package-read-sexp (str)
   "Read a Lisp expression from STR.
 
 Signal an error if the entire string was not used."
@@ -1137,7 +1137,7 @@ then an error is signaled unless NOERROR is non-nil."
          (end (+ start (tar-header-size pkg-hdr)))
          (pkg-data (with-current-buffer buf
                      (buffer-substring start end))))
-    (package-read-string pkg-data)))
+    (package-from-string pkg-data)))
 
 (defun package-from-buffer (buf &optional noerror)
   "Generate and return a package structure from BUF.
@@ -1158,7 +1158,7 @@ FILE is the path to a tar archive."
                     ;; Requires GNU tar.
                     (concat "tar -xOf " file " "
                             (package-info-file pkg t))))
-         (pkg-new (apply 'make-package (package-read-from-string pkg-info))))
+         (pkg-new (package-from-string pkg-info)))
 
     ;; TODO: Maybe add some more sanity checks... Use a hook to avoid having to
     ;; hard-code in the checks to this function.
