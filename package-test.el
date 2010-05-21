@@ -843,36 +843,36 @@
            'builtin))
 
   (desc "package-read-archive-contents")
-  (expect '((smex .
-                  [(1 1)
-                   nil "M-x interface with Ido-style lazy matching." single])
-            (drag-stuff .
-                        [(0 0 2)
-                         nil "Drag stuff (lines, words, region, etc...) around" single]))
+  (expect '(1 (smex .
+                    [(1 1)
+                     nil "M-x interface with Ido-style lazy matching." single])
+              (drag-stuff .
+                          [(0 0 2)
+                           nil "Drag stuff (lines, words, region, etc...) around" single]))
           (package-read-archive-contents "(1 (smex . [(1 1) nil
        \"M-x interface with Ido-style lazy matching.\" single])
  (drag-stuff .
 	     [(0 0 2)
 	      nil \"Drag stuff (lines, words, region, etc...) around\" single]))"))
-  (expect '((:name test-pkg
-                   :version (1 0)
-                   :version-raw "1.0"
-                   :summary "Simple package system for Emacs"
-                   :created "10 Mar 2007"
-                   :updated "10 Mar 2007"
-                   :license "gpl3"
-                   :authors (("Joe Bob" . "jbob@example.com"))
-                   :maintainer ("Joe Bob" . "jbob@example.com")
-                   :provides (test-pkg)
-                   :requires-hard ((dep-pkg deppy))
-                   :requires-soft ()
-                   :keywords ("tools" "libraries")
-                   :homepage "www.example.com"
-                   :wikipage "test-pkg.el"
-                   :commentary "This is a completely great testing package"
-                   :archive elpa
-                   :type single
-                   :status obsolete))
+  (expect '(2 (:name test-pkg
+                     :version (1 0)
+                     :version-raw "1.0"
+                     :summary "Simple package system for Emacs"
+                     :created "10 Mar 2007"
+                     :updated "10 Mar 2007"
+                     :license "gpl3"
+                     :authors (("Joe Bob" . "jbob@example.com"))
+                     :maintainer ("Joe Bob" . "jbob@example.com")
+                     :provides (test-pkg)
+                     :requires-hard ((dep-pkg deppy))
+                     :requires-soft ()
+                     :keywords ("tools" "libraries")
+                     :homepage "www.example.com"
+                     :wikipage "test-pkg.el"
+                     :commentary "This is a completely great testing package"
+                     :archive elpa
+                     :type single
+                     :status obsolete))
           (package-read-archive-contents "(2 (:name test-pkg
                    :version (1 0)
                    :version-raw \"1.0\"

@@ -988,7 +988,7 @@ for that function."
     (unless (memq arch-version package-archive-versions)
       (error "Package archive version %d is not one of %s"
              arch-version package-archive-versions))
-    (cdr contents)))
+    contents))
 
 (defun package-register-all-archive-contents ()
   "Read the archive description of each of the archives in `package-archives'."
@@ -1002,10 +1002,15 @@ Will add any new packages found `package-registry'. Will signal
 an error if the archive version is too new or if a
 package's :archive field does not match ARCHIVE."
   (let* ((buf (find-file-noselect (package-archive-content-file archive)))
-         (archive-contents (package-read-archive-contents buf)))
+         (archive-contents (package-read-archive-contents buf))
+         (pkg-version (car archive-contents)))
     (kill-buffer buf)
-    (if archive-contents
-        (dolist (pkg archive-contents)
+    (if (cdr-safe archive-contents)
+        (dolist (pkg (cdr archive-contents))
+          ;; TODO: Use a `case' statement or function to make this more
+          ;; flexible/extendable?
+          (when (eq pkg-version 1)
+            (setq pkg (package-from-version-1 pkg archive)))
           ;; TODO: Use a hook for validating packages before they hit the registry?
           (unless (eq (package-archive pkg) archive)
             (error "Package %s lists %s as its archive, but was read from archive %s"
