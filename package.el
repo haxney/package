@@ -556,18 +556,13 @@ ARCHIVE must be the symbol name of an archive."
   "Read a Lisp expression from STR.
 
 Signal an error if the entire string was not used."
-  (let* ((read-data (read-from-string str))
-         (more-left
-          (condition-case nil
-              ;; The call to `ignore' suppresses a compiler warning.
-              (progn
-                (ignore (read-from-string
-                         (substring str (cdr read-data))))
-                     t)
-            (end-of-file nil))))
-    (if more-left
-        (error "Can't read whole string")
-      (car read-data))))
+  (let ((read-data (read-from-string str)))
+    (condition-case err
+        ;; The call to `ignore' suppresses a compiler warning.
+        (ignore (read-from-string
+                 (substring str (cdr read-data)))
+                (error "Can't read whole string"))
+      (end-of-file (car read-data)))))
 
 (defun package-from-string (str &optional noerror)
   "Read `package' structure data from STR.
