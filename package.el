@@ -559,9 +559,9 @@ Signal an error if the entire string was not used."
   (let ((read-data (read-from-string str)))
     (condition-case err
         ;; The call to `ignore' suppresses a compiler warning.
-        (ignore (read-from-string
-                 (substring str (cdr read-data)))
-                (error "Can't read whole string"))
+        (noreturn (ignore (read-from-string
+                           (substring str (cdr read-data)))
+                          (error "Can't read whole string")))
       (end-of-file (car read-data)))))
 
 (defun package-from-string (str &optional noerror)
