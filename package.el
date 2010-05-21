@@ -962,7 +962,7 @@ Signal an error if the entire string was not used."
       (car read-data))))
 
 ;; TODO: Attempt to download README into :commentary slot?
-(defun package-from-version-1 (old-spec)
+(defun package-from-version-1 (old-spec &optional archive)
   "Reads a version 1 package from OLD-SPEC into a v2 package."
   (let ((name (car old-spec))
         (vec (cdr old-spec)))
@@ -971,7 +971,8 @@ Signal an error if the entire string was not used."
                     :requires-hard (loop for (name version) in (aref vec 1)
                                          collect (list (cons name version)))
                     :summary (aref vec 2)
-                    :type (aref vec 3))))
+                    :type (aref vec 3)
+                    :archive archive)))
 
 (defun package-read-archive-contents (source)
   "Read the contents for SOURCE.

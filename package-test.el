@@ -830,6 +830,17 @@
            '(htmlize .
                      [(1 37)
                       nil "Convert buffer text and decorations to HTML." single])))
+  (expect (make-package :name 'htmlize
+                        :version '(1 37)
+                        :requires-hard nil
+                        :summary "Convert buffer text and decorations to HTML."
+                        :type 'single
+                        :archive 'builtin)
+          (package-from-version-1
+           '(htmlize .
+                     [(1 37)
+                      nil "Convert buffer text and decorations to HTML." single])
+           'builtin))
 
   (desc "package-read-archive-contents")
   (expect '((smex .
