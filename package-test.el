@@ -423,6 +423,21 @@
                                  :version '(0 2 3)
                                  :archive 'manual))
     (package-from-filename (concat test-dir "package-test-0.2.3") nil t))
+  (expect (error error "Could not find package type for extension: 3")
+      (with-package-test
+       (package-from-filename (concat test-dir "package-test-0.2.3.thing") "thing")))
+  (expect (package (make-package :name 'package-test
+                                 :version '(0 2 3)
+                                 :archive 'manual))
+    (package-from-filename (concat test-dir "package-test-0.2.3.thing") "thing" t))
+  (expect (make-package :name 'happy-pkg_ometer
+                        :version '(0 2 3)
+                        :type 'single
+                        :archive 'two)
+    (let ((package-archives '((one "file:///path/to/one" "/path/to/one")
+                              (two "file:///path/to/two" "/path/to/two")
+                              (three "file:///path/to/three" "/path/to/three"))))
+      (package-from-filename "/path/to/two/happy-pkg_ometer-0.2.3.el")))
 
   (desc "package-type-from-buffer")
   (expect 'single

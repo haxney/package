@@ -664,10 +664,9 @@ version."
                                             (aget package-types type t)
                                             noerror))
          archive)
-    (loop for (arch info) in package-archives
+    (loop for (arch ignore) in package-archives
           for arch-path = (package-archive-localpath arch)
-          for path-len = (length arch-path)
-          if (equal (substring file 0 path-len) arch-path)
+          if (string-match (concat "^" arch-path) file)
           do (setq archive arch))
     (if (or archive noerror)
         (make-package :name (car file-info)
