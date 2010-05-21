@@ -587,16 +587,26 @@ Returns nil if PKG was already in the list or PKG if it was not."
         pkg)
       (aput 'package-registry pkg-name (list pkg)))))
 
-(defun package-load-descriptor (pkg)
-  "Return information the info file of PKG.
+(defun package-load-rest-from-descriptor (pkg &optional noerror)
+  "Fill in PKG with information loaded from its info file.
 
-PKG can be a minimal `package' structure; only
-the :name, :version, and :archive fields are needed.
+Destructively modifies PKG with information loaded from the info
+file belonging to PKG. This is determined using
+`package-info-file', so PKG has to have at least enough
+information for `package-info-file' to figure out a path,
+currently `:name', `:version', and `:archive'.
 
-Return nil if the package could not be found."
-  (with-temp-buffer
-        (insert-file-contents (package-info-file pkg))
-        (package-from-string (buffer-string))))
+If there is a problem loading the info file, an error is
+signaled, unless NOERROR is non-nil, in which case PKG is not
+modified and nil is returned."
+  (let ((info-file (package-info-file pkg)))
+    (condition-case err
+        (with-temp-buffer
+          (insert-file-contents (package-info-file pkg))
+          (cl-merge-struct 'package pkg (package-from-string (buffer-string))))
+      (error (if noerror
+                 nil
+               (error "Unable to load package info file '%s'" info-file))))))
 
 (defun package-split-filename (file &optional suffix noerror)
   "Split FILE into a name and version.
@@ -677,7 +687,7 @@ Uses `package-archives' to find packages."
         when (and (file-readable-p archive-dir)
                   (file-directory-p archive-dir))
         do (loop for pkg-dirname in (directory-files archive-dir t "^[^.]")
-                 for pkg = (package-load-descriptor
+                 for pkg = (package-load-rest-from-descriptor
                             (package-from-filename pkg-dirname))
                  do (setf (package-status pkg) 'installed)
                  do (package-register pkg))))

@@ -1149,6 +1149,83 @@
     (package-from-string "(sexp1) (sexp2)"))
   (expect nil
     (package-from-string "(sexp1) (sexp2)" t))
+
+  (desc "package-load-rest-from-descriptor")
+  (expect (package (make-package :name 'tarty
+                                 :version '(1 5 -3 3)
+                                 :version-raw "1.5alpha3"
+                                 :summary "Simple package system for Emacs"
+                                 :created "10 Mar 2007"
+                                 :updated "10 Mar 2007"
+                                 :license "gpl3"
+                                 :authors '(("George Tarterson" . "jtart@example.com"))
+                                 :maintainer '("George Tarterson" . "jtart@example.com")
+                                 :provides '(tarty)
+                                 :keywords '("tools" "libraries")
+                                 :homepage "tarty.example.com"
+                                 :wikipage "tarty.el"
+                                 :commentary "This is a completely great testing package"
+                                 :archive 'manual
+                                 :type 'tar
+                                 :status 'activated))
+    (setup-test 'test-dir)
+    (make-directory (concat test-dir "tarty-1.5alpha3"))
+    (with-temp-file (concat test-dir "tarty-1.5alpha3/info.epkg")
+      (insert (cl-merge-pp tarty 'package)))
+    (package-load-rest-from-descriptor (make-package :name 'tarty
+                                                     :version '(1 5 -3 3)
+                                                     :archive 'manual)))
+  (expect (package (make-package :name 'test-pkg
+                                 :version '(1 0)
+                                 :version-raw "1.0"
+                                 :archive 'elpa
+                                 :type 'single
+                                 :status 'obsolete))
+    (setup-test 'test-dir)
+    (make-directory (concat test-dir "test-pkg-1.0"))
+    (let ((package-archives `((elpa ,(concat "file://" test-dir "upstream/") ,test-dir))))
+      (with-temp-file (concat test-dir "test-pkg-1.0/info.epkg")
+        (insert "(:name test-pkg
+                :version (1 0)
+                :version-raw \"1.0\"
+                :archive elpa
+                :type single
+                :status obsolete)"))
+      (package-load-rest-from-descriptor (make-package :name 'test-pkg
+                                                       :version '(1 0)
+                                                       :archive 'elpa))))
+  (expect (package (make-package :name 'test-pkg
+                                 :version '(1 0)
+                                 :version-raw "1.0"
+                                 :archive 'elpa
+                                 :type 'single
+                                 :status 'obsolete))
+    (setup-test 'test-dir)
+    (make-directory (concat test-dir "test-pkg-1.0"))
+    (let ((package-archives `((elpa ,(concat "file://" test-dir "upstream/") ,test-dir)))
+          (pkg (make-package :name 'test-pkg
+                             :version '(1 0)
+                             :archive 'elpa)))
+      (with-temp-file (concat test-dir "test-pkg-1.0/info.epkg")
+        (insert "(:name test-pkg
+                :version (1 0)
+                :version-raw \"1.0\"
+                :archive elpa
+                :type single
+                :status obsolete)"))
+      (package-load-rest-from-descriptor pkg)
+      pkg))
+  (expect (error error "Unable to load package info file '/a/non/existent/path/bad-1.0/info.epkg'")
+    (let ((package-archives '((fake "file:///a/non/existent/path/" "/a/non/existent/path/"))))
+      (package-load-rest-from-descriptor (make-package :name 'bad
+                                                       :version '(1 0)
+                                                       :archive 'fake))))
+  (expect nil
+    (let ((package-archives '((fake "file:///a/non/existent/path/" "/a/non/existent/path/"))))
+      (package-load-rest-from-descriptor (make-package :name 'bad
+                                                       :version '(1 0)
+                                                       :archive 'fake)
+                                         t)))
   )
 
 (provide 'package-test)
