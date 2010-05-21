@@ -552,6 +552,23 @@ Each archive in `package-archives' is checked."
 ARCHIVE must be the symbol name of an archive."
   (concat (package-archive-localpath archive) package-archive-contents-filename))
 
+(defun package-read-sexp (str)
+  "Read a Lisp expression from STR.
+
+Signal an error if the entire string was not used."
+  (let* ((read-data (read-from-string str))
+         (more-left
+          (condition-case nil
+              ;; The call to `ignore' suppresses a compiler warning.
+              (progn
+                (ignore (read-from-string
+                         (substring str (cdr read-data))))
+                     t)
+            (end-of-file nil))))
+    (if more-left
+        (error "Can't read whole string")
+      (car read-data))))
+
 (defun package-from-string (str &optional noerror)
   "Read `package' structure data from STR.
 
@@ -954,22 +971,6 @@ processed to resolve all dependencies (if possible)."
         into temp
         finally return (remove-duplicates (append temp result)
                                           :from-end t)))
-
-(defun package-read-sexp (str)
-  "Read a Lisp expression from STR.
-
-Signal an error if the entire string was not used."
-  (let* ((read-data (read-from-string str))
-         (more-left
-          (condition-case nil
-              ;; The call to `ignore' suppresses a compiler warning.
-              (progn (ignore (read-from-string
-                              (substring str (cdr read-data))))
-                     t)
-            (end-of-file nil))))
-    (if more-left
-        (error "Can't read whole string")
-      (car read-data))))
 
 ;; TODO: Attempt to download README into :commentary slot?
 (defun package-from-version-1 (old-spec &optional archive)

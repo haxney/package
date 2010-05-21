@@ -1066,6 +1066,58 @@
       (prog1
           (package-read-archive-contents buf)
         (kill-buffer buf))))
+
+  (desc "package-read-sexp")
+  (expect '(a good parsed sexp)
+    (package-read-sexp "(a good parsed sexp)"))
+  (expect (error error "Can't read whole string")
+    (package-read-sexp "(multiple) (sexps)"))
+
+  (desc "package-from-string")
+  (expect (make-package :name 'test-pkg
+                        :version '(1 0)
+                        :version-raw "1.0"
+                        :summary "Simple package system for Emacs"
+                        :created "10 Mar 2007"
+                        :updated "10 Mar 2007"
+                        :license "gpl3"
+                        :authors '(("Joe Bob" . "jbob@example.com"))
+                        :maintainer '("Joe Bob" . "jbob@example.com")
+                        :provides '(test-pkg)
+                        :requires-hard '((dep-pkg deppy))
+                        :requires-soft '()
+                        :keywords '("tools" "libraries")
+                        :homepage "www.example.com"
+                        :wikipage "test-pkg.el"
+                        :commentary "This is a completely great testing package"
+                        :archive 'elpa
+                        :type 'single
+                        :status 'obsolete)
+    (package-from-string "(:name test-pkg
+                           :version (1 0)
+                           :version-raw \"1.0\"
+                           :summary \"Simple package system for Emacs\"
+                           :created \"10 Mar 2007\"
+                           :updated \"10 Mar 2007\"
+                           :license \"gpl3\"
+                           :authors ((\"Joe Bob\" . \"jbob@example.com\"))
+                           :maintainer (\"Joe Bob\" . \"jbob@example.com\")
+                           :provides (test-pkg)
+                           :requires-hard ((dep-pkg deppy))
+                           :requires-soft ()
+                           :keywords (\"tools\" \"libraries\")
+                           :homepage \"www.example.com\"
+                           :wikipage \"test-pkg.el\"
+                           :commentary \"This is a completely great testing package\"
+                           :archive elpa
+                           :type single
+                           :status obsolete)"))
+  (expect (error error "Keyword argument bad-spec not one of (:name :version :version-raw :summary :created :updated :license :authors :maintainer :provides :requires-hard :requires-soft :keywords :homepage :wikipage :commentary :archive :type :status)")
+    (package-from-string "(bad-spec)"))
+  (expect (error error "Can't read whole string")
+    (package-from-string "(sexp1) (sexp2)"))
+  (expect nil
+    (package-from-string "(sexp1) (sexp2)" t))
   )
 
 (provide 'package-test)
