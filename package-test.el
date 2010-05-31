@@ -1241,6 +1241,16 @@
                                                        :version '(1 0)
                                                        :archive 'fake)
                                          t)))
+
+  (desc "package-register-all-installed")
+  (expect (package `((tarty ,(cl-merge-struct 'package
+                                              (copy-package tarty)
+                                              (make-package
+                                               :status 'installed)))))
+          (let (package-registry)
+            (setup-test 'test-dir 'tarty)
+            (package-register-all-installed)
+            package-registry))
   )
 
 (provide 'package-test)
