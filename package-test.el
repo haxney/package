@@ -491,6 +491,13 @@
     (setup-test 'test-dir 'tarty)
     (package-from-file tarty-file))
 
+  (desc "package-install-directory")
+  (expect (package (concat package-user-dir "package-1.0/"))
+          (package-install-directory (make-package :name 'package
+                                                   :archive 'elpa
+                                                   :version '(1 0)))
+   )
+
   (desc "package-delete")
   (expect (package nil)
     (setup-test 'test-dir 'tarty)

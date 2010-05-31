@@ -703,7 +703,7 @@ VERSION is the version of the package after being processed by
 
 If RELATIVE is non-nil, return the install directory of PKG
 relative to its archive root."
-  (let* ((name (symbol-name (package-name pkg)))
+  (let* ((name (package-name pkg))
          (version (package-version-canonical pkg))
          (archive-dir (if (eq name 'package)
                           ;; The package for package.el is handled specially.
