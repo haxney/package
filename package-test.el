@@ -1262,6 +1262,21 @@
             (setup-test 'test-dir 'tarty)
             (package-register-all-installed)
             package-registry))
+
+  (desc "package-install-file-path")
+  (expect (error error "Package type must be `single' to get an install file; given: builtin")
+          (package-install-file-path (make-package :name 'more-good
+                                                   :version '(1 2 3)
+                                                   :type 'builtin)))
+  (expect (error error "Package type must be `single' to get an install file; given: tar")
+          (package-install-file-path (make-package :name 'more-good
+                                                   :version '(1 2 3)
+                                                   :type 'tar)))
+  (expect (package (concat test-dir "single-file-1.2.34/single-file.el"))
+          (package-install-file-path (make-package :name 'single-file
+                                                   :version '(1 2 34)
+                                                   :archive 'manual
+                                                   :type 'single)))
   )
 
 (provide 'package-test)
