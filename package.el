@@ -851,7 +851,7 @@ install the package."
       (error "Destination file %s exists, refusing to overwrite" pkg-file))
     (with-temp-file pkg-file
       (with-current-buffer buf
-        (buffer-substring)))))
+        (buffer-string)))))
 
 (defun package-unpack (pkg &optional buf)
   "Unpack and install PKG from BUF or the current buffer.
@@ -1178,7 +1178,7 @@ FILE is the path to a tar archive."
 (defsubst package-from-single-file (file)
   "Returns a package structure for FILE."
   (with-temp-buffer file
-                    (insert-file-literally file)
+                    (insert-file-contents file)
                     (package-from-single-buffer (current-buffer))))
 
 (defun package-from-file (&optional source)
@@ -1680,8 +1680,8 @@ packages, so that must be done separately."
          (obj (posn-object pos))
          (col (if obj
                   (get-text-property (cdr obj) 'package-menu-col (car obj))
-                (get-text-property (posn-point pos) 'package-menu-col)))))
-  (package-list-packages-internal nil col))
+                (get-text-property (posn-point pos) 'package-menu-col))))
+    (package-list-packages-internal nil col)))
 
 (defun package-menu-compute-header-line ()
   "Compute a header format according to `package-menu-columns'.
