@@ -495,8 +495,12 @@
   (expect (package (concat package-user-dir "package-1.0/"))
           (package-install-directory (make-package :name 'package
                                                    :archive 'elpa
-                                                   :version '(1 0)))
-   )
+                                                   :version '(1 0))))
+  (expect (package "package-1.0/")
+          (package-install-directory (make-package :name 'package
+                                                   :archive 'elpa
+                                                   :version '(1 0))
+                                     t))
 
   (desc "package-delete")
   (expect (package nil)
