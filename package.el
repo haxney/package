@@ -1231,12 +1231,13 @@ The file must match one of the extensions in `package-types'."
 (defun package-delete (pkg)
   "Delete package PKG.
 
-This does not touch the package metadata at all (such as the fact
-that the package is no longer installed), so that must be done
-separately."
+This also removes the `installed' status from PKG."
+  (unless (memq (package-status pkg) '(installed activated))
+    (error "Package %s is not installed, so it cannot be deleted" (package-name pkg)))
   (dired-delete-file (package-install-directory pkg)
                      ;; FIXME: query user?
-                     'always))
+                     'always)
+  (setf (package-status pkg) 'available))
 
 (defun package-download-one-archive (archive)
   "Download a single archive-contents file and store it locally.

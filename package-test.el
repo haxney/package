@@ -510,6 +510,14 @@
     (package-download tarty)
     (package-delete tarty)
     (file-directory-p (package-install-directory tarty)))
+  (expect (package 'available)
+    (setup-test 'test-dir 'tarty)
+    (package-download tarty)
+    (package-delete tarty)
+    (package-status tarty))
+  (expect (error error "Package test-pkg is not installed, so it cannot be deleted")
+    (with-package-test
+     (package-delete test-pkg1)))
 
   (desc "package-print-package")
   (expect (regexp "  test-pkg            1.0         obs     Simple package system for Emacs *")
