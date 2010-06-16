@@ -768,28 +768,29 @@ the `autoload' file for the package."
 
 Signal an error if the package could not be activated.
 
-Recursively activates all dependencies of PKG."
+Recursively activates all dependencies of PKG.
+
+Returns nil if PKG does not need to be activated, such as when it
+is already activated or it would not make sense to activate
+it (such as for the \"emacs\" package)."
   ;; Assume the user knows what he is doing -- go ahead and activate a
   ;; newer version of a package if an older one has already been
   ;; activated.  This is not ideal; we'd at least need to check to see
   ;; if the package has actually been loaded, and not merely
   ;; activated.
   (let ((name (package-name pkg)))
+    (package-find-rest pkg t)
     (cond
-     ((eq (package-status pkg) 'activated))
+     ((eq (package-status pkg) 'activated) nil)
      ;; Don't try to activate 'emacs', that's just silly.
-     ((eq name 'emacs))
-     ;; If this package is already the most recently installed version, no
-     ;; further action is needed.
-     ((equal pkg (package-find-latest name t :status 'activated)))
-     ((member pkg (package-find name)))
+     ((eq name 'emacs) nil)
      (t
       ;; Signal an error if a hard requirement cannot be found, but not for a
       ;; soft requirement.
       (dolist (req (package-required-packages pkg 'hard))
-        (package-activate (package-find-latest req nil)))
+        (package-activate (package-find-latest (package-name req) nil)))
       (dolist (req (package-required-packages pkg 'soft))
-        (package-activate (package-find-latest req t)))
+        (package-activate (package-find-latest (package-name req) t)))
       (package-do-activate pkg)))))
 
 (defun package-generate-autoloads (pkg)

@@ -1296,6 +1296,22 @@
     (package-download tarty)
     (package-do-activate tarty)
     (caar load-history))
+
+  (desc "package-activate")
+  (expect (package nil)
+    (package-activate test-pkg2))
+  (expect (package nil)
+    (package-activate (make-package :name 'emacs
+                                    :version '(23 1 0))))
+  (expect (error file-error "Cannot open load file")
+    (with-package-test
+     (let ((package-archives `((elpa ,(concat "file://" test-dir "upstream/") ,test-dir))))
+      (package-activate test-pkg1))))
+  (expect (mock (package-find-latest 'dep-pkg nil *) => (make-package :name 'dep-pkg :version '(2 0)))
+    (mocklet ((package-do-activate))
+     (with-package-test
+      (let ((package-archives `((elpa ,(concat "file://" test-dir "upstream/") ,test-dir))))
+        (package-activate test-pkg1)))))
   )
 
 (provide 'package-test)
