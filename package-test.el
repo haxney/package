@@ -1312,6 +1312,9 @@
      (with-package-test
       (let ((package-archives `((elpa ,(concat "file://" test-dir "upstream/") ,test-dir))))
         (package-activate test-pkg1)))))
+  (expect (not-called package-do-activate)
+    (package-activate nil))
+
   (desc "package-generate-autoloads")
   (expect (regexp ";;; tarty-autoloads\.el --- automatically extracted autoloads")
     (with-package-test

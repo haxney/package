@@ -765,7 +765,7 @@ the `autoload' file for the package."
   (setf (package-status pkg) 'activated))
 
 ;; FIXME: return a reason instead?
-(defun package-activate (pkg)
+(defun* package-activate (pkg)
   "Try to activate PKG.
 
 Signal an error if the package could not be activated.
@@ -775,6 +775,8 @@ Recursively activates all dependencies of PKG.
 Returns nil if PKG does not need to be activated, such as when it
 is already activated or it would not make sense to activate
 it (such as for the \"emacs\" package)."
+  (unless pkg
+    (return-from package-activate nil))
   ;; Assume the user knows what he is doing -- go ahead and activate a
   ;; newer version of a package if an older one has already been
   ;; activated.  This is not ideal; we'd at least need to check to see
