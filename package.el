@@ -808,19 +808,15 @@ it (such as for the \"emacs\" package)."
 This is pretty primitive, and should really be included in Emacs."
   (file-name-directory (directory-file-name dir)))
 
-(defun package-untar-buffer (&optional buf dir)
-  "Untar BUF or the current buffer to DIR.
+(defun* package-untar-buffer (&optional (buf (current-buffer))
+                                        (dir default-directory))
+  "Untar the buffer BUF to DIR.
 
 If BUF is nil, then use the current buffer. If DIR is nil, use
 the current value of `default-directory'.
 
 This uses `tar-untar-buffer' if it is available. Otherwise it
 uses an external `tar' program."
-  (unless buf
-    (setq buf (current-buffer)))
-  (unless dir
-    (setq dir default-directory))
-
   (with-current-buffer buf
     (let ((default-directory dir))
       (if (fboundp 'tar-untar-buffer)
@@ -830,7 +826,7 @@ uses an external `tar' program."
             (delete-region (point-min) (point))
             (tar-mode)
             (tar-untar-buffer))
-        ;; FIXME: check the result.
+        ;; TODO: check the result.
         (call-process-region (point) (point-max) "tar" nil nil nil
                              "xf" "-")))))
 
