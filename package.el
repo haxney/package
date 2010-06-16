@@ -1225,7 +1225,7 @@ The file must match one of the extensions in `package-types'."
   (interactive "fPackage file name: ")
   (let ((pkg (package-from-file file)))
     (with-temp-buffer
-      (insert-file-contents-literally file)
+      (insert-file-contents file)
       (package-install-from-buffer (current-buffer) pkg))))
 
 (defun package-delete (pkg)
