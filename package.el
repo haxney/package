@@ -862,7 +862,7 @@ install PKG."
         (pkg-info-file (package-info-file pkg))
         (pkg-dir (package-install-directory pkg)))
     (make-directory pkg-dir t)
-    (apply (intern (format "packge-unpack-%s" (package-type pkg)))
+    (apply (intern (format "package-unpack-%s" (package-type pkg)))
            (list pkg buf))
     (unless (file-exists-p pkg-info-file)
       (with-temp-file pkg-info-file
