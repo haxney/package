@@ -1291,7 +1291,7 @@
     (package-download tarty)
     (package-do-activate tarty)
     (consp (member (concat test-dir "tarty-1.5alpha3/") load-path)))
-  (expect (package (concat test-dir "tarty-1.5alpha3/autoloads.el"))
+  (expect (package (concat test-dir "tarty-1.5alpha3/tarty-autoloads.el"))
     (setup-test 'test-dir 'tarty)
     (package-download tarty)
     (package-do-activate tarty)

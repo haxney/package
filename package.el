@@ -749,7 +749,9 @@ This depends on the base URL of the package's archive."
 
 (defun package-autoload-file (pkg)
   "Return the full path of the autoload file for PKG."
-  (concat (package-install-directory pkg) "autoloads.el"))
+  (concat (package-install-directory pkg)
+          (symbol-name (package-name pkg))
+          "-autoloads.el"))
 
 ;; TODO: Re-add info handling, used to add `package-install-directory' to
 ;; `Info-directory-list'.
