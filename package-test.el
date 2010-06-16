@@ -150,7 +150,8 @@
           test-dir-created
           (package-archives `((manual ,(concat "file://" test-dir "upstream/") ,test-dir))))
      (flet ((make-tar (base files)
-                      (let* ((base-abs (expand-file-name base test-dir))
+                      (let* ((base-dir (concat test-dir "upstream/"))
+                             (base-abs (expand-file-name base base-dir))
                              (file-list
                               (loop for f in files
                                     for name = (car f)
@@ -161,11 +162,12 @@
                                          (make-directory contain-dir t)
                                          (with-temp-file full-path
                                            (insert contents)))))
-                             (output-abs (concat base-abs ".tar")))
-                        (shell-command (format "tar -cf %s -C %s %s"
+                             (output-abs (concat base-abs ".tar"))
+                             (cmd (format "tar -cf %s -C %s %s"
                                                output-abs
-                                               test-dir
-                                               base))
+                                               base-dir
+                                               base)))
+                        (shell-command cmd)
                         output-abs))
             ;; Setup various parts of the test, such as creating files and
             ;; directories and such.
@@ -451,7 +453,7 @@
       (package-type-from-buffer (current-buffer))))
 
   (desc "make-tar")
-  (expect (package (concat test-dir "out.tar"))
+  (expect (package (concat test-dir "upstream/out.tar"))
     (setup-test 'test-dir)
     (make-tar "out" '(("name" . "contents"))))
   (expect (package '("out/" "out/name"))
@@ -505,6 +507,7 @@
   (desc "package-delete")
   (expect (package nil)
     (setup-test 'test-dir 'tarty)
+    (package-download tarty)
     (package-delete tarty)
     (file-directory-p (package-install-directory tarty)))
 
@@ -1260,6 +1263,7 @@
                                                :status 'installed)))))
           (let (package-registry)
             (setup-test 'test-dir 'tarty)
+            (package-download tarty)
             (package-register-all-installed)
             package-registry))
 
