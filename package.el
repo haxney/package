@@ -466,6 +466,7 @@ number \"0.9.5\", if any exist."
                             :key (intern (concat "package-" (symbol-name slot)))))))))
 
 ;; TODO: Resolve multiple matches using archive priority?
+;; TODO: Remove NAME argument, use KEYS instead.
 (defun* package-find-latest (name &optional noerror &rest keys)
   "Find the newest version of package NAME.
 
