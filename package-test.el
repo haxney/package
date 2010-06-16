@@ -1312,6 +1312,23 @@
      (with-package-test
       (let ((package-archives `((elpa ,(concat "file://" test-dir "upstream/") ,test-dir))))
         (package-activate test-pkg1)))))
+  (desc "package-generate-autoloads")
+  (expect (regexp ";;; tarty-autoloads\.el --- automatically extracted autoloads")
+    (with-package-test
+     (setup-test 'test-dir 'tarty)
+     (package-download tarty)
+     (package-generate-autoloads tarty)
+     (with-temp-buffer
+       (insert-file-contents (package-autoload-file tarty))
+       (buffer-string))))
+  (expect (regexp "(provide 'tarty-autoloads)")
+    (with-package-test
+     (setup-test 'test-dir 'tarty)
+     (package-download tarty)
+     (package-generate-autoloads tarty)
+     (with-temp-buffer
+       (insert-file-contents (package-autoload-file tarty))
+       (buffer-string))))
   )
 
 (provide 'package-test)

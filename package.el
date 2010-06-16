@@ -798,7 +798,8 @@ it (such as for the \"emacs\" package)."
 (defun package-generate-autoloads (pkg)
   "Generate autoload definitions for PKG."
   (let ((generated-autoload-file (package-autoload-file pkg))
-        (version-control 'never))
+        (version-control 'never)
+        (pkg-dir (package-install-directory pkg)))
     (update-directory-autoloads pkg-dir)))
 
 (defsubst package-parent-directory (dir)
