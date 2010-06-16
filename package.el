@@ -1155,7 +1155,7 @@ Signals an error on failure unless NOERROR is non-nil."
          (func (intern (format "package-from-%s-buffer" type))))
     (funcall func buf noerror)))
 
-;; Merge this somehow with (a less-ugly) `package-from-tar-buffer'.
+;; TODO: Merge this somehow with (a less-ugly) `package-from-tar-buffer'.
 (defun package-from-tar-file (file)
   "Find package information for a tar file.
 
