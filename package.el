@@ -1655,12 +1655,12 @@ is used."
          do (setq offset (+ offset (package-menu-col-width current))))))
 
 (defun* package-list-packages-internal (&optional (buf (get-buffer-create "*Packages*"))
-                                                  (selector 'name))
+                                                  (column 'name))
   "List the available and installed packages.
 
 Inserts the contents into BUF, or a new buffer called
 \"*Packages*\" if BUF is nil. The packages are ordered according
-to SELECTOR, which is either the symbol name of a column or a
+to COLUMN, which is either the symbol type of a column or a
 complete column specification as described by
 `package-menu-columns'.
 
@@ -1669,13 +1669,13 @@ packages, so that must be done separately."
   (with-current-buffer buf
     (setq buffer-read-only nil)
     (erase-buffer)
-    (let* ((col (if (listp selector)
-                    selector
-                  (find selector package-menu-columns :key 'package-menu-col-type)))
-           (comparator (package-menu-col-comparator col))
+    (let* ((column (if (consp column)
+                       column
+                     (find column package-menu-columns :key 'package-menu-col-type)))
+           (comparator (package-menu-col-comparator column))
            (sort-pred '(lambda (left right)
-                         (let ((vleft (package-property-get left selector))
-                               (vright (package-property-get right selector)))
+                         (let ((vleft (package-property-get left (package-menu-col-type column)))
+                               (vright (package-property-get right (package-menu-col-type column))))
                            (funcall comparator vleft vright)))))
       (loop for pkg in (sort (package-registry-flat) sort-pred)
             do (package-print-package pkg t)))

@@ -643,6 +643,25 @@
           (with-temp-buffer
             (package-list-packages-internal (current-buffer) 'version)
             (buffer-string)))
+  (expect (package (mapconcat '(lambda (item) (with-output-to-string (package-print-package item t standard-output)))
+                              (list test-pkg1
+                                    test-pkg2
+                                    tarty
+                                    internal-pkg
+                                    dep-pkg) ""))
+          (with-temp-buffer
+            (package-list-packages-internal (current-buffer) package-menu-column-version)
+            (buffer-string)))
+  (expect (package (mapconcat '(lambda (item) (with-output-to-string (package-print-package item t standard-output)))
+                              (list test-pkg1
+                                    test-pkg2
+                                    tarty
+                                    internal-pkg
+                                    dep-pkg
+                                    ) ""))
+          (with-temp-buffer
+            (package-list-packages-internal (current-buffer) package-menu-column-version)
+            (buffer-string)))
 
   (desc "package-menu-compute-header-line")
   (expect " Package Version Status Summary "
