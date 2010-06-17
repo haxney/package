@@ -1291,7 +1291,7 @@ for download."
 ;;;; Package menu mode.
 
 (defvar package-menu-mode-map
-  (let ((map (make-keymap))
+  (let ((map (make-sparse-keymap))
         (menu-map (make-sparse-keymap "Package")))
     (suppress-keymap map)
     (define-key map "q" 'quit-window)
