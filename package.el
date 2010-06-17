@@ -283,7 +283,7 @@ dependencies.")
 
 (defconst package-statuses '((available . "avail")
                              (installed . "inst")
-                             (activated . "act")
+                             (activated . "active")
                              (obsolete  . "obs"))
   "Possible statuses of a package with abbreviations.
 

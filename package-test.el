@@ -524,20 +524,20 @@
           (with-output-to-string
             (with-package-test
              (package-print-package test-pkg1 nil standard-output))))
-  (expect (regexp "  test-pkg            1.1         act     Simple package system for Emacs *")
+  (expect (regexp "  test-pkg            1.1         active  Simple package system for Emacs *")
           (with-output-to-string
             (with-package-test
              (package-print-package test-pkg2 nil standard-output))))
-  (expect (regexp "  test-pkg            1.1         act     Simple package system for Emacs *")
+  (expect (regexp "  test-pkg            1.1         active  Simple package system for Emacs *")
           (with-output-to-string
             (with-package-test
              (package-print-package test-pkg2 nil standard-output))))
-  (expect (regexp "  test-pkg            1.1         act     Simple package system for Emacs *\n")
+  (expect (regexp "  test-pkg            1.1         active  Simple package system for Emacs *\n")
           (with-output-to-string
             (with-package-test
              (package-print-package test-pkg2 t standard-output))))
 
-  (expect "test-pkg            act     1.1           \n"
+  (expect "test-pkg            active  1.1           \n"
           (with-output-to-string
             (with-package-test
              (let ((package-menu-columns (list package-menu-column-name
@@ -585,7 +585,7 @@
     (package-menu-make-pkg '(command "I"
                                       name "test-pkg"
                                       version "1.1"
-                                      status "act"
+                                      status "active"
                                       summary "Simple package system for Emacs")))
   (expect (make-package :name 'builtin-pkg
                         :version '(2 1 -3 2)
@@ -625,10 +625,10 @@
 
   (desc "package-list-packages-internal")
   (expect (regexp "  dep-pkg             2.0         avail   Simple package system for Emacs *
-  internal-pkg        2.0beta2    act     Simple package system for Emacs *
-  tarty               1.5alpha3   act     Simple package system for Emacs *
+  internal-pkg        2.0beta2    active  Simple package system for Emacs *
+  tarty               1.5alpha3   active  Simple package system for Emacs *
   test-pkg            1.0         obs     Simple package system for Emacs *
-  test-pkg            1.1         act     Simple package system for Emacs *\n")
+  test-pkg            1.1         active  Simple package system for Emacs *\n")
           (with-package-test
            (with-temp-buffer
              (package-list-packages-internal (current-buffer))
@@ -845,10 +845,10 @@
               ;; Hack to make up for lack of cleanup capability.
               (kill-buffer res))))
   (expect (regexp "  dep-pkg             2.0         avail   Simple package system for Emacs *
-  internal-pkg        2.0beta2    act     Simple package system for Emacs *
-  tarty               1.5alpha3   act     Simple package system for Emacs *
+  internal-pkg        2.0beta2    active  Simple package system for Emacs *
+  tarty               1.5alpha3   active  Simple package system for Emacs *
   test-pkg            1.0         obs     Simple package system for Emacs *
-  test-pkg            1.1         act     Simple package system for Emacs *\n")
+  test-pkg            1.1         active  Simple package system for Emacs *\n")
           (with-package-test
            (let ((res (package-list-packages)))
              (prog1
