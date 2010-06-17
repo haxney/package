@@ -869,7 +869,7 @@ install PKG."
            (list pkg buf))
     (unless (file-exists-p pkg-info-file)
       (with-temp-file pkg-info-file
-        (insert (cl-merge-pp pkg))))
+        (insert (cl-merge-pp pkg 'package))))
     (package-generate-autoloads pkg)
     (let ((load-path (append (list pkg-dir) load-path)))
       (byte-recompile-directory pkg-dir 0 t))))
