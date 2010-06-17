@@ -579,11 +579,18 @@ non-nil."
 (defun package-register (pkg)
   "Register package PKG if it isn't already in `package-registry'.
 
-Returns nil if PKG was already in the list or PKG if it was not."
+Returns nil if PKG was already in the list or PKG if it was not.
+If there is an existing package in `package-registry' with the
+same name, version, and archive, it is considered to be already
+present."
   (let* ((pkg-name (package-name pkg))
         (existing-pkgs (aget package-registry pkg-name)))
     (if existing-pkgs
-      (unless (member pkg existing-pkgs)
+      (unless (loop for other in existing-pkgs
+                    when (and (eq (package-name pkg) (package-name other))
+                             (equal (package-version pkg) (package-version other))
+                             (eq (package-archive pkg) (package-archive other)))
+                    return t)
         (nconc existing-pkgs (list pkg))
         pkg)
       (aput 'package-registry pkg-name (list pkg)))))

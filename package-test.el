@@ -1024,6 +1024,18 @@
                                           :type 'single
                                           :archive 'manual))
           package-registry)
+  (expect `((addy ,(make-package :name 'addy
+                                 :version '(1 0)
+                                 :type 'single
+                                 :archive 'manual)))
+    (let (package-registry
+          (addy (make-package :name 'addy
+                              :version '(1 0)
+                              :type 'single
+                              :archive 'manual)))
+      (package-register addy)
+      (package-register addy)
+      package-registry))
 
   (desc "package-archive-url")
   (expect (package (concat "file://" test-dir "upstream/"))
@@ -1405,6 +1417,7 @@
      (with-temp-buffer
        (insert-file-contents (package-autoload-file tarty))
        (buffer-string))))
+
   )
 
 (provide 'package-test)
