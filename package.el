@@ -832,7 +832,7 @@ uses an external `tar' program."
         (call-process-region (point) (point-max) "tar" nil nil nil
                              "xf" "-")))))
 
-(defun package-unpack-tar (pkg buf)
+(defun package-unpack-tar (pkg buf &optional noerror)
   "Unpack a tar PKG from BUF.
 
 BUF is expected to contain a tarred package archive. If BUF is
@@ -843,15 +843,20 @@ nil, the current buffer is used."
     ;;           (directory-files pkg-dir t "^[^.]")))
     (package-untar-buffer buf (package-parent-directory pkg-dir))))
 
-(defun package-unpack-single (pkg buf)
+(defun package-unpack-single (pkg buf &optional noerror)
   "Extract and install PKG from contents of BUF.
 
 PKG is the package metadata and BUF is the buffer from which to
-install the package."
+install the package.
+
+If optional argument NOERROR is non-nil, don't signal an error
+when the destination file exists."
   (let ((pkg-file (package-install-file-path pkg)))
     (when (and (not (eq (package-type pkg) 'package))
                (file-exists-p pkg-file))
-      (error "Destination file %s exists, refusing to overwrite" pkg-file))
+      (if noerror
+          nil
+        (error "Destination file %s exists, refusing to overwrite" pkg-file)))
     (with-temp-file pkg-file
       (with-current-buffer buf
         (buffer-string)))))
@@ -866,7 +871,7 @@ install PKG."
         (pkg-dir (package-install-directory pkg)))
     (make-directory pkg-dir t)
     (apply (intern (format "package-unpack-%s" (package-type pkg)))
-           (list pkg buf))
+           (list pkg buf t))
     (unless (file-exists-p pkg-info-file)
       (with-temp-file pkg-info-file
         (insert (cl-merge-pp pkg 'package))))
