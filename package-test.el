@@ -1020,6 +1020,27 @@
   (expect (package (concat test-dir "archive-contents"))
           (package-archive-content-file 'manual))
 
+  (desc "package-register-archive")
+  (expect (error error "Content file for archive `manual' is not readable")
+    (with-package-test
+     (package-register-archive 'manual)))
+  (expect (package `((tarty ,tarty)))
+    (setup-test 'test-dir)
+    (setq package-registry nil)
+    (with-temp-file (concat test-dir "upstream/" "archive-contents")
+      (insert "(2" (cl-merge-pp tarty 'package) ")"))
+    (package-download-one-archive 'manual)
+    (package-register-archive 'manual)
+    package-registry)
+  (expect (error error "Package test-pkg lists elpa as its archive, but was read from archive manual")
+    (with-package-test
+     (setup-test 'test-dir)
+     (setq package-registry nil)
+     (with-temp-file (concat test-dir "upstream/" "archive-contents")
+       (insert "(2" (cl-merge-pp test-pkg2 'package) ")"))
+     (package-download-one-archive 'manual)
+     (package-register-archive 'manual)))
+
   (desc "package-download-url")
   (expect "http://example.com/elpa/test-pkg-1.0.el"
           (let ((package-archives '((example "http://example.com/elpa/" "/tmp/"))))

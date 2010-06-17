@@ -1018,17 +1018,21 @@ for that function."
 
 Will add any new packages found `package-registry'. Will signal
 an error if the archive version is too new or if a
-package's :archive field does not match ARCHIVE."
+package's :archive field does not match ARCHIVE.
+
+If the archive contents file for ARCHIVE is not readable, signals
+an error."
+  (unless (file-readable-p (package-archive-content-file archive))
+    (error "Content file for archive `%s' is not readable" archive))
   (let* ((buf (find-file-noselect (package-archive-content-file archive)))
          (archive-contents (package-read-archive-contents buf))
          (pkg-version (car archive-contents)))
     (kill-buffer buf)
     (if (cdr-safe archive-contents)
         (dolist (pkg (cdr archive-contents))
-          ;; TODO: Use a `case' statement or function to make this more
-          ;; flexible/extendable?
-          (when (eq pkg-version 1)
-            (setq pkg (package-from-version-1 pkg archive)))
+          (case pkg-version
+            (1 (setq pkg (package-from-version-1 pkg archive)))
+            (2 (setq pkg (apply 'make-package pkg))))
           ;; TODO: Use a hook for validating packages before they hit the registry?
           (unless (eq (package-archive pkg) archive)
             (error "Package %s lists %s as its archive, but was read from archive %s"
