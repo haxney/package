@@ -1247,7 +1247,10 @@ to ARCHIVE's local path. Returns the path of the file written."
   (let* ((archive-url (concat (package-archive-url archive)
                               package-archive-contents-filename))
          (buf (url-retrieve-synchronously archive-url))
-         (local-file (package-archive-content-file archive)))
+         (local-file (package-archive-content-file archive))
+         (archive-dir (package-archive-localpath archive)))
+    (unless (file-directory-p archive-dir)
+      (make-directory archive-dir t))
     (with-temp-file local-file
       (insert (with-current-buffer buf
                 (package-handle-response)

@@ -1134,6 +1134,31 @@
       (prog1
           (package-read-archive-contents buf)
         (kill-buffer buf))))
+  (expect (package (concat test-dir "manual/"))
+    (let ((package-archives `((manual ,(concat "file://" test-dir "upstream/") ,(concat test-dir "manual/")))))
+      (make-directory (concat test-dir "upstream/") t)
+     (with-temp-file (concat test-dir "upstream/" "archive-contents")
+       (insert "(2 (:name test-pkg
+                   :version (1 0)
+                   :version-raw \"1.0\"
+                   :summary \"Simple package system for Emacs\"
+                   :created \"10 Mar 2007\"
+                   :updated \"10 Mar 2007\"
+                   :license \"gpl3\"
+                   :authors ((\"Joe Bob\" . \"jbob@example.com\"))
+                   :maintainer (\"Joe Bob\" . \"jbob@example.com\")
+                   :provides (test-pkg)
+                   :requires-hard ((dep-pkg deppy))
+                   :requires-soft ()
+                   :keywords (\"tools\" \"libraries\")
+                   :homepage \"www.example.com\"
+                   :wikipage \"test-pkg.el\"
+                   :commentary \"This is a completely great testing package\"
+                   :archive elpa
+                   :type single
+                   :status obsolete))"))
+     (package-download-one-archive 'manual)
+     (package-archive-localpath 'manual)))
 
   (desc "package-read-sexp")
   (expect '(a good parsed sexp)
