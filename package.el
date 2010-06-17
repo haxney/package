@@ -1683,16 +1683,17 @@ packages, so that must be done separately."
     (goto-char (point-min)))
   buf)
 
-(defun package-menu-sort-by-column (&optional e)
-  "Sort the package menu by the last column clicked, E."
+(defun package-menu-sort-by-column (&optional ev)
+  "Sort the package menu by the last column clicked, EV."
   (interactive (list last-input-event))
-  (if e (mouse-select-window e))
-  (let* ((pos (event-start e))
-         (obj (posn-object pos))
-         (col (if obj
-                  (get-text-property (cdr obj) 'package-menu-col (car obj))
-                (get-text-property (posn-point pos) 'package-menu-col))))
-    (package-list-packages-internal nil col)))
+  (when ev (mouse-select-window ev)
+        (let* ((pos (event-start ev))
+               (buf (window-buffer (posn-window pos)))
+               (obj (posn-object pos))
+               (col (if obj
+                        (get-text-property (cdr obj) 'package-menu-col (car obj))
+                      (get-text-property (posn-point pos) 'package-menu-col))))
+          (package-list-packages-internal buf col))))
 
 (defun package-menu-compute-header-line ()
   "Compute a header format according to `package-menu-columns'.
