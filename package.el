@@ -585,6 +585,8 @@ same name, version, and archive, it is considered to be already
 present."
   (let* ((pkg-name (package-name pkg))
         (existing-pkgs (aget package-registry pkg-name)))
+    (unless (package-status pkg)
+      (setf (package-status pkg) 'available))
     (if existing-pkgs
       (unless (loop for other in existing-pkgs
                     when (and (eq (package-name pkg) (package-name other))

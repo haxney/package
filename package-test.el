@@ -955,6 +955,7 @@
   (expect (package `((adder ,(make-package :name 'adder
                                            :version '(1 0)
                                            :type 'single
+                                           :status 'available
                                            :archive 'manual))
                      (test-pkg ,test-pkg1 ,test-pkg2)
                      (dep-pkg ,dep-pkg)
@@ -968,6 +969,7 @@
   (expect `((adder ,(make-package :name 'adder
                                   :version '(1 0)
                                   :type 'single
+                                  :status 'available
                                   :archive 'manual)))
     (let (package-registry)
       (package-register (make-package :name 'adder
@@ -978,10 +980,12 @@
   (expect `((adder ,(make-package :name 'adder
                                   :version '(1 0)
                                   :type 'single
+                                  :status 'available
                                   :archive 'manual)
                    ,(make-package :name 'adder
                                   :version '(1 1)
                                   :type 'single
+                                  :status 'available
                                   :archive 'manual)))
     (let (package-registry)
       (package-register (make-package :name 'adder
@@ -996,6 +1000,7 @@
   (expect (package `((test-pkg ,test-pkg1 ,test-pkg2 ,(make-package :name 'test-pkg
                                                                     :version '(2 5)
                                                                     :type 'single
+                                                                    :status 'available
                                                                     :archive 'manual))
                      (dep-pkg ,dep-pkg)
                      (tarty ,tarty)
@@ -1014,6 +1019,7 @@
   (expect (package `((addy ,(make-package :name 'addy
                                           :version '(1 0)
                                           :type 'single
+                                          :status 'available
                                           :archive 'manual))
                      (test-pkg ,test-pkg1 ,test-pkg2)
                      (dep-pkg ,dep-pkg)
@@ -1027,6 +1033,7 @@
   (expect `((addy ,(make-package :name 'addy
                                  :version '(1 0)
                                  :type 'single
+                                 :status 'available
                                  :archive 'manual)))
     (let (package-registry
           (addy (make-package :name 'addy
