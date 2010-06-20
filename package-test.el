@@ -738,6 +738,16 @@
                        (package-install (make-package :name 'not-found))
                        'completed)
             (error err)))
+  (expect (package 'activated)
+    (setup-test 'test-dir 'tarty)
+    (package-download tarty)
+    (package-install tarty)
+    (package-status tarty))
+  (expect (package 'activated)
+    (setup-test 'test-dir 'tarty)
+    (package-download tarty)
+    (package-install tarty)
+    (package-status (car (package-find 'tarty))))
 
   (desc "package-menu-column-offset")
   (expect 0

@@ -1088,8 +1088,7 @@ Interactively, prompts for the package name."
            (package-compute-transaction (list pkg)
                                         (package-requires-hard pkg))))
       (package-download-transaction transaction)))
-  ;; Try to activate it.
-  (package-initialize))
+  (package-activate pkg))
 
 (defun package-from-single-buffer (buf)
   "Create a package structure from BUF.
