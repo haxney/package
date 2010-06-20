@@ -123,7 +123,8 @@
 
 ;;; simple-file.el ends here
 ")
-          (simple-file-pkg (make-package :version '(1 2 3)
+          (simple-file-pkg (make-package :name 'simple-file
+                                         :version '(1 2 3)
                                          :version-raw "1.2.3"
                                          :summary "A simple Elisp file for testing"
                                          :created "20100105"
@@ -458,6 +459,13 @@
                               (two "file:///path/to/two" "/path/to/two")
                               (three "file:///path/to/three" "/path/to/three"))))
       (package-from-filename "/path/to/two/happy-pkg_ometer-0.2.3.el")))
+  (expect (package (make-package :name 'simple-file
+                                 :version '(1 2 3)
+                                 :type 'single
+                                 :archive 'manual))
+    (let* ((dir (concat test-dir "simple-file-1.2.3/"))
+           (file (concat dir "simple-file.el")))
+      (package-from-filename file nil t)))
 
   (desc "package-type-from-buffer")
   (expect 'single

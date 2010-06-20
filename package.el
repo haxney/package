@@ -671,9 +671,12 @@ version."
                 file)))
   (let* ((type (package-type-from-filename file noerror))
          (local-file (file-name-nondirectory (directory-file-name file)))
-         (file-info (package-split-filename file
-                                            (aget package-types type t)
-                                            noerror))
+         (file-info (or (package-split-filename file
+                                                (aget package-types type t)
+                                                noerror)
+                        (package-split-filename (file-name-directory file)
+                                                (aget package-types type t)
+                                                noerror)))
          archive)
     (loop for (arch ignore) in package-archives
           for arch-path = (package-archive-localpath arch)
