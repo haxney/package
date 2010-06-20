@@ -1202,11 +1202,12 @@ FILE is the path to a tar archive."
       (error "Inconsistent package archives"))
     pkg-new))
 
-(defsubst package-from-single-file (file)
+(defun package-from-single-file (file)
   "Returns a package structure for FILE."
-  (with-temp-buffer file
-                    (insert-file-contents file)
-                    (package-from-single-buffer (current-buffer))))
+  (let ((buf (find-file-noselect file)))
+    (prog1
+        (package-from-single-buffer buf)
+      (kill-buffer buf))))
 
 (defun package-from-file (&optional source)
   "Return a package structure from SOURCE.
