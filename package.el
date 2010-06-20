@@ -1236,8 +1236,7 @@ attempt to read it from BUF."
   (package-download-transaction
    (package-compute-transaction nil (package-required-packages pkg)))
   (package-unpack pkg buf)
-  ;; Try to activate it.
-  (package-initialize))
+  (package-activate pkg))
 
 (defun package-install-from-file (file)
   "Install a package from FILE.
