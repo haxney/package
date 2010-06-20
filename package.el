@@ -1209,18 +1209,22 @@ FILE is the path to a tar archive."
         (package-from-single-buffer buf)
       (kill-buffer buf))))
 
-(defun package-from-file (&optional source)
+(defun* package-from-file (&optional (source (current-buffer)))
   "Return a package structure from SOURCE.
 
 SOURCE is either a buffer, a file, or nil, meaning use the
 current buffer."
-  (unless source
-    (setq source (current-buffer)))
   (cond
    ((and (stringp source) (file-readable-p source))
     (let* ((type (package-type-from-filename source))
            (extractor (intern (format "package-from-%s-file" type))))
-      (funcall extractor source)))
+      (cl-merge-struct 'package
+                       ;; Keep `cl-merge-struct' from complaining if
+                       ;; `package-from-filename' returns nil.
+                       (or (package-from-filename source nil t)
+                           (make-package))
+                       (funcall extractor source))))
+   ;; TODO: Use `buffer-file-name' to guess at package name and archive.
    ((buffer-live-p (get-buffer source))
     (case (package-type-from-buffer source)
       ('single (package-from-single-buffer source))

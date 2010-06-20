@@ -511,7 +511,9 @@
   (desc "package-from-file")
   (expect (package simple-file-pkg)
     (setup-test 'test-dir)
-    (let ((file (make-temp-file test-dir nil ".el")))
+    (let* ((dir (concat test-dir "simple-file-1.2.3/"))
+           (file (concat dir "simple-file.el")))
+      (make-directory dir)
       (with-temp-file file
         (insert simple-file))
       (package-from-file file)))
