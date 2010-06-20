@@ -702,8 +702,8 @@ Uses `package-archives' to find packages."
         do (loop for pkg-dirname in (directory-files archive-dir t "^[^.]")
                  for pkg = (package-load-rest-from-descriptor
                             (package-from-filename pkg-dirname nil t) t)
-                 when pkg do (setf (package-status pkg) 'installed)
-                 when pkg do (package-register pkg))))
+                 when pkg do (progn (setf (package-status pkg) 'installed)
+                                    (package-register pkg)))))
 
 (defun package-install-directory (pkg &optional relative)
   "Return the install directory for PKG.

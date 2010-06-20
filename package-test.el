@@ -1349,6 +1349,26 @@
             (package-download tarty)
             (package-register-all-installed)
             package-registry))
+  (expect (package `((tarty ,(cl-merge-struct 'package
+                                              (copy-package tarty)
+                                              (make-package
+                                               :status 'installed)))))
+    (let ((package-registry `((tarty ,tarty))))
+      (setup-test 'test-dir 'tarty)
+      (package-download tarty)
+      (package-register-all-installed)
+      package-registry))
+  (expect (package `((simple-file ,(cl-merge-struct 'package
+                                                    (copy-package simple-file-pkg)
+                                                    (make-package :status 'installed)))
+                     (tarty ,tarty)))
+    (let ((package-registry `((tarty ,tarty))))
+      (setup-test 'test-dir 'tarty)
+      (make-directory (concat test-dir "simple-file-1.2.3"))
+      (with-temp-file (concat test-dir "simple-file-1.2.3/info.epkg")
+        (insert (cl-merge-pp simple-file-pkg 'package)))
+      (package-register-all-installed)
+      package-registry))
 
   (desc "package-install-file-path")
   (expect (error error "Package type must be `single' to get an install file; given: builtin")
