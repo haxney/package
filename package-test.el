@@ -148,7 +148,25 @@
           (test-dir (file-name-as-directory (make-temp-name (expand-file-name "package-test"
                                                                               temporary-file-directory))))
           test-dir-created
-          (package-archives `((manual ,(concat "file://" test-dir "upstream/") ,test-dir))))
+          (package-archives `((manual ,(concat "file://" test-dir "upstream/") ,test-dir)))
+          (upstream-archive-contents "(2 (:name test-pkg
+                   :version (1 0)
+                   :version-raw \"1.0\"
+                   :summary \"Simple package system for Emacs\"
+                   :created \"10 Mar 2007\"
+                   :updated \"10 Mar 2007\"
+                   :license \"gpl3\"
+                   :authors ((\"Joe Bob\" . \"jbob@example.com\"))
+                   :maintainer (\"Joe Bob\" . \"jbob@example.com\")
+                   :provides (test-pkg)
+                   :requires-hard ((dep-pkg deppy))
+                   :requires-soft ()
+                   :keywords (\"tools\" \"libraries\")
+                   :homepage \"www.example.com\"
+                   :wikipage \"test-pkg.el\"
+                   :commentary \"This is a completely great testing package\"
+                   :archive elpa
+                   :type single))"))
      (flet ((make-tar (base files)
                       (let* ((base-dir (concat test-dir "upstream/"))
                              (base-abs (expand-file-name base base-dir))
@@ -1161,8 +1179,7 @@
                    :wikipage \"test-pkg.el\"
                    :commentary \"This is a completely great testing package\"
                    :archive elpa
-                   :type single
-                   :status obsolete))"))
+                   :type single))"))
     (package-download-one-archive 'manual))
   (expect (package '(2 (:name test-pkg
                               :version (1 0)
@@ -1181,8 +1198,7 @@
                               :wikipage "test-pkg.el"
                               :commentary "This is a completely great testing package"
                               :archive elpa
-                              :type single
-                              :status obsolete)))
+                              :type single)))
     (setup-test 'test-dir)
     (with-temp-file (concat test-dir "upstream/" "archive-contents")
       (insert "(2 (:name test-pkg
@@ -1202,8 +1218,7 @@
                    :wikipage \"test-pkg.el\"
                    :commentary \"This is a completely great testing package\"
                    :archive elpa
-                   :type single
-                   :status obsolete))"))
+                   :type single))"))
     (package-download-one-archive 'manual)
     (let ((buf (find-file-noselect (package-archive-content-file 'manual))))
       (prog1
@@ -1230,10 +1245,20 @@
                    :wikipage \"test-pkg.el\"
                    :commentary \"This is a completely great testing package\"
                    :archive elpa
-                   :type single
-                   :status obsolete))"))
+                   :type single))"))
      (package-download-one-archive 'manual)
      (package-archive-localpath 'manual)))
+
+  (desc "package-download")
+  (expect (package `((test-pkg ,test-pkg1 ,test-pkg2)
+                     (dep-pkg ,dep-pkg)
+                     (tarty ,(cl-merge-struct 'package (copy-package tarty) (make-package :status 'installed)))
+                     (internal-pkg ,internal-pkg)))
+    (setup-test 'test-dir 'tarty)
+    (with-temp-file (concat test-dir "upstream/" "archive-contents")
+      (insert upstream-archive-contents))
+    (package-download tarty)
+    package-registry)
 
   (desc "package-read-sexp")
   (expect '(a good parsed sexp)

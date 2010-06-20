@@ -943,7 +943,10 @@ built in) and so signal an error if PKG has :type 'builtin."
               (package-download-url pkg))))
     (package-handle-response buf)
     (package-unpack pkg buf)
-    (kill-buffer buf)))
+    (kill-buffer buf)
+    (package-register (cl-merge-struct 'package
+                                       (copy-package pkg)
+                                       (make-package :status 'installed)))))
 
 (defun package-required-packages (pkg &optional type)
   "Return a list of the required packages of PKG.
