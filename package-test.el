@@ -1043,6 +1043,22 @@
       (package-register addy)
       (package-register addy)
       package-registry))
+  (expect `((addy ,(make-package :name 'addy
+                                 :version '(1 0)
+                                 :type 'single
+                                 :status 'installed
+                                 :archive 'manual)))
+    (let (package-registry)
+      (package-register (make-package :name 'addy
+                                      :version '(1 0)
+                                      :type 'single
+                                      :archive 'manual))
+      (package-register (make-package :name 'addy
+                                      :version '(1 0)
+                                      :type 'single
+                                      :status 'installed
+                                      :archive 'manual))
+      package-registry))
 
   (desc "package-archive-url")
   (expect (package (concat "file://" test-dir "upstream/"))

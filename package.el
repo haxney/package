@@ -590,9 +590,10 @@ present."
     (if existing-pkgs
       (unless (loop for other in existing-pkgs
                     when (and (eq (package-name pkg) (package-name other))
-                             (equal (package-version pkg) (package-version other))
-                             (eq (package-archive pkg) (package-archive other)))
-                    return t)
+                              (equal (package-version pkg) (package-version other))
+                              (eq (package-archive pkg) (package-archive other)))
+                    do (setf (package-status other) (package-status pkg))
+                    and return t)
         (nconc existing-pkgs (list pkg))
         pkg)
       (aput 'package-registry pkg-name (list pkg)))))
