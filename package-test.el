@@ -86,8 +86,7 @@
                                    :wikipage "tarty.el"
                                    :type 'tar
                                    :archive 'manual
-                                   :status 'activated)
-                                  ))
+                                   :status 'available)))
           (internal-pkg (cl-merge-struct 'package
                                          (copy-package test-pkg1)
                                          (make-package
@@ -101,8 +100,7 @@
                                           :homepage "internal.example.com"
                                           :wikipage "internal-pkg.el"
                                           :type 'builtin
-                                          :status 'activated)
-                                         ))
+                                          :status 'activated)))
           tarty-file
           (simple-file ";;; simple-file.el --- A simple Elisp file for testing.
 
@@ -208,8 +206,7 @@
              ,@body)
          (when test-dir-created
            (require 'dired)
-           (dired-delete-file test-dir 'always))))
-     ))
+           (dired-delete-file test-dir 'always))))))
 
 (defun package-exps-assert-with-package-test (expected actual)
   (with-package-test
@@ -654,7 +651,7 @@
   (desc "package-list-packages-internal")
   (expect (regexp "  dep-pkg             2.0         avail   Simple package system for Emacs *
   internal-pkg        2.0beta2    active  Simple package system for Emacs *
-  tarty               1.5alpha3   active  Simple package system for Emacs *
+  tarty               1.5alpha3   avail   Simple package system for Emacs *
   test-pkg            1.0         obs     Simple package system for Emacs *
   test-pkg            1.1         active  Simple package system for Emacs *\n")
           (with-package-test
@@ -732,22 +729,17 @@
           (get-text-property 24 'package-menu-col (package-menu-compute-header-line)))
 
   (desc "package-install")
-  (expect (package 'completed)
-          (mocklet (((package-download-transaction (list tarty)))
-                    (package-initialize))
-                   (package-install (make-package :name 'tarty))
-                   'completed))
-  (expect (package 'completed)
-          (mocklet (((package-download-transaction (list tarty)))
-                    (package-initialize))
-                   (package-install (make-package :name 'tarty :version '(1 5 -3 3)))
-                   'completed))
-  (expect (package '(mock-error not-called))
-          (condition-case err
-              (mocklet (((package-download-transaction (list tarty))))
-                       (package-install (make-package :name 'not-found))
-                       'completed)
-            (error err)))
+  (expect (package 'activated)
+    (setup-test 'test-dir 'tarty)
+    (package-install (make-package :name 'tarty)))
+  (expect (package 'activated)
+    (setup-test 'test-dir 'tarty)
+    (package-install (make-package :name 'tarty :version '(1 5 -3 3))))
+  (expect (not-called package-download-transaction)
+    (condition-case err
+        (with-package-test
+         (package-install (make-package :name 'not-found)))
+      (error err)))
   (expect (package 'activated)
     (setup-test 'test-dir 'tarty)
     (package-download tarty)
@@ -884,7 +876,7 @@
               (kill-buffer res))))
   (expect (regexp "  dep-pkg             2.0         avail   Simple package system for Emacs *
   internal-pkg        2.0beta2    active  Simple package system for Emacs *
-  tarty               1.5alpha3   active  Simple package system for Emacs *
+  tarty               1.5alpha3   avail   Simple package system for Emacs *
   test-pkg            1.0         obs     Simple package system for Emacs *
   test-pkg            1.1         active  Simple package system for Emacs *\n")
           (with-package-test
@@ -1279,7 +1271,7 @@
                                  :commentary "This is a completely great testing package"
                                  :archive 'manual
                                  :type 'tar
-                                 :status 'activated))
+                                 :status 'available))
     (setup-test 'test-dir)
     (make-directory (concat test-dir "tarty-1.5alpha3"))
     (with-temp-file (concat test-dir "tarty-1.5alpha3/info.epkg")
