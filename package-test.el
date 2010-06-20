@@ -928,44 +928,25 @@
  (drag-stuff .
 	     [(0 0 2)
 	      nil \"Drag stuff (lines, words, region, etc...) around\" single]))"))
-  (expect '(2 (:name test-pkg
-                     :version (1 0)
-                     :version-raw "1.0"
-                     :summary "Simple package system for Emacs"
-                     :created "10 Mar 2007"
-                     :updated "10 Mar 2007"
-                     :license "gpl3"
-                     :authors (("Joe Bob" . "jbob@example.com"))
-                     :maintainer ("Joe Bob" . "jbob@example.com")
-                     :provides (test-pkg)
-                     :requires-hard ((dep-pkg deppy))
-                     :requires-soft ()
-                     :keywords ("tools" "libraries")
-                     :homepage "www.example.com"
-                     :wikipage "test-pkg.el"
-                     :commentary "This is a completely great testing package"
-                     :archive elpa
-                     :type single
-                     :status obsolete))
-          (package-read-archive-contents "(2 (:name test-pkg
-                   :version (1 0)
-                   :version-raw \"1.0\"
-                   :summary \"Simple package system for Emacs\"
-                   :created \"10 Mar 2007\"
-                   :updated \"10 Mar 2007\"
-                   :license \"gpl3\"
-                   :authors ((\"Joe Bob\" . \"jbob@example.com\"))
-                   :maintainer (\"Joe Bob\" . \"jbob@example.com\")
-                   :provides (test-pkg)
-                   :requires-hard ((dep-pkg deppy))
-                   :requires-soft ()
-                   :keywords (\"tools\" \"libraries\")
-                   :homepage \"www.example.com\"
-                   :wikipage \"test-pkg.el\"
-                   :commentary \"This is a completely great testing package\"
-                   :archive elpa
-                   :type single
-                   :status obsolete))"))
+  (expect (package '(2 (:name test-pkg
+                              :version (1 0)
+                              :version-raw "1.0"
+                              :summary "Simple package system for Emacs"
+                              :created "10 Mar 2007"
+                              :updated "10 Mar 2007"
+                              :license "gpl3"
+                              :authors (("Joe Bob" . "jbob@example.com"))
+                              :maintainer ("Joe Bob" . "jbob@example.com")
+                              :provides (test-pkg)
+                              :requires-hard ((dep-pkg deppy))
+                              :requires-soft ()
+                              :keywords ("tools" "libraries")
+                              :homepage "www.example.com"
+                              :wikipage "test-pkg.el"
+                              :commentary "This is a completely great testing package"
+                              :archive elpa
+                              :type single)))
+    (package-read-archive-contents upstream-archive-contents))
   (expect (error error "Package archive version 3 is not one of (2 1)")
           (package-read-archive-contents "(3 (package . [stuff]))"))
 
@@ -1162,24 +1143,7 @@
   (expect (package (concat test-dir "archive-contents"))
     (setup-test 'test-dir)
     (with-temp-file (concat test-dir "upstream/" "archive-contents")
-      (insert "(2 (:name test-pkg
-                   :version (1 0)
-                   :version-raw \"1.0\"
-                   :summary \"Simple package system for Emacs\"
-                   :created \"10 Mar 2007\"
-                   :updated \"10 Mar 2007\"
-                   :license \"gpl3\"
-                   :authors ((\"Joe Bob\" . \"jbob@example.com\"))
-                   :maintainer (\"Joe Bob\" . \"jbob@example.com\")
-                   :provides (test-pkg)
-                   :requires-hard ((dep-pkg deppy))
-                   :requires-soft ()
-                   :keywords (\"tools\" \"libraries\")
-                   :homepage \"www.example.com\"
-                   :wikipage \"test-pkg.el\"
-                   :commentary \"This is a completely great testing package\"
-                   :archive elpa
-                   :type single))"))
+      (insert upstream-archive-contents))
     (package-download-one-archive 'manual))
   (expect (package '(2 (:name test-pkg
                               :version (1 0)
@@ -1201,24 +1165,7 @@
                               :type single)))
     (setup-test 'test-dir)
     (with-temp-file (concat test-dir "upstream/" "archive-contents")
-      (insert "(2 (:name test-pkg
-                   :version (1 0)
-                   :version-raw \"1.0\"
-                   :summary \"Simple package system for Emacs\"
-                   :created \"10 Mar 2007\"
-                   :updated \"10 Mar 2007\"
-                   :license \"gpl3\"
-                   :authors ((\"Joe Bob\" . \"jbob@example.com\"))
-                   :maintainer (\"Joe Bob\" . \"jbob@example.com\")
-                   :provides (test-pkg)
-                   :requires-hard ((dep-pkg deppy))
-                   :requires-soft ()
-                   :keywords (\"tools\" \"libraries\")
-                   :homepage \"www.example.com\"
-                   :wikipage \"test-pkg.el\"
-                   :commentary \"This is a completely great testing package\"
-                   :archive elpa
-                   :type single))"))
+      (insert upstream-archive-contents))
     (package-download-one-archive 'manual)
     (let ((buf (find-file-noselect (package-archive-content-file 'manual))))
       (prog1
@@ -1228,24 +1175,7 @@
     (let ((package-archives `((manual ,(concat "file://" test-dir "upstream/") ,(concat test-dir "manual/")))))
       (make-directory (concat test-dir "upstream/") t)
      (with-temp-file (concat test-dir "upstream/" "archive-contents")
-       (insert "(2 (:name test-pkg
-                   :version (1 0)
-                   :version-raw \"1.0\"
-                   :summary \"Simple package system for Emacs\"
-                   :created \"10 Mar 2007\"
-                   :updated \"10 Mar 2007\"
-                   :license \"gpl3\"
-                   :authors ((\"Joe Bob\" . \"jbob@example.com\"))
-                   :maintainer (\"Joe Bob\" . \"jbob@example.com\")
-                   :provides (test-pkg)
-                   :requires-hard ((dep-pkg deppy))
-                   :requires-soft ()
-                   :keywords (\"tools\" \"libraries\")
-                   :homepage \"www.example.com\"
-                   :wikipage \"test-pkg.el\"
-                   :commentary \"This is a completely great testing package\"
-                   :archive elpa
-                   :type single))"))
+       (insert upstream-archive-contents))
      (package-download-one-archive 'manual)
      (package-archive-localpath 'manual)))
 
