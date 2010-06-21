@@ -1033,6 +1033,7 @@ for that function."
 (defun package-register-all-archive-contents ()
   "Read the archive description of each of the archives in `package-archives'."
   (loop for (archive . info) in package-archives
+        when (file-readable-p (package-archive-content-file archive))
         do (package-register-archive archive)))
 
 (defun package-register-archive (archive)
