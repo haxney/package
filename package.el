@@ -1074,25 +1074,23 @@ an error."
 
 Interactively, prompts for the package name."
   (interactive
-   (list (package-find-latest (intern (completing-read "Install package: "
+   (list (package-find-latest
+          (intern (completing-read "Install package: "
                                    (loop for (name . pkgs) in package-registry
                                          collect (symbol-name name))
                                    nil t))
-                              nil)))
-  ;; TODO: Don't loop twice through package list. Make a `package-find' variant
-  ;; which takes a package and looks for a total match in `package-registry'.
-  (let* ((name (package-name pkg))
-         (version (or (package-version pkg)
-                      (package-version (package-find-latest name))))
-         (pkg (car (package-find name :version version))))
-    (unless pkg
-      (error "Package '%s', version '%s' not available for installation"
-             name version))
-    ;; TODO: Make a function which combines these two steps.
-    (let ((transaction
-           (package-compute-transaction (list pkg)
-                                        (package-requires-hard pkg))))
-      (package-download-transaction transaction)))
+          nil)))
+  (package-install-internal pkg))
+
+(defun package-install-internal (pkg)
+  "Install the package PKG.
+
+Assumes that PKG is complete enough for `package-find-rest' to
+find something useful."
+  (package-find-rest pkg)
+  (package-download-transaction
+   (package-compute-transaction (list pkg)
+                                (package-requires-hard pkg)))
   (package-activate pkg))
 
 (defun package-from-single-buffer (buf)
