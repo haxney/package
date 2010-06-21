@@ -1391,6 +1391,13 @@
     (package-download tarty)
     (package-do-activate tarty)
     (caar load-history))
+  (expect (package `(tarty ,(cl-merge-struct 'package
+                                             (copy-package tarty)
+                                             (make-package :status 'activated))))
+    (setup-test 'test-dir 'tarty)
+    (package-download tarty)
+    (package-do-activate tarty)
+    (assq 'tarty package-registry))
 
   (desc "package-activate")
   (expect (package nil)

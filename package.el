@@ -775,7 +775,8 @@ Modifies `load-path' to include the package directory and loads
 the `autoload' file for the package."
   (add-to-list 'load-path (package-install-directory pkg))
   (load (package-autoload-file pkg) nil t)
-  (setf (package-status pkg) 'activated))
+  (prog1 (setf (package-status pkg) 'activated)
+    (package-register pkg)))
 
 ;; FIXME: return a reason instead?
 (defun* package-activate (pkg)
