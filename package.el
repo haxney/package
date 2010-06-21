@@ -1306,9 +1306,9 @@ for download."
 
 (defun package-initialize ()
   "Load all packages and activate as many as possible."
+  (package-register-all-archive-contents)
   (package-register-all-installed)
-  (package-activate-all-installed)
-  (package-register-all-archive-contents))
+  (package-activate-all-installed))
 
 
 
