@@ -222,6 +222,7 @@
 
 (require 'assoc)
 (require 'elx)
+(require 'cl-merge)
 (require 'autoload)
 (require 'tar-mode)
 (require 'dired)
@@ -386,7 +387,7 @@ elpa archive, and archive type). The fields are:
 
 (defun package-required-hard (pkg)
   "Return the hard requirements of PKG."
-  (nth 1 (package-required pkg)))
+  (nth 0 (package-required pkg)))
 
 (defun package-required-soft (pkg)
   "Return the soft requirements of PKG."
