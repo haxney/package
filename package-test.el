@@ -40,8 +40,7 @@
                       :authors '(("Joe Bob" . "jbob@example.com"))
                       :maintainer '("Joe Bob" . "jbob@example.com")
                       :provides '(test-pkg)
-                      :requires-hard '((dep-pkg deppy))
-                      :requires-soft '()
+                      :required '(((dep-pkg deppy)) ())
                       :keywords '("tools" "libraries")
                       :homepage "www.example.com"
                       :wikipage "test-pkg.el"
@@ -73,7 +72,7 @@
                                      :status 'available)))
           (tarty (cl-merge-struct 'package
                                   (let ((tmp (copy-package test-pkg1)))
-                                    (setf (package-requires-hard tmp) nil)
+                                    (setf (package-required tmp) nil)
                                     tmp)
                                   (make-package
                                    :name 'tarty
@@ -95,7 +94,7 @@
                                           :version-raw "2.0beta2"
                                           :authors '(("RMS" . "rms@example.com"))
                                           :maintainer '("RMS" . "rms@example.com")
-                                          :requires-hard '(())
+                                          :required '(())
                                           :provides '(internal-pkg)
                                           :homepage "internal.example.com"
                                           :wikipage "internal-pkg.el"
@@ -158,8 +157,7 @@
                    :authors ((\"Joe Bob\" . \"jbob@example.com\"))
                    :maintainer (\"Joe Bob\" . \"jbob@example.com\")
                    :provides (test-pkg)
-                   :requires-hard ((dep-pkg deppy))
-                   :requires-soft ()
+                   :required (((dep-pkg deppy)) ())
                    :keywords (\"tools\" \"libraries\")
                    :homepage \"www.example.com\"
                    :wikipage \"test-pkg.el\"
@@ -191,7 +189,7 @@
             (setup-test (&rest options)
                         (dolist (op options)
                           (case op
-                            (basic (setf (package-requires-hard dep-pkg) nil))
+                            (basic (setf (package-required dep-pkg) '(nil nil)))
                             (test-dir (make-directory (concat test-dir "upstream/") t)
                                       (setq test-dir-created t))
                             (tarty
@@ -224,7 +222,7 @@
   (expect (package test-pkg1)
     (cadar package-registry))
   (expect (package '((dep-pkg deppy)))
-    (package-requires-hard test-pkg1))
+    (package-required-hard test-pkg1))
 
   (desc "package-registry-flat")
   (expect (package (list test-pkg1
@@ -895,8 +893,8 @@
   (desc "package-from-version-1")
   (expect (make-package :name 'swank-clojure
                         :version '(1 1 0)
-                        :requires-hard '(((slime-repl . (20091016)))
-                                         ((clojure-mode . (1 6))))
+                        :required '((((slime-repl . (20091016)))
+                                     ((clojure-mode . (1 6)))))
                         :summary "slime adapter for clojure"
                         :type 'single)
           (package-from-version-1
@@ -909,7 +907,7 @@
                             "slime adapter for clojure" single])))
   (expect (make-package :name 'htmlize
                         :version '(1 37)
-                        :requires-hard nil
+                        :required nil
                         :summary "Convert buffer text and decorations to HTML."
                         :type 'single)
           (package-from-version-1
@@ -918,7 +916,7 @@
                       nil "Convert buffer text and decorations to HTML." single])))
   (expect (make-package :name 'htmlize
                         :version '(1 37)
-                        :requires-hard nil
+                        :required nil
                         :summary "Convert buffer text and decorations to HTML."
                         :type 'single
                         :archive 'builtin)
@@ -950,8 +948,7 @@
                               :authors (("Joe Bob" . "jbob@example.com"))
                               :maintainer ("Joe Bob" . "jbob@example.com")
                               :provides (test-pkg)
-                              :requires-hard ((dep-pkg deppy))
-                              :requires-soft ()
+                              :required (((dep-pkg deppy)) ())
                               :keywords ("tools" "libraries")
                               :homepage "www.example.com"
                               :wikipage "test-pkg.el"
@@ -1167,8 +1164,7 @@
                               :authors (("Joe Bob" . "jbob@example.com"))
                               :maintainer ("Joe Bob" . "jbob@example.com")
                               :provides (test-pkg)
-                              :requires-hard ((dep-pkg deppy))
-                              :requires-soft ()
+                              :required (((dep-pkg deppy)))
                               :keywords ("tools" "libraries")
                               :homepage "www.example.com"
                               :wikipage "test-pkg.el"
@@ -1219,8 +1215,7 @@
                         :authors '(("Joe Bob" . "jbob@example.com"))
                         :maintainer '("Joe Bob" . "jbob@example.com")
                         :provides '(test-pkg)
-                        :requires-hard '((dep-pkg deppy))
-                        :requires-soft '()
+                        :required '(((dep-pkg deppy)))
                         :keywords '("tools" "libraries")
                         :homepage "www.example.com"
                         :wikipage "test-pkg.el"
@@ -1238,8 +1233,7 @@
                            :authors ((\"Joe Bob\" . \"jbob@example.com\"))
                            :maintainer (\"Joe Bob\" . \"jbob@example.com\")
                            :provides (test-pkg)
-                           :requires-hard ((dep-pkg deppy))
-                           :requires-soft ()
+                           :required (((dep-pkg deppy)))
                            :keywords (\"tools\" \"libraries\")
                            :homepage \"www.example.com\"
                            :wikipage \"test-pkg.el\"
@@ -1247,7 +1241,7 @@
                            :archive elpa
                            :type single
                            :status obsolete)"))
-  (expect (error error "Keyword argument bad-spec not one of (:name :version :version-raw :summary :created :updated :license :authors :maintainer :provides :requires-hard :requires-soft :keywords :homepage :wikipage :commentary :archive :type :status)")
+  (expect (error error "Keyword argument bad-spec not one of (:name :version :version-raw :summary :created :updated :license :authors :maintainer :provides :required :keywords :homepage :wikipage :commentary :archive :type :status)")
     (package-from-string "(bad-spec)"))
   (expect (error error "Can't read whole string")
     (package-from-string "(sexp1) (sexp2)"))
