@@ -3,8 +3,9 @@
 ;; Copyright (C) 2007, 2008, 2009 Tom Tromey <tromey@redhat.com>
 
 ;; Author: Tom Tromey <tromey@redhat.com>
+;;     Daniel Hackney <dan@haxney.org>
 ;; Created: 10 Mar 2007
-;; Version: 2.0pre
+;; Version: 1.9.0
 ;; Keywords: tools
 
 ;; This file is not (yet) part of GNU Emacs.
@@ -194,27 +195,28 @@
 ;; following files would exist:
 ;;
 ;; * ~/emacs.d/elpa/bm-1.37/bm.el
-;; * ~/emacs.d/elpa/bm-1.37/autoloads.el
+;; * ~/emacs.d/elpa/bm-1.37/bm-autoloads.el
 ;; * ~/emacs.d/elpa/bm-1.37/info.epkg
 
 ;;; Thanks:
 ;;; (sorted by sort-lines):
 
+;; Dan Hackney <dan@haxney.org>
 ;; Jim Blandy <jimb@red-bean.com>
 ;; Karl Fogel <kfogel@red-bean.com>
 ;; Kevin Ryde <user42@zip.com.au>
 ;; Lawrence Mitchell
 ;; Michael Olson <mwolson@member.fsf.org>
+;; Phil Hagelberg <phil@hagelb.org>
+;; Samuel Bronson <naesten@gmail.com>
 ;; Sebastian Tennant <sebyte@smolny.plus.com>
 ;; Stefan Monnier <monnier@iro.umontreal.ca>
 ;; Vinicius Jose Latorre <viniciusjl@ig.com.br>
-;; Phil Hagelberg <phil@hagelb.org>
-;; Samuel Bronson <naesten@gmail.com>
 
 ;;; History:
 ;;
 ;; Originally written by Tom Tromey, multiple archive support added by Phil
-;; Hagelberg.
+;; Hagelberg, and overhauled by Dan Hackney.
 
 ;;; Code:
 

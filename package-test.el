@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2010 Daniel Hackney
 
-;; Author: Daniel Hackney
+;; Author: Daniel Hackney <dan@haxney.org>
 
 ;; This file is free software; you can redistribute it and/or modify it under
 ;; the terms of the GNU General Public License as published by the Free Software
@@ -21,7 +21,7 @@
 
 ;;; Commentary:
 ;;
-;; Testing for package.el using the el-expectations library.
+;; Testing for package.el using the el-expectations and el-mock libraries.
 
 ;;; Code:
 (require 'el-expectations)
