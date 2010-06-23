@@ -139,9 +139,8 @@
 ;; * license
 ;; * authors
 ;; * maintainer
-;; * provides
-;; * requires-hard
-;; * requires-soft
+;; * provided
+;; * required
 ;; * keywords
 ;; * homepage
 ;; * wikipage
@@ -375,7 +374,7 @@ elpa archive, and archive type). The fields are:
   license
   authors
   maintainer
-  provides
+  provided
   required
   keywords
   homepage
@@ -1008,12 +1007,12 @@ hard, soft, or both. Its behavior is as follows:
  * 'hard: Return a list of only the hard requirements.
 
  * 'soft: Return a list of only the soft requirements."
-  (let ((hard (loop for (name . provides) in (package-required-hard pkg)
+  (let ((hard (loop for (name . provided) in (package-required-hard pkg)
                     collect (package-find-latest
-                             name nil :provides provides)))
-        (soft (loop for (name . provides) in (package-required-soft pkg)
+                             name nil :provided provides)))
+        (soft (loop for (name . provided) in (package-required-soft pkg)
                     collect (package-find-latest
-                             name nil :provides provides))))
+                             name nil :provided provides))))
     (cond
      ((or (null type) (eq type 'both))
       (append hard soft))

@@ -39,7 +39,7 @@
                       :license "gpl3"
                       :authors '(("Joe Bob" . "jbob@example.com"))
                       :maintainer '("Joe Bob" . "jbob@example.com")
-                      :provides '(test-pkg)
+                      :provided '(test-pkg)
                       :required '(((dep-pkg deppy)) ())
                       :keywords '("tools" "libraries")
                       :homepage "www.example.com"
@@ -66,7 +66,7 @@
                                      :version-raw "2.0"
                                      :authors '(("Sally Smith" . "ssmith@example.com"))
                                      :maintainer '("Sally Smith" . "ssmith@example.com")
-                                     :provides '(deppy)
+                                     :provided '(deppy)
                                      :homepage "deppy.example.com"
                                      :wikipage "deppy.el"
                                      :status 'available)))
@@ -80,7 +80,7 @@
                                    :version-raw "1.5alpha3"
                                    :authors '(("George Tarterson" . "jtart@example.com"))
                                    :maintainer '("George Tarterson" . "jtart@example.com")
-                                   :provides '(tarty)
+                                   :provided '(tarty)
                                    :homepage "tarty.example.com"
                                    :wikipage "tarty.el"
                                    :type 'tar
@@ -95,7 +95,7 @@
                                           :authors '(("RMS" . "rms@example.com"))
                                           :maintainer '("RMS" . "rms@example.com")
                                           :required '(())
-                                          :provides '(internal-pkg)
+                                          :provided '(internal-pkg)
                                           :homepage "internal.example.com"
                                           :wikipage "internal-pkg.el"
                                           :type 'builtin
@@ -128,7 +128,7 @@
                                          :updated "2010"
                                          :authors '(("Example Ample" . "ample@example.com"))
                                          :maintainer '("Example Ample" . "ample@example.com")
-                                         :provides '(simple-file)
+                                         :provided '(simple-file)
                                          :keywords '("tools")
                                          :commentary "This is a cool simple file which doesn't actually do stuff.\n"
                                          :type 'single
@@ -156,7 +156,7 @@
                    :license \"gpl3\"
                    :authors ((\"Joe Bob\" . \"jbob@example.com\"))
                    :maintainer (\"Joe Bob\" . \"jbob@example.com\")
-                   :provides (test-pkg)
+                   :provided (test-pkg)
                    :required (((dep-pkg deppy)) ())
                    :keywords (\"tools\" \"libraries\")
                    :homepage \"www.example.com\"
@@ -301,10 +301,10 @@
   (expect (package nil)
     (package-find 'tarty :archive 'manual :type 'single))
   (expect (package (list dep-pkg))
-          (package-find 'dep-pkg :provides '(deppy)))
+          (package-find 'dep-pkg :provided '(deppy)))
   (expect (package (list dep-pkg))
           (let ((package-registry package-registry-alt))
-            (package-find 'dep-pkg :provides '(deppy))))
+            (package-find 'dep-pkg :provided '(deppy))))
   (expect (package (list tarty))
           (let ((package-registry package-registry-alt))
             (package-find 'tarty :archive 'manual :type 'tar)))
@@ -320,7 +320,7 @@
                                      ,(make-package
                                        :name 'test-pkg
                                        :version '(0 9)
-                                       :provides '(test-pkg)
+                                       :provided '(test-pkg)
                                        :archive 'elpa
                                        :type 'single
                                        :status 'obsolete)
@@ -331,7 +331,7 @@
                                      ,(make-package
                                        :name 'dep-pkg
                                        :version '(0 9)
-                                       :provides '(test-pkg)
+                                       :provided '(test-pkg)
                                        :archive 'elpa
                                        :type 'single
                                        :status 'obsolete)
@@ -339,7 +339,7 @@
                                      ,(make-package
                                        :name 'dep-pkg
                                        :version '(1 9)
-                                       :provides '(test-pkg)
+                                       :provided '(test-pkg)
                                        :archive 'elpa
                                        :type 'single
                                        :status 'obsolete)))))
@@ -351,15 +351,15 @@
     (package-find-latest 'test-pkg t :license "gpl2"))
   (expect (package nil)
     (package-find-latest 'dep-pkg t
-                         :provides '(deppy)
+                         :provided '(deppy)
                          :wikipage "not-dep.el"))
   (expect (package dep-pkg)
     (package-find-latest 'dep-pkg t
-                         :provides '(deppy)
+                         :provided '(deppy)
                          :wikipage "deppy.el"))
   (expect (package nil)
           (package-find-latest 'dep-pkg t
-                               :provides '(deppy)
+                               :provided '(deppy)
                                :wikipage "deppy.el"
                                :version '(2 0)))
   (expect (error error "Version already specified; how do you expect me to find the latest?")
@@ -815,21 +815,21 @@
                                      ,(make-package
                                        :name 'dep-pkg
                                        :version '(0 9)
-                                       :provides '(test-pkg)
+                                       :provided '(test-pkg)
                                        :archive 'elpa
                                        :type 'single
                                        :status 'obsolete)
                                      ,(make-package
                                        :name 'dep-pkg
                                        :version '(0 5)
-                                       :provides '(test-pkg)
+                                       :provided '(test-pkg)
                                        :archive 'elpa
                                        :type 'single
                                        :status 'obsolete)
                                      ,(make-package
                                        :name 'dep-pkg
                                        :version '(1 9)
-                                       :provides '(test-pkg)
+                                       :provided '(test-pkg)
                                        :archive 'elpa
                                        :type 'single
                                        :status 'obsolete)))))
@@ -947,7 +947,7 @@
                               :license "gpl3"
                               :authors (("Joe Bob" . "jbob@example.com"))
                               :maintainer ("Joe Bob" . "jbob@example.com")
-                              :provides (test-pkg)
+                              :provided (test-pkg)
                               :required (((dep-pkg deppy)) ())
                               :keywords ("tools" "libraries")
                               :homepage "www.example.com"
@@ -1163,7 +1163,7 @@
                               :license "gpl3"
                               :authors (("Joe Bob" . "jbob@example.com"))
                               :maintainer ("Joe Bob" . "jbob@example.com")
-                              :provides (test-pkg)
+                              :provided (test-pkg)
                               :required (((dep-pkg deppy)))
                               :keywords ("tools" "libraries")
                               :homepage "www.example.com"
@@ -1214,7 +1214,7 @@
                         :license "gpl3"
                         :authors '(("Joe Bob" . "jbob@example.com"))
                         :maintainer '("Joe Bob" . "jbob@example.com")
-                        :provides '(test-pkg)
+                        :provided '(test-pkg)
                         :required '(((dep-pkg deppy)))
                         :keywords '("tools" "libraries")
                         :homepage "www.example.com"
@@ -1232,7 +1232,7 @@
                            :license \"gpl3\"
                            :authors ((\"Joe Bob\" . \"jbob@example.com\"))
                            :maintainer (\"Joe Bob\" . \"jbob@example.com\")
-                           :provides (test-pkg)
+                           :provided (test-pkg)
                            :required (((dep-pkg deppy)))
                            :keywords (\"tools\" \"libraries\")
                            :homepage \"www.example.com\"
@@ -1241,7 +1241,7 @@
                            :archive elpa
                            :type single
                            :status obsolete)"))
-  (expect (error error "Keyword argument bad-spec not one of (:name :version :version-raw :summary :created :updated :license :authors :maintainer :provides :required :keywords :homepage :wikipage :commentary :archive :type :status)")
+  (expect (error error "Keyword argument bad-spec not one of (:name :version :version-raw :summary :created :updated :license :authors :maintainer :provided :required :keywords :homepage :wikipage :commentary :archive :type :status)")
     (package-from-string "(bad-spec)"))
   (expect (error error "Can't read whole string")
     (package-from-string "(sexp1) (sexp2)"))
@@ -1258,7 +1258,7 @@
                                  :license "gpl3"
                                  :authors '(("George Tarterson" . "jtart@example.com"))
                                  :maintainer '("George Tarterson" . "jtart@example.com")
-                                 :provides '(tarty)
+                                 :provided '(tarty)
                                  :keywords '("tools" "libraries")
                                  :homepage "tarty.example.com"
                                  :wikipage "tarty.el"
