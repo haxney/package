@@ -221,7 +221,7 @@
 ;;; Code:
 
 (require 'assoc)
-(require 'elm)
+(require 'elx)
 (require 'autoload)
 (require 'tar-mode)
 (require 'dired)
@@ -315,30 +315,48 @@ below:
 (defconst package-status-default 'available
   "Status to assign to packages which don't provide their own.")
 
-(defstruct (package (:include elx-pkg)
-                    (:constructor inherit-package
-                                  (pkg
-                                   &key archive type status
-                                   &aux (name (elx-pkg-name pkg))
-                                   (version (elx-pkg-version pkg))
-                                   (version-raw (elx-pkg-version-raw pkg))
-                                   (summary (elx-pkg-summary pkg))
-                                   (created (elx-pkg-created pkg))
-                                   (updated (elx-pkg-updated pkg))
-                                   (license (elx-pkg-license pkg))
-                                   (authors (elx-pkg-authors pkg))
-                                   (maintainer (elx-pkg-maintainer pkg))
-                                   (provides (elx-pkg-provides pkg))
-                                   (requires-hard (elx-pkg-requires-hard pkg))
-                                   (requires-soft (elx-pkg-requires-soft pkg))
-                                   (keywords (elx-pkg-keywords pkg))
-                                   (homepage (elx-pkg-homepage pkg))
-                                   (wikipage (elx-pkg-wikipage pkg))
-                                   (commentary (elx-pkg-commentary pkg)))))
-  "Extends the `elx-pkg' structure with archive-specific information.
+(defstruct package
+  "A structure containing info about a single package.
 
-This contains the complete info about a package as contained in
-the archive index. The fields are:
+This contains all of the information that can be pulled from the
+package's source tree (which excludes things like the package
+elpa archive, and archive type). The fields are:
+
+ - NAME: The name of the package, as a symbol.
+
+ - VERSION: The parsed version of the package.
+
+ - VERSION-RAW: The unsanitized string version of the package version.
+
+ - SUMMARY: The brief description of the package.
+
+ - CREATED: The date this package was created.
+
+ - UPDATED: The date the current version was published.
+
+ - LICENSE: The license of this package (as a symbol).
+
+ - AUTHORS: Alist of author names to email addresses.
+
+ - MAINTAINER: Cons cell of maintainer name and email address.
+
+ - PROVIDED: Features provided by this package.
+
+ - REQUIRED: The packages required by this package, as a list
+   of (REQUIRED-HARD REQUIRED-SOFT). REQUIRED-HARD and
+   REQUIRED-SOFT are themselves lists of the form ((REQ-NAME .
+   REQ-VERSION) FEATURES...), where REQ-NAME is a symbol,
+   REQ-VERSION is a parsed version string, and FEATURES is a list
+   of the features expected to be provided by the REQ-NAME
+   package.
+
+ - KEYWORDS: The keywords which describe this package.
+
+ - HOMEPAGE: The upstream homepage of this package.
+
+ - WIKIPAGE: The page on EmacsWiki about this package.
+
+ - COMMENTARY: The package commentary.
 
  - ARCHIVE: The archive from which this package comes, as a symbol.
 
@@ -346,14 +364,33 @@ the archive index. The fields are:
    types in `package-types'.
 
  - STATUS: The installed status of this package, see
-   `package-statuses'.
-
-The special constructor, `inherit-package' allows constructing a
-`package' struct from an existing `elx-pkg' struct. Extra
-arguments are supported by keys."
+   `package-statuses'."
+  name
+  version
+  version-raw
+  summary
+  created
+  updated
+  license
+  authors
+  maintainer
+  provides
+  required
+  keywords
+  homepage
+  wikipage
+  commentary
   archive
   type
   status)
+
+(defun package-required-hard (pkg)
+  "Return the hard requirements of PKG."
+  (nth 1 (package-required pkg)))
+
+(defun package-required-soft (pkg)
+  "Return the soft requirements of PKG."
+  (nth 1 (package-required pkg)))
 
 (defun package-property-get (pkg prop)
   "Returns the PROP property of PKG"
@@ -970,10 +1007,10 @@ hard, soft, or both. Its behavior is as follows:
  * 'hard: Return a list of only the hard requirements.
 
  * 'soft: Return a list of only the soft requirements."
-  (let ((hard (loop for (name . provides) in (package-requires-hard pkg)
+  (let ((hard (loop for (name . provides) in (package-required-hard pkg)
                     collect (package-find-latest
                              name nil :provides provides)))
-        (soft (loop for (name . provides) in (package-requires-soft pkg)
+        (soft (loop for (name . provides) in (package-required-soft pkg)
                     collect (package-find-latest
                              name nil :provides provides))))
     (cond
@@ -1092,7 +1129,7 @@ find something useful."
   (package-find-rest pkg)
   (package-download-transaction
    (package-compute-transaction (list pkg)
-                                (package-requires-hard pkg)))
+                                (package-required-hard pkg)))
   (package-activate pkg))
 
 (defun package-from-single-buffer (buf)
