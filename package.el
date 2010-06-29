@@ -468,9 +468,10 @@ this function provides that."
                            license
                            authors
                            maintainer
-                           provides
-                           requires-hard
-                           requires-soft
+                           provided
+                           required
+                           required-hard
+                           required-soft
                            keywords
                            homepage
                            wikipage
@@ -1009,10 +1010,10 @@ hard, soft, or both. Its behavior is as follows:
  * 'soft: Return a list of only the soft requirements."
   (let ((hard (loop for (name . provided) in (package-required-hard pkg)
                     collect (package-find-latest
-                             name nil :provided provides)))
+                             name nil :provided provided)))
         (soft (loop for (name . provided) in (package-required-soft pkg)
                     collect (package-find-latest
-                             name nil :provided provides))))
+                             name nil :provided provided))))
     (cond
      ((or (null type) (eq type 'both))
       (append hard soft))
