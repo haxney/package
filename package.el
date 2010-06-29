@@ -1138,9 +1138,9 @@ find something useful."
 
 BUF must be an Emacs Lisp source code file which is parseable by
 `elx-package-metadata'."
-  (inherit-package (elx-package-metadata buf)
-                   :archive 'manual
-                   :type 'single))
+  (make-package (append (elx-package-metadata buf)
+                        (list :archive 'manual
+                              :type 'single))))
 
 (defun package-type-from-buffer (buf)
   "Determine the package type from the contents of BUF."
