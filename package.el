@@ -139,6 +139,7 @@
 ;; * license
 ;; * authors
 ;; * maintainer
+;; * adapted-by
 ;; * provided
 ;; * required
 ;; * keywords
@@ -340,6 +341,9 @@ elpa archive, and archive type). The fields are:
 
  - MAINTAINER: Cons cell of maintainer name and email address.
 
+ - ADAPTED-BY: The person who adapted this package, in the
+   form (NAME . EMAIL).
+
  - PROVIDED: Features provided by this package.
 
  - REQUIRED: The packages required by this package, as a list
@@ -374,6 +378,7 @@ elpa archive, and archive type). The fields are:
   license
   authors
   maintainer
+  adapted-by
   provided
   required
   keywords
@@ -468,6 +473,7 @@ this function provides that."
                            license
                            authors
                            maintainer
+                           adapted-by
                            provided
                            required
                            required-hard
@@ -1138,9 +1144,9 @@ find something useful."
 
 BUF must be an Emacs Lisp source code file which is parseable by
 `elx-package-metadata'."
-  (make-package (append (elx-package-metadata buf)
-                        (list :archive 'manual
-                              :type 'single))))
+  (apply 'make-package (append (elx-package-metadata nil buf)
+                               (list :archive 'manual
+                                     :type 'single))))
 
 (defun package-type-from-buffer (buf)
   "Determine the package type from the contents of BUF."
