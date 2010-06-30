@@ -240,32 +240,32 @@
             (package-registry-flat)))
 
   (desc "package-split-filename")
-  (expect (package '(package . (0 1 1)))
+  (expect (package '("package" . "0.1.1"))
     (package-split-filename "package-0.1.1"))
-  (expect (package '(package . (0 1 1)))
+  (expect (package '("package" . "0.1.1"))
     (package-split-filename "package-0.1.1/"))
-  (expect (package '(package . (0 1 1)))
+  (expect (package '("package" . "0.1.1"))
     (package-split-filename (concat test-dir "package-0.1.1")))
-  (expect (package '(package . (0 1 1)))
+  (expect (package '("package" . "0.1.1"))
     (package-split-filename (concat test-dir "package-0.1.1/")))
 
-  (expect (package '(package-test . (0 2 3)))
+  (expect (package '("package-test" . "0.2.3"))
     (package-split-filename "package-test-0.2.3"))
-  (expect (package '(package-test . (0 2 3)))
+  (expect (package '("package-test" . "0.2.3"))
     (package-split-filename "package-test-0.2.3/"))
-  (expect (package '(package-test . (0 2 3)))
+  (expect (package '("package-test" . "0.2.3"))
     (package-split-filename "/package-test-0.2.3"))
 
-  (expect '(tar-test . (1 -1 2))
+  (expect '("tar-test" . "1rc2")
     (package-split-filename "tar-test-1rc2.tar" "tar"))
-  (expect (package '(tar-test . (1 -1 2)))
+  (expect (package '("tar-test" . "1rc2"))
     (package-split-filename (concat test-dir "tar-test-1rc2.tar") "tar"))
 
-  (expect (package '(package-test . (0 2 3)))
+  (expect (package '("package-test" . "0.2.3"))
     (package-split-filename (concat test-dir "package-test-0.2.3/")))
-  (expect (package '(package-test . (0 2 3)))
+  (expect (package '("package-test" . "0.2.3"))
     (package-split-filename (concat test-dir "package-test-0.2.3")))
-  (expect (package '(package-test . (0 2 3)))
+  (expect (package '("package-test" . "0.2.3"))
     (package-split-filename (concat test-dir "package-test-0.2.3/")))
 
   (expect (error error *)
@@ -432,11 +432,13 @@
   (desc "package-from-filename")
   (expect (package (make-package :name 'package-test
                                  :version '(0 2 3)
+                                 :version-raw "0.2.3"
                                  :archive 'manual
                                  :type 'tar))
     (package-from-filename (concat test-dir "package-test-0.2.3.tar")))
   (expect (package (make-package :name 'package-test
                                  :version '(0 2 3)
+                                 :version-raw "0.2.3"
                                  :archive 'manual))
     (package-from-filename (concat test-dir "package-test-0.2.3") nil t))
   (expect (error error "Could not find package type for extension: 3")
@@ -444,10 +446,12 @@
        (package-from-filename (concat test-dir "package-test-0.2.3.thing") "thing")))
   (expect (package (make-package :name 'package-test
                                  :version '(0 2 3)
+                                 :version-raw "0.2.3"
                                  :archive 'manual))
     (package-from-filename (concat test-dir "package-test-0.2.3.thing") "thing" t))
   (expect (make-package :name 'happy-pkg_ometer
                         :version '(0 2 3)
+                        :version-raw "0.2.3"
                         :type 'single
                         :archive 'two)
     (let ((package-archives '((one "file:///path/to/one" "/path/to/one")
@@ -456,6 +460,7 @@
       (package-from-filename "/path/to/two/happy-pkg_ometer-0.2.3.el")))
   (expect (package (make-package :name 'simple-file
                                  :version '(1 2 3)
+                                 :version-raw "1.2.3"
                                  :type 'single
                                  :archive 'manual))
     (let* ((dir (concat test-dir "simple-file-1.2.3/"))

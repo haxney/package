@@ -665,15 +665,23 @@ modified and nil is returned."
                  nil
                (error "Unable to load package info file '%s'" info-file))))))
 
+(defvar package-name-regexp "^[[:alnum:]]+[[:alnum:]-_]*[[:alnum:]]+$"
+  "Allowed format of the :name slot of packages.
+
+There is some limitation to the names packages are permitted to
+have, described by this regular expression. Package names must
+match this regexp or are considered invalid.")
+
 (defun package-split-filename (file &optional suffix noerror)
   "Split FILE into a name and version.
 
 FILE must be a directory of the form \"NAME-VERSION\" which will
 be split into a cons cell with the form (NAME . VERSION), where
-NAME is an interned symbol and VERSION is a list as returned by
-`version-to-list'. FILE can be either a relative or absolute
-filename, only the last element of the filename (which should be
-the directory to examine) will be considered.
+NAME and VERSION are strings. They should be processed by
+`intern' or `version-to-list' for NAME and VERSION, respectively.
+FILE can be either a relative or absolute filename, only the last
+element of the filename (which should be the directory to
+examine) will be considered.
 
 If optional argument SUFFIX is provided, strip the suffix from
 FILE before processing the name.
@@ -689,13 +697,11 @@ when FILE cannot be resolved to a name and version."
          (parts (split-string local-dir "-" t))
          (version (car (last parts)))
          (name (combine-and-quote-strings (butlast parts 1) "-")))
-    (condition-case err
-        ;; TODO: Add some format checks to `name'.
-        (cons (intern name)
-              (version-to-list version))
-      (error (if noerror
-                 nil
-               (signal (car err) (cdr err)))))))
+    (if (string-match package-name-regexp name)
+        (cons name version)
+      (if noerror
+          nil
+        (error "Invalid package name '%s'" name)))))
 
 (defun package-from-filename (file &optional suffix noerror)
   "Create a skeleton `package' structure from FILE.
@@ -729,8 +735,9 @@ version."
           if (string-match (concat "^" arch-path) file)
           do (setq archive arch))
     (if (or archive noerror)
-        (make-package :name (car file-info)
-                      :version (cdr file-info)
+        (make-package :name (intern (car file-info))
+                      :version (version-to-list (cdr file-info))
+                      :version-raw (cdr file-info)
                       :type type
                       :archive archive)
       (error "Could not find an archive containing file: %s" file))))
@@ -1202,8 +1209,9 @@ then an error is signaled unless NOERROR is non-nil."
                                                       (tar-header-link-type item)))))
          ;; Check that we actually received successfully found dir-hdr
          (name-vers (package-split-filename (tar-header-name dir-hdr)))
-         (pkg-skel (make-package :name (car name-vers)
-                                 :version (cdr name-vers)
+         (pkg-skel (make-package :name (intern (car name-vers))
+                                 :version (version-to-list (cdr name-vers))
+                                 :version-raw (cdr name-vers)
                                  ;; Doesn't actually matter, since we will be
                                  ;; returning only the relative path.
                                  :archive 'manual))
