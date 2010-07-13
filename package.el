@@ -118,8 +118,8 @@
 
 ;;; Tar Package Format:
 
-;; A tar file must be named "NAME-VERSION.tar". The tar file must unpack into
-;; a directory named after the package and version: "NAME-VERSION". All of the
+;; A tar file must be named "NAME-VERSION.tar". The tar file must unpack into a
+;; directory named after the package and version: "NAME-VERSION". All of the
 ;; package files must be in this directory, and it must include a file
 ;; "info.epkg" in the unpacked directory which contains the package metadata
 ;; (see "Package Metadata" below).
@@ -127,8 +127,7 @@
 ;;; Package Metadata:
 ;;
 ;; The `package' structure is used throughout this library and contains metadata
-;; about an individual version of a package. It contains the following fields
-;; (most of which are inherited from `elx-pkg', which see):
+;; about an individual version of a package. It contains the following fields:
 ;;
 ;; * name
 ;; * version
@@ -149,8 +148,8 @@
 ;; * archive
 ;; * type
 ;;
-;; See the documentation of the `package' and `elx-pkg' structures for more
-;; information about each of the fields.
+;; See the documentation of the `package' structure for more information about
+;; each of the fields.
 ;;
 ;; When saved to disk, a package is written as a plist, with each of the fields
 ;; as a property and that field's value as the plist value. This means that an
