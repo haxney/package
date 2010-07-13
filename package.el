@@ -655,14 +655,16 @@ currently `:name', `:version', and `:archive'.
 If there is a problem loading the info file, an error is
 signaled, unless NOERROR is non-nil, in which case PKG is not
 modified and nil is returned."
-  (let ((info-file (package-info-file pkg)))
-    (condition-case err
-        (with-temp-buffer
-          (insert-file-contents (package-info-file pkg))
-          (cl-merge-struct 'package pkg (package-from-string (buffer-string))))
-      (error (if noerror
-                 nil
-               (error "Unable to load package info file '%s'" info-file))))))
+  (let (info-file)
+   (condition-case err
+       (progn
+         (setq info-file (package-info-file pkg))
+         (with-temp-buffer
+           (insert-file-contents (package-info-file pkg))
+           (cl-merge-struct 'package pkg (package-from-string (buffer-string)))))
+     (error (if noerror
+                nil
+              (error "Unable to load package info file '%s'" info-file))))))
 
 (defvar package-name-regexp "^[[:alnum:]]+[[:alnum:]-_]*[[:alnum:]]+$"
   "Allowed format of the :name slot of packages.
@@ -806,7 +808,7 @@ file for either `tar' or `builtin' packages."
           "."
           (package-suffix pkg)))
 
-(defsubst package-info-file (pkg &optional relative)
+(defun package-info-file (pkg &optional relative)
   "Returns the info (.epkg) file for PKG.
 
 If RELATIVE is non-nil, return the path of the info file relative
