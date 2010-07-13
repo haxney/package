@@ -740,13 +740,17 @@ version."
           for arch-path = (package-archive-localpath arch)
           if (string-match (concat "^" arch-path) file)
           do (setq archive arch))
-    (if (or archive noerror)
+    (condition-case err
+        (if (or archive noerror)
         (make-package :name (intern (car file-info))
                       :version (version-to-list (cdr file-info))
                       :version-raw (cdr file-info)
                       :type type
                       :archive archive)
-      (error "Could not find an archive containing file: %s" file))))
+      (error "Could not find an archive containing file: %s" file))
+        (error (if noerror
+                   nil
+                 (signal (car err) (cdr err)))))))
 
 ;; TODO: Add special handling of builtin packages, so that directories don't
 ;; need to be created for each builtin package.

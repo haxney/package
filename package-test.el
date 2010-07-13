@@ -1331,6 +1331,11 @@
                                          t)))
 
   (desc "package-register-all-installed")
+  (expect (package nil)
+    (let (package-registry)
+     (setup-test 'test-dir)
+     (package-register-all-installed)
+     package-registry))
   (expect (package `((tarty ,(cl-merge-struct 'package
                                               (copy-package tarty)
                                               (make-package
