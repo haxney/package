@@ -912,7 +912,7 @@
                             "slime adapter for clojure" single])))
   (expect (make-package :name 'htmlize
                         :version '(1 37)
-                        :required nil
+                        :required '(nil)
                         :summary "Convert buffer text and decorations to HTML."
                         :type 'single)
           (package-from-version-1
@@ -921,7 +921,7 @@
                       nil "Convert buffer text and decorations to HTML." single])))
   (expect (make-package :name 'htmlize
                         :version '(1 37)
-                        :required nil
+                        :required '(nil)
                         :summary "Convert buffer text and decorations to HTML."
                         :type 'single
                         :archive 'builtin)
@@ -1169,7 +1169,7 @@
                               :authors (("Joe Bob" . "jbob@example.com"))
                               :maintainer ("Joe Bob" . "jbob@example.com")
                               :provided (test-pkg)
-                              :required (((dep-pkg deppy)))
+                              :required (((dep-pkg deppy)) nil)
                               :keywords ("tools" "libraries")
                               :homepage "www.example.com"
                               :wikipage "test-pkg.el"
