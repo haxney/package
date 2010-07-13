@@ -1246,7 +1246,7 @@
                            :archive elpa
                            :type single
                            :status obsolete)"))
-  (expect (error error "Keyword argument bad-spec not one of (:name :version :version-raw :summary :created :updated :license :authors :maintainer :provided :required :keywords :homepage :wikipage :commentary :archive :type :status)")
+  (expect (error error "Keyword argument bad-spec not one of (:name :version :version-raw :summary :created :updated :license :authors :maintainer :adapted-by :provided :required :keywords :homepage :wikipage :commentary :archive :type :status)")
     (package-from-string "(bad-spec)"))
   (expect (error error "Can't read whole string")
     (package-from-string "(sexp1) (sexp2)"))
