@@ -697,7 +697,14 @@ when FILE cannot be resolved to a name and version."
          (version (car (last parts)))
          (name (combine-and-quote-strings (butlast parts 1) "-")))
     (if (string-match package-name-regexp name)
-        (cons name version)
+        (condition-case err
+            (progn
+              (version-to-list version)
+              (cons name version))
+          (error (if noerror
+                     nil
+                   (signal (car err) (cdr err)))))
+
       (if noerror
           nil
         (error "Invalid package name '%s'" name)))))
