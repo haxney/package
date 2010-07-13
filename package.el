@@ -1067,8 +1067,8 @@ processed to resolve all dependencies (if possible)."
         (vec (cdr old-spec)))
       (make-package :name name
                     :version (aref vec 0)
-                    :requires-hard (loop for (name version) in (aref vec 1)
-                                         collect (list (cons name version)))
+                    :required (list (loop for (name version) in (aref vec 1)
+                                          collect (list (cons name version))))
                     :summary (aref vec 2)
                     :type (aref vec 3)
                     :archive archive)))
