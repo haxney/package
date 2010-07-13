@@ -5,7 +5,7 @@
 ;; Author: Tom Tromey <tromey@redhat.com>
 ;;     Daniel Hackney <dan@haxney.org>
 ;; Created: 10 Mar 2007
-;; Version: 1.9.0
+;; Version: 1.9.1
 ;; Keywords: tools
 
 ;; This file is not (yet) part of GNU Emacs.
