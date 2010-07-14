@@ -34,8 +34,8 @@
                       :version '(1 0)
                       :version-raw "1.0"
                       :summary "Simple package system for Emacs"
-                      :created "10 Mar 2007"
-                      :updated "10 Mar 2007"
+                      :created '(nil nil nil 10 3 2007 nil nil nil)
+                      :updated '(nil nil nil 10 3 2007 nil nil nil)
                       :license "gpl3"
                       :authors '(("Joe Bob" . "jbob@example.com"))
                       :maintainer '("Joe Bob" . "jbob@example.com")
@@ -55,8 +55,8 @@
                                        :authors '(("Joe Bob" . "jbob@example.com")
                                                   ("Fred Jones" . "fjones@example.com"))
                                        :version-raw "1.1"
-                                       :created "10 Mar 2008"
-                                       :updated "10 Mar 2008"
+                                       :created '(nil nil nil 10 3 2008 nil nil nil)
+                                       :updated '(nil nil nil 10 3 2008 nil nil nil)
                                        :status 'activated)))
           (dep-pkg (cl-merge-struct 'package
                                     (copy-package test-pkg1)
@@ -124,8 +124,8 @@
                                          :version '(1 2 3)
                                          :version-raw "1.2.3"
                                          :summary "A simple Elisp file for testing"
-                                         :created "20100105"
-                                         :updated "2010"
+                                         :created '(nil nil nil 5 1 2010 nil nil nil)
+                                         :updated '(nil nil nil nil nil 2010 nil nil nil)
                                          :authors '(("Example Ample" . "ample@example.com"))
                                          :maintainer '("Example Ample" . "ample@example.com")
                                          :provided '(simple-file)
@@ -151,8 +151,8 @@
                    :version (1 0)
                    :version-raw \"1.0\"
                    :summary \"Simple package system for Emacs\"
-                   :created \"10 Mar 2007\"
-                   :updated \"10 Mar 2007\"
+                   :created (nil nil nil 10 3 2007 nil nil nil)
+                   :updated (nil nil nil 10 3 2007 nil nil nil)
                    :license \"gpl3\"
                    :authors ((\"Joe Bob\" . \"jbob@example.com\"))
                    :maintainer (\"Joe Bob\" . \"jbob@example.com\")
@@ -947,8 +947,8 @@
                               :version (1 0)
                               :version-raw "1.0"
                               :summary "Simple package system for Emacs"
-                              :created "10 Mar 2007"
-                              :updated "10 Mar 2007"
+                              :created (nil nil nil 10 3 2007 nil nil nil)
+                              :updated (nil nil nil 10 3 2007 nil nil nil)
                               :license "gpl3"
                               :authors (("Joe Bob" . "jbob@example.com"))
                               :maintainer ("Joe Bob" . "jbob@example.com")
@@ -1163,8 +1163,8 @@
                               :version (1 0)
                               :version-raw "1.0"
                               :summary "Simple package system for Emacs"
-                              :created "10 Mar 2007"
-                              :updated "10 Mar 2007"
+                              :created (nil nil nil 10 3 2007 nil nil nil)
+                              :updated (nil nil nil 10 3 2007 nil nil nil)
                               :license "gpl3"
                               :authors (("Joe Bob" . "jbob@example.com"))
                               :maintainer ("Joe Bob" . "jbob@example.com")
@@ -1214,8 +1214,8 @@
                         :version '(1 0)
                         :version-raw "1.0"
                         :summary "Simple package system for Emacs"
-                        :created "10 Mar 2007"
-                        :updated "10 Mar 2007"
+                        :created '(nil nil nil 10 3 2007 nil nil nil)
+                        :updated '(nil nil nil 10 3 2007 nil nil nil)
                         :license "gpl3"
                         :authors '(("Joe Bob" . "jbob@example.com"))
                         :maintainer '("Joe Bob" . "jbob@example.com")
@@ -1232,8 +1232,8 @@
                            :version (1 0)
                            :version-raw \"1.0\"
                            :summary \"Simple package system for Emacs\"
-                           :created \"10 Mar 2007\"
-                           :updated \"10 Mar 2007\"
+                           :created (nil nil nil 10 3 2007 nil nil nil)
+                           :updated (nil nil nil 10 3 2007 nil nil nil)
                            :license \"gpl3\"
                            :authors ((\"Joe Bob\" . \"jbob@example.com\"))
                            :maintainer (\"Joe Bob\" . \"jbob@example.com\")
@@ -1258,8 +1258,8 @@
                                  :version '(1 5 -3 3)
                                  :version-raw "1.5alpha3"
                                  :summary "Simple package system for Emacs"
-                                 :created "10 Mar 2007"
-                                 :updated "10 Mar 2007"
+                                 :created '(nil nil nil 10 3 2007 nil nil nil)
+                                 :updated '(nil nil nil 10 3 2007 nil nil nil)
                                  :license "gpl3"
                                  :authors '(("George Tarterson" . "jtart@example.com"))
                                  :maintainer '("George Tarterson" . "jtart@example.com")
