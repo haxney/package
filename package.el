@@ -302,6 +302,23 @@ contrast, `package-user-dir' contains packages for personal use."
   archive
   (lisp-dirs '(".")))
 
+;; Translations for the old versions of package-desc-* substitutions.
+(defsubst package-old-desc-vers (desc)
+  "Extract version from an old-style package description vector."
+  (aref desc 0))
+
+(defsubst package-old-desc-reqs (desc)
+  "Extract requirements from an old-style package description vector."
+  (aref desc 1))
+
+(defsubst package-old-desc-doc (desc)
+  "Extract doc string from an old-style package description vector."
+  (aref desc 2))
+
+(defsubst package-old-desc-kind (desc)
+  "Extract the kind of download from an old-style archive package description vector."
+  (aref desc 3))
+
 ;; The value is precomputed in finder-inf.el, but don't load that
 ;; until it's needed (i.e. when `package-initialize' is called).
 (defvar package--builtins nil
