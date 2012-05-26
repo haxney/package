@@ -950,17 +950,7 @@ Otherwise return nil."
       (error nil))))
 
 (defun package-buffer-info ()
-  "Return a vector describing the package in the current buffer.
-The vector has the form
-
-   [FILENAME REQUIRES DESCRIPTION VERSION COMMENTARY]
-
-FILENAME is the file name, a string, sans the \".el\" extension.
-REQUIRES is a list of requirements, each requirement having the
- form (NAME VER); NAME is a string and VER is a version list.
-DESCRIPTION is the package description, a string.
-VERSION is the version, a string.
-COMMENTARY is the commentary section, a string, or nil if none.
+  "Return a `package-desc' for the package in the current buffer.
 
 If the buffer does not contain a conforming package, signal an
 error.  If there is a package, narrow the buffer to the file's
@@ -990,14 +980,13 @@ boundaries."
       (unless pkg-version
 	(error
 	 "Package lacks a \"Version\" or \"Package-Version\" header"))
-      ;; Turn string version numbers into list form.
-      (setq requires
-	    (mapcar
-	     (lambda (elt)
-	       (list (car elt)
-		     (version-to-list (car (cdr elt)))))
-	     requires))
-      (vector file-name requires desc pkg-version commentary))))
+
+      (define-package-desc
+	file-name
+	pkg-version
+	desc
+	requires
+	:commentary commentary))))
 
 (defun package-tar-file-info (file)
   "Find package information for a tar file.
