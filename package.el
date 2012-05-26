@@ -550,8 +550,8 @@ Required package `%s-%s' is unavailable"
 	    package-obsolete-alist))))
 
 (defun define-package (name-string version-string
-				&optional docstring requirements
-				&rest extra-properties)
+				   &optional docstring requirements
+				   &rest extra-properties)
   "Define a new package.
 NAME-STRING is the name of the package, as a string.
 VERSION-STRING is the version of the package, as a string.
@@ -560,18 +560,23 @@ REQUIREMENTS is a list of dependencies on other packages.
  Each requirement is of the form (OTHER-PACKAGE OTHER-VERSION),
  where OTHER-VERSION is a string.
 
-EXTRA-PROPERTIES is currently unused."
+EXTRA-PROPERTIES is a plist with the following keys:
+
+  :lisp-dirs DIRNAMES
+
+      DIRNAMES is a list of the form (dir1 dir2 ...) where each
+      item of the list is a directory which contains elisp source
+      to be processed."
   (let* ((name (intern name-string))
 	 (version (version-to-list version-string))
 	 (new-pkg-desc
 	  (cons name
-		(vector version
-			(mapcar
-			 (lambda (elt)
-			   (list (car elt)
-				 (version-to-list (car (cdr elt)))))
-			 requirements)
-			docstring)))
+		(apply 'define-package-desc
+		       name-string
+		       version-string
+		       docstring
+		       requirements
+		       extra-properties)))
 	 (old-pkg (assq name package-alist)))
     (cond
      ;; If there's no old package, just add this to `package-alist'.
