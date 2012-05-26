@@ -519,18 +519,18 @@ Required package `%s-%s' is unavailable"
 	  ;; If all goes well, activate the package itself.
 	  (package-activate-1 package pkg-vec)))))))
 
-(defun package-mark-obsolete (package pkg-vec)
+(defun package-mark-obsolete (package pkg-desc)
   "Put package on the obsolete list, if not already there."
   (let ((elt (assq package package-obsolete-alist)))
     (if elt
 	;; If this obsolete version does not exist in the list, update
 	;; it the list.
-	(unless (assoc (package-desc-vers pkg-vec) (cdr elt))
-	  (setcdr elt (cons (cons (package-desc-vers pkg-vec) pkg-vec)
+	(unless (assoc (package-desc-vers pkg-desc) (cdr elt))
+	  (setcdr elt (cons (cons (package-desc-vers pkg-desc) pkg-desc)
 			    (cdr elt))))
       ;; Make a new association.
-      (push (cons package (list (cons (package-desc-vers pkg-vec)
-				      pkg-vec)))
+      (push (cons package (list (cons (package-desc-vers pkg-desc)
+				      pkg-desc)))
 	    package-obsolete-alist))))
 
 (defun define-package (name-string version-string
