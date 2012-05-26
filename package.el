@@ -171,6 +171,9 @@
 
 ;;; Code:
 
+(eval-when-compile
+  (require 'cl))
+
 (require 'tabulated-list)
 
 (defgroup package nil
@@ -280,6 +283,27 @@ contrast, `package-user-dir' contains packages for personal use."
   :risky t
   :group 'package
   :version "24.1")
+
+(defstruct (package-desc
+	    (:constructor
+	     define-package-desc
+	     (name-string version-string &optional doc requirements
+			  &key lisp-dirs
+			  &aux (name (intern name-string))
+			  (vers (version-to-list version-string))
+			  (reqs (mapcar
+				 (lambda (elt)
+				   (list (car elt)
+					 (version-to-list (cadr elt))))
+				 requirements)))))
+  "Structure containing information about an individual package."
+  name
+  vers
+  doc
+  reqs
+  kind
+  archive
+  (lisp-dirs '(".")))
 
 ;; The value is precomputed in finder-inf.el, but don't load that
 ;; until it's needed (i.e. when `package-initialize' is called).
