@@ -234,7 +234,7 @@ Each element has the form (ID . LOCATION).
 Only add locations that you trust, since fetching and installing
 a package can run arbitrary code."
   :type '(alist :key-type (string :tag "Archive name")
-                :value-type (string :tag "URL or directory name"))
+		:value-type (string :tag "URL or directory name"))
   :risky t
   :group 'package
   :version "24.1")
