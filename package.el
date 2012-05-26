@@ -715,14 +715,14 @@ It will move point to somewhere in the headers."
   (let ((location (package-archive-base name))
 	(file (concat (symbol-name name) "-" version ".el")))
     (package--with-work-buffer location file
-      (package-unpack-single (symbol-name name) version desc requires))))
+			       (package-unpack-single (symbol-name name) version desc requires))))
 
 (defun package-download-tar (name version)
   "Download and install a tar package."
   (let ((location (package-archive-base name))
 	(file (concat (symbol-name name) "-" version ".tar")))
     (package--with-work-buffer location file
-      (package-unpack name version))))
+			       (package-unpack name version))))
 
 (defun package-installed-p (package &optional min-version)
   "Return true if PACKAGE, of MIN-VERSION or newer, is installed.
@@ -799,7 +799,7 @@ Signal an error if the entire string was not used."
 		     t)
 	    (end-of-file nil))))
     (if more-left
-        (error "Can't read whole string")
+	(error "Can't read whole string")
       (car read-data))))
 
 (defun package--read-archive-file (file)
@@ -840,10 +840,10 @@ If the archive version is too new, signal an error."
   "Add the PACKAGE from the given ARCHIVE if necessary.
 Also, add the originating archive to the end of the package vector."
   (let* ((name    (car package))
-         (version (package-desc-vers (cdr package)))
-         (entry   (cons name
+	 (version (package-desc-vers (cdr package)))
+	 (entry   (cons name
 			(vconcat (cdr package) (vector archive))))
-         (existing-package (assq name package-archive-contents)))
+	 (existing-package (assq name package-archive-contents)))
     (cond ((not existing-package)
 	   (add-to-list 'package-archive-contents entry))
 	  ((version-list-< (package-desc-vers (cdr existing-package))
@@ -1094,13 +1094,13 @@ similar to an entry in `package-alist'.  Save the cached copy to
   (let* ((dir (expand-file-name "archives" package-user-dir))
 	 (dir (expand-file-name (car archive) dir)))
     (package--with-work-buffer (cdr archive) file
-      ;; Read the retrieved buffer to make sure it is valid (e.g. it
-      ;; may fetch a URL redirect page).
-      (when (listp (read buffer))
-	(make-directory dir t)
-	(setq buffer-file-name (expand-file-name file dir))
-	(let ((version-control 'never))
-	  (save-buffer))))))
+			       ;; Read the retrieved buffer to make sure it is valid (e.g. it
+			       ;; may fetch a URL redirect page).
+			       (when (listp (read buffer))
+				 (make-directory dir t)
+				 (setq buffer-file-name (expand-file-name file dir))
+				 (let ((version-control 'never))
+				   (save-buffer))))))
 
 ;;;###autoload
 (defun package-refresh-contents ()
@@ -1271,12 +1271,12 @@ If optional arg NO-ACTIVATE is non-nil, don't activate packages."
 	(cond ((condition-case nil
 		   (package--with-work-buffer (package-archive-base package)
 					      (concat package-name "-readme.txt")
-		     (setq buffer-file-name
-			   (expand-file-name readme package-user-dir))
-		     (let ((version-control 'never))
-		       (save-buffer))
-		     (setq readme-string (buffer-string))
-		     t)
+					      (setq buffer-file-name
+						    (expand-file-name readme package-user-dir))
+					      (let ((version-control 'never))
+						(save-buffer))
+					      (setq readme-string (buffer-string))
+					      t)
 		 (error nil))
 	       (insert readme-string))
 	      ((file-readable-p readme)
@@ -1404,7 +1404,7 @@ or a list of package names (symbols) to display."
       (setq name (car elt))
       (when (and (not (eq name 'emacs)) ; Hide the `emacs' package.
 		 (or (eq packages t) (memq name packages)))
-    	(package--push name (cdr elt) "built-in" info-list)))
+	(package--push name (cdr elt) "built-in" info-list)))
 
     ;; Available and disabled packages:
     (dolist (elt package-archive-contents)
