@@ -436,9 +436,9 @@ NAME and VERSION are both strings."
 	  (setq dir-list (cdr dir-list)))))
     pkg-dir))
 
-(defun package-activate-1 (package pkg-vec)
-  (let* ((name (symbol-name package))
-	 (version-str (package-version-join (package-desc-vers pkg-vec)))
+(defun package-activate-1 (pkg-desc)
+  (let* ((name (package-desc-name pkg-desc))
+	 (version-str (package-version-join (package-desc-vers pkg-desc)))
 	 (pkg-dir (package--dir name version-str)))
     (unless pkg-dir
       (error "Internal error: unable to find directory for `%s-%s'"
@@ -452,7 +452,7 @@ NAME and VERSION are both strings."
     ;; Add to load path, add autoloads, and activate the package.
     (push pkg-dir load-path)
     (load (expand-file-name (concat name "-autoloads") pkg-dir) nil t)
-    (push package package-activated-list)
+    (push name package-activated-list)
     ;; Don't return nil.
     t))
 
@@ -501,7 +501,7 @@ Return nil if the package could not be activated."
 Required package `%s-%s' is unavailable"
 		  package (car fail) (package-version-join (cadr fail)))
 	  ;; If all goes well, activate the package itself.
-	  (package-activate-1 package pkg-vec)))))))
+	  (package-activate-1 pkg-vec)))))))
 
 (defun package-mark-obsolete (package pkg-desc)
   "Put package on the obsolete list, if not already there."
