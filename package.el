@@ -1047,21 +1047,22 @@ TYPE is the package type (either `single' or `tar')."
   (interactive (list (package-buffer-info) 'single))
   (save-excursion
     (save-restriction
-      (let* ((file-name (aref pkg-info 0))
-	     (requires  (aref pkg-info 1))
-	     (desc (if (string= (aref pkg-info 2) "")
+      (let* ((file-name (package-desc-name pkg-info))
+	     (requires (package-desc-reqs pkg-info))
+	     (desc (if (string= (package-desc-doc pkg) "")
 		       "No description available."
-		     (aref pkg-info 2)))
-	     (pkg-version (aref pkg-info 3)))
+		     (package-desc-doc pkg)))
+	     (pkg-version (package-desc-version pkg-info))
+	     (kind (package-desc-kind pkg-info)))
 	;; Download and install the dependencies.
 	(let ((transaction (package-compute-transaction nil requires)))
 	  (package-download-transaction transaction))
 	;; Install the package itself.
 	(cond
 	 ((eq type 'single)
-	  (package-unpack-single file-name pkg-version desc requires))
+	  (package-unpack-single (symbol-name file-name) (package-desc-vers pkg-info) desc requires))
 	 ((eq type 'tar)
-	  (package-unpack (intern file-name) pkg-version))
+	  (package-unpack file-name pkg-version))
 	 (t
 	  (error "Unknown type: %s" (symbol-name type))))
 	;; Try to activate it.
