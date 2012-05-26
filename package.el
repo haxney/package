@@ -753,7 +753,7 @@ not included in this list."
       (unless (package-installed-p next-pkg next-version)
 	;; A package is required, but not installed.  It might also be
 	;; blocked via `package-load-list'.
-	(let ((pkg-desc (assq next-pkg package-archive-contents))
+	(let ((pkg-desc (cdr (assq next-pkg package-archive-contents)))
 	      hold)
 	  (when (setq hold (assq next-pkg package-load-list))
 	    (setq hold (cadr hold))
@@ -766,25 +766,25 @@ not included in this list."
 		  ((version-list-< (version-to-list hold) next-version)
 		   (error "Package `%s' held at version %s, \
 but version %s required"
-			  (symbol-name next-pkg) hold
+			  next-pkg hold
 			  (package-version-join next-version)))))
 	  (unless pkg-desc
 	    (error "Package `%s-%s' is unavailable"
-		   (symbol-name next-pkg)
+		   next-pkg
 		   (package-version-join next-version)))
 	  (unless (version-list-<= next-version
-				   (package-desc-vers (cdr pkg-desc)))
+				   (package-desc-vers pkg-desc))
 	    (error
 	     "Need package `%s-%s', but only %s is available"
-	     (symbol-name next-pkg) (package-version-join next-version)
-	     (package-version-join (package-desc-vers (cdr pkg-desc)))))
+	     next-pkg (package-version-join next-version)
+	     (package-version-join (package-desc-vers pkg-desc))))
 	  ;; Only add to the transaction if we don't already have it.
 	  (unless (memq next-pkg package-list)
 	    (push next-pkg package-list))
 	  (setq package-list
 		(package-compute-transaction package-list
 					     (package-desc-reqs
-					      (cdr pkg-desc))))))))
+					      pkg-desc)))))))
   package-list)
 
 (defun package-read-from-string (str)
