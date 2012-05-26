@@ -285,7 +285,7 @@ contrast, `package-user-dir' contains packages for personal use."
 	    (:constructor
 	     define-package-desc
 	     (name-string version-string &optional doc requirements
-			  &key lisp-dirs commentary
+			  &key kind archive lisp-dirs commentary
 			  &aux (name (intern name-string))
 			  (vers (version-to-list version-string))
 			  (reqs (mapcar
