@@ -996,9 +996,7 @@ boundaries."
       (process-file shell-file-name nil '(t nil) nil shell-command-switch command))))
 
 (defun package-tar-file-info (file)
-  "Find package information for a tar file.
-FILE is the name of the tar file to examine.
-The return result is a vector like `package-buffer-info'."
+  "Extract a `package-desc' from a tar file."
   (let ((default-directory (file-name-directory file))
 	(file (file-name-nondirectory file)))
     (unless (string-match (concat "\\`" package-subdirectory-regexp "\\.tar\\'")
@@ -1016,30 +1014,24 @@ The return result is a vector like `package-buffer-info'."
 	   (pkg-def-parsed (package-read-from-string pkg-def-contents)))
       (unless (eq (car pkg-def-parsed) 'define-package)
 	(error "No `define-package' sexp is present in `%s-pkg.el'" pkg-name))
-      (let ((name-str       (nth 1 pkg-def-parsed))
-	    (version-string (nth 2 pkg-def-parsed))
-	    (docstring      (nth 3 pkg-def-parsed))
-	    (requires       (nth 4 pkg-def-parsed))
-	    (readme (shell-command-to-string
-		     ;; Requires GNU tar.
-		     (concat "tar -xOf " file " "
-			     pkg-name "-" pkg-version "/README"))))
-	(unless (equal pkg-version version-string)
+
+      (let* ((readme (package-shell-command-to-string-noerr
+		      ;; Requires GNU tar.
+		      (concat "tar -xOf " file " "
+			      pkg-name "-" pkg-version "/README")))
+	     ;; Horrible hack until `define-package' becomes side-effect-free. Replace
+	     ;; `define-package' with `define-package-desc' (which doesn't have
+	     ;; side-effects), add the readme, and eval that instead.
+	     (pkg-desc (eval (append (cons 'define-package-desc (cdr pkg-def-parsed))
+				     `(:commentary ,readme)))))
+	(unless (equal (package-version-join (package-desc-version pkg-desc))
+		       pkg-version)
 	  (error "Package has inconsistent versions"))
-	(unless (equal pkg-name name-str)
+	(unless (equal (symbol-name (package-desc-name pkg-desc))
+		       pkg-name)
 	  (error "Package has inconsistent names"))
-	;; Kind of a hack.
-	(if (string-match ": Not found in archive" readme)
-	    (setq readme nil))
-	;; Turn string version numbers into list form.
-	(if (eq (car requires) 'quote)
-	    (setq requires (car (cdr requires))))
-	(setq requires
-	      (mapcar (lambda (elt)
-			(list (car elt)
-			      (version-to-list (cadr elt))))
-		      requires))
-	(vector pkg-name requires docstring version-string readme)))))
+
+	pkg-desc))))
 
 ;;;###autoload
 (defun package-install-from-buffer (pkg-info type)
