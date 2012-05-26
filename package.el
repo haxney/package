@@ -438,22 +438,6 @@ the package by calling `package-load-descriptor'."
 	 ;; Actually load the descriptor:
 	 (package-load-descriptor dir subdir))))
 
-(defsubst package-desc-vers (desc)
-  "Extract version from a package description vector."
-  (aref desc 0))
-
-(defsubst package-desc-reqs (desc)
-  "Extract requirements from a package description vector."
-  (aref desc 1))
-
-(defsubst package-desc-doc (desc)
-  "Extract doc string from a package description vector."
-  (aref desc 2))
-
-(defsubst package-desc-kind (desc)
-  "Extract the kind of download from an archive package description vector."
-  (aref desc 3))
-
 (defun package--dir (name version)
   "Return the directory where a package is installed, or nil if none.
 NAME and VERSION are both strings."
