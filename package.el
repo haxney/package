@@ -986,7 +986,8 @@ boundaries."
 	pkg-version
 	desc
 	requires
-	:commentary commentary))))
+	:commentary commentary
+	:kind 'single))))
 
 (defun package-shell-command-to-string-noerr (command)
   "Like `shell-command-to-string' but ignores stderr."
