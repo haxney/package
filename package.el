@@ -855,16 +855,21 @@ If the archive version is too new, signal an error."
 
 (defun package--add-to-archive-contents (package archive)
   "Add the PACKAGE from the given ARCHIVE if necessary.
-Also, add the originating archive to the end of the package vector."
-  (let* ((name    (car package))
-	 (version (package-desc-vers (cdr package)))
-	 (entry   (cons name
-			(vconcat (cdr package) (vector archive))))
+Also, add the originating archive to the `package-desc' structure."
+  (let* ((name (car package))
+	 (pkg-desc
+	  (make-package-desc :name name
+			     :vers (package-old-desc-vers (cdr package))
+			     :reqs (package-old-desc-reqs (cdr package))
+			     :doc (package-old-desc-doc (cdr package))
+			     :kind (package-old-desc-kind (cdr package))
+			     :archive archive))
+	 (entry   (cons name pkg-desc))
 	 (existing-package (assq name package-archive-contents)))
     (cond ((not existing-package)
 	   (add-to-list 'package-archive-contents entry))
 	  ((version-list-< (package-desc-vers (cdr existing-package))
-			   version)
+			   (package-desc-vers pkg-desc))
 	   ;; Replace the entry with this one.
 	   (setq package-archive-contents
 		 (cons entry
