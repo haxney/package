@@ -476,11 +476,11 @@ specifying the minimum acceptable version."
 MIN-VERSION should be a version list.
 If PACKAGE has any dependencies, recursively activate them.
 Return nil if the package could not be activated."
-  (let ((pkg-vec (cdr (assq package package-alist)))
+  (let ((pkg-desc (cdr (assq package package-alist)))
 	available-version found)
     ;; Check if PACKAGE is available in `package-alist'.
-    (when pkg-vec
-      (setq available-version (package-desc-vers pkg-vec)
+    (when pkg-desc
+      (setq available-version (package-desc-vers pkg-desc)
 	    found (version-list-<= min-version available-version)))
     (cond
      ;; If no such package is found, maybe it's built-in.
@@ -493,7 +493,7 @@ Return nil if the package could not be activated."
      (t
       (let ((fail (catch 'dep-failure
 		    ;; Activate its dependencies recursively.
-		    (dolist (req (package-desc-reqs pkg-vec))
+		    (dolist (req (package-desc-reqs pkg-desc))
 		      (unless (package-activate (car req) (cadr req))
 			(throw 'dep-failure req))))))
 	(if fail
@@ -501,7 +501,7 @@ Return nil if the package could not be activated."
 Required package `%s-%s' is unavailable"
 		  package (car fail) (package-version-join (cadr fail)))
 	  ;; If all goes well, activate the package itself.
-	  (package-activate-1 pkg-vec)))))))
+	  (package-activate-1 pkg-desc)))))))
 
 (defun package-mark-obsolete (package pkg-desc)
   "Put package on the obsolete list, if not already there."
