@@ -285,7 +285,7 @@ contrast, `package-user-dir' contains packages for personal use."
 	    (:constructor
 	     define-package-desc
 	     (name-string version-string &optional doc requirements
-			  &key lisp-dirs
+			  &key lisp-dirs commentary
 			  &aux (name (intern name-string))
 			  (vers (version-to-list version-string))
 			  (reqs (mapcar
@@ -300,7 +300,8 @@ contrast, `package-user-dir' contains packages for personal use."
   reqs
   kind
   archive
-  (lisp-dirs '(".")))
+  (lisp-dirs '("."))
+  commentary)
 
 ;; Translations for the old versions of package-desc-* substitutions.
 (defsubst package-old-desc-vers (desc)
