@@ -988,6 +988,13 @@ boundaries."
 	requires
 	:commentary commentary))))
 
+(defun package-shell-command-to-string-noerr (command)
+  "Like `shell-command-to-string' but ignores stderr."
+  (with-output-to-string
+    (with-current-buffer
+	standard-output
+      (process-file shell-file-name nil '(t nil) nil shell-command-switch command))))
+
 (defun package-tar-file-info (file)
   "Find package information for a tar file.
 FILE is the name of the tar file to examine.
