@@ -249,11 +249,8 @@ Lower version numbers than this will probably be understood as well.")
 ;; We don't prime the cache since it tends to get out of date.
 (defvar package-archive-contents nil
   "Cache of the contents of the Emacs Lisp Package Archive.
-This is an alist mapping package names (symbols) to package
-descriptor vectors.  These are like the vectors for `package-alist'
-but have extra entries: one which is 'tar for tar packages and
-'single for single-file packages, and one which is the name of
-the archive from which it came.")
+This is an alist mapping package names (symbols) to
+`package-desc' structures.")
 (put 'package-archive-contents 'risky-local-variable t)
 
 (defcustom package-user-dir (locate-user-emacs-file "elpa")
@@ -314,26 +311,13 @@ The actual value is initialized by loading the library
 function `package-built-in-p'.
 
 Each element has the form (PKG . DESC), where PKG is a package
-name (a symbol) and DESC is a vector that describes the package.
-The vector DESC has the form [VERSION-LIST REQS DOCSTRING].
-  VERSION-LIST is a version list.
-  REQS is a list of packages required by the package, each
-   requirement having the form (NAME VL), where NAME is a string
-   and VL is a version list.
-  DOCSTRING is a brief description of the package.")
+name (a symbol) and DESC is a `package-desc' structure.")
 (put 'package--builtins 'risky-local-variable t)
 
 (defvar package-alist nil
   "Alist of all packages available for activation.
 Each element has the form (PKG . DESC), where PKG is a package
-name (a symbol) and DESC is a vector that describes the package.
-
-The vector DESC has the form [VERSION-LIST REQS DOCSTRING].
-  VERSION-LIST is a version list.
-  REQS is a list of packages required by the package, each
-   requirement having the form (NAME VL) where NAME is a string
-   and VL is a version list.
-  DOCSTRING is a brief description of the package.
+name (a symbol) and DESC is a `package-desc' structure.
 
 This variable is set automatically by `package-load-descriptor',
 called via `package-initialize'.  To change which packages are
