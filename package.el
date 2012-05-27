@@ -1035,36 +1035,35 @@ boundaries."
 	pkg-desc))))
 
 ;;;###autoload
-(defun package-install-from-buffer (pkg-info type)
+(defun package-install-from-buffer (pkg-desc &optional ignore)
   "Install a package from the current buffer.
 When called interactively, the current buffer is assumed to be a
 single .el file that follows the packaging guidelines; see info
 node `(elisp)Packaging'.
 
-When called from Lisp, PKG-INFO is a vector describing the
-information, of the type returned by `package-buffer-info'; and
-TYPE is the package type (either `single' or `tar')."
-  (interactive (list (package-buffer-info) 'single))
+When called from Lisp, PKG-DESC is a `package-desc' structure.
+
+The argument IGNORE used to specify the kind of package (single
+or tar), but that information is now contained within the
+`package-desc' structure."
+  (interactive (list (package-buffer-info)))
   (save-excursion
     (save-restriction
-      (let* ((file-name (package-desc-name pkg-info))
-	     (requires (package-desc-reqs pkg-info))
-	     (desc (if (string= (package-desc-doc pkg) "")
-		       "No description available."
-		     (package-desc-doc pkg)))
-	     (pkg-version (package-desc-version pkg-info))
-	     (kind (package-desc-kind pkg-info)))
+      (let* ((file-name (package-desc-name pkg-desc))
+	     (requires (package-desc-reqs pkg-desc))
+	     (pkg-version (package-desc-vers pkg-desc))
+	     (kind (package-desc-kind pkg-desc)))
 	;; Download and install the dependencies.
 	(let ((transaction (package-compute-transaction nil requires)))
 	  (package-download-transaction transaction))
 	;; Install the package itself.
 	(cond
-	 ((eq type 'single)
-	  (package-unpack-single (symbol-name file-name) (package-desc-vers pkg-info) desc requires))
-	 ((eq type 'tar)
+	 ((eq kind 'single)
+	  (package-unpack-single (symbol-name file-name) pkg-version (package-desc-doc pkg) requires))
+	 ((eq kind 'tar)
 	  (package-unpack file-name pkg-version))
 	 (t
-	  (error "Unknown type: %s" (symbol-name type))))
+	  (error "Unknown package type: %s" kind)))
 	;; Try to activate it.
 	(package-initialize)))))
 
@@ -1077,9 +1076,9 @@ The file can either be a tar file or an Emacs Lisp file."
     (insert-file-contents-literally file)
     (cond
      ((string-match "\\.el$" file)
-      (package-install-from-buffer (package-buffer-info) 'single))
+      (package-install-from-buffer (package-buffer-info)))
      ((string-match "\\.tar$" file)
-      (package-install-from-buffer (package-tar-file-info file) 'tar))
+      (package-install-from-buffer (package-tar-file-info file)))
      (t (error "Unrecognized extension `%s'" (file-name-extension file))))))
 
 (defun package-delete (name version)
