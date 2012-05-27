@@ -284,7 +284,7 @@ contrast, `package-user-dir' contains packages for personal use."
 (defstruct (package-desc
 	    (:constructor
 	     define-package-desc
-	     (name-string version-string &optional doc requirements
+	     (name-string version-string &optional (doc "No description available.") requirements
 			  &key kind archive lisp-dirs commentary
 			  &aux (name (intern name-string))
 			  (vers (version-to-list version-string))
@@ -296,7 +296,7 @@ contrast, `package-user-dir' contains packages for personal use."
   "Structure containing information about an individual package."
   name
   vers
-  doc
+  (doc "No description available.")
   reqs
   kind
   archive
