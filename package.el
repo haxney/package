@@ -521,18 +521,19 @@ Required package `%s-%s' is unavailable"
 	  ;; If all goes well, activate the package itself.
 	  (package-activate-1 pkg-desc)))))))
 
-(defun package-mark-obsolete (package pkg-desc)
-  "Put package on the obsolete list, if not already there."
-  (let ((elt (assq package package-obsolete-alist)))
-    (if elt
-	;; If this obsolete version does not exist in the list, update
-	;; it the list.
-	(unless (assoc (package-desc-vers pkg-desc) (cdr elt))
-	  (setcdr elt (cons (cons (package-desc-vers pkg-desc) pkg-desc)
-			    (cdr elt))))
+(defun package-mark-obsolete (pkg-desc)
+  "Put PKG-DESC on the obsolete list, if not already there."
+  (let* ((name (package-desc-name pkg-desc))
+	 (existing-elt (assq name package-obsolete-alist))
+	 (pkg-version (package-desc-vers pkg-desc)))
+    (if existing-elt
+	;; Add this obsolete version to the list if it is not already there.
+	(unless (assoc pkg-versoin (cdr existing-elt))
+	  (setcdr existing-elt (cons (cons pkg-version pkg-desc)
+				     (cdr existing-elt))))
       ;; Make a new association.
-      (push (cons package (list (cons (package-desc-vers pkg-desc)
-				      pkg-desc)))
+      (push (cons name (list (cons pkg-version
+				   pkg-desc)))
 	    package-obsolete-alist))))
 
 (defun define-package (name-string version-string
@@ -570,7 +571,7 @@ EXTRA-PROPERTIES is a plist with the following keys:
       (push new-pkg-desc package-alist))
      ((version-list-< (package-desc-vers (cdr old-pkg)) version)
       ;; Remove the old package and declare it obsolete.
-      (package-mark-obsolete name (cdr old-pkg))
+      (package-mark-obsolete (cdr old-pkg))
       (setq package-alist (cons new-pkg-desc
 				(delq old-pkg package-alist))))
      ;; You can have two packages with the same version, e.g. one in
@@ -578,7 +579,7 @@ EXTRA-PROPERTIES is a plist with the following keys:
      ;; directory.  We just let the first one win.
      ((not (version-list-= (package-desc-vers (cdr old-pkg)) version))
       ;; The package is born obsolete.
-      (package-mark-obsolete name (cdr new-pkg-desc))))))
+      (package-mark-obsolete (cdr new-pkg-desc))))))
 
 ;; From Emacs 22.
 (defun package-autoload-ensure-default-file (file)
