@@ -528,7 +528,7 @@ Required package `%s-%s' is unavailable"
 	 (pkg-version (package-desc-vers pkg-desc)))
     (if existing-elt
 	;; Add this obsolete version to the list if it is not already there.
-	(unless (assoc pkg-versoin (cdr existing-elt))
+	(unless (assoc pkg-version (cdr existing-elt))
 	  (setcdr existing-elt (cons (cons pkg-version pkg-desc)
 				     (cdr existing-elt))))
       ;; Make a new association.
@@ -1026,7 +1026,7 @@ boundaries."
 	     ;; side-effects), add the readme, and eval that instead.
 	     (pkg-desc (eval (append (cons 'define-package-desc (cdr pkg-def-parsed))
 				     `(:commentary ,readme)))))
-	(unless (equal (package-version-join (package-desc-version pkg-desc))
+	(unless (equal (package-version-join (package-desc-vers pkg-desc))
 		       pkg-version)
 	  (error "Package has inconsistent versions"))
 	(unless (equal (symbol-name (package-desc-name pkg-desc))
@@ -1060,7 +1060,10 @@ or tar), but that information is now contained within the
 	;; Install the package itself.
 	(cond
 	 ((eq kind 'single)
-	  (package-unpack-single (symbol-name file-name) pkg-version (package-desc-doc pkg) requires))
+	  (package-unpack-single (symbol-name file-name)
+				 pkg-version
+				 (package-desc-doc pkg-desc)
+				 requires))
 	 ((eq kind 'tar)
 	  (package-unpack file-name pkg-version))
 	 (t
