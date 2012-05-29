@@ -856,7 +856,7 @@ If the archive version is too new, signal an error."
 	(package--add-to-archive-contents package archive)))))
 
 (defun package--add-to-archive-contents (package archive)
-  "Add the PACKAGE from the given ARCHIVE if necessary.
+  "Add the (old-style) PACKAGE from the given ARCHIVE if necessary.
 Also, add the originating archive to the `package-desc' structure."
   (let* ((name (car package))
 	 (pkg-desc
