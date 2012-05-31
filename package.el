@@ -287,7 +287,12 @@ contrast, `package-user-dir' contains packages for personal use."
 	     (name-string version-string &optional (doc "No description available.") requirements
 			  &key kind archive lisp-dirs commentary
 			  &aux (name (intern name-string))
-			  (vers (version-to-list version-string))
+			  ;; `version-to-list' errors out if its arg is "" or
+			  ;; nil, but the `version-list-*' function accept nil
+			  ;; just fine.
+			  (vers (if (zerop (length version-string))
+				    nil
+				  (version-to-list version-string)))
 			  (reqs (mapcar
 				 (lambda (elt)
 				   (list (car elt)
