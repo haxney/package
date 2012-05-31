@@ -445,6 +445,51 @@ the package by calling `package-load-descriptor'."
 	 ;; Actually load the descriptor:
 	 (package-load-descriptor dir subdir))))
 
+(defvar package-builtins-newified nil
+  "non-nil if `package-newify-builtins' has been run.
+The `finder-inf' library uses old-style package definitions which
+must be converted to the new `package-desc' version.")
+
+(defun package-newify-one-builtin (pkg)
+  "Change a single old-style PKG into a `package-desc'.
+PKG should be (NAME . PACKAGE-VECTOR) where PACKAGE-VECTOR is
+\[VERSION-LIST DEPENDENCIES DOC]."
+  (require 'lisp-mnt)
+  (require 'whitespace)
+  (let* ((pkg-name (symbol-name (car pkg)))
+	 (pkg-vers (package-old-desc-vers (cdr pkg)))
+	 (pkg-reqs (package-old-desc-reqs (cdr pkg)))
+	 (pkg-desc (package-old-desc-doc (cdr pkg)))
+	 (commentary
+	  (with-temp-buffer
+	    (let ((fn (locate-file (concat pkg-name ".el") load-path
+				   load-file-rep-suffixes))
+		  (whitespace-style '(empty trailing)))
+	      (insert (or (lm-commentary fn) ""))
+	      (goto-char (point-min))
+	      ;; `lm-commentary' returns the commentary section with leading
+	      ;; semicolons. Strip these out.
+	      (when (re-search-forward "^;;; Commentary:\n" nil t)
+		(replace-match ""))
+	      (while (re-search-forward "^\\(;+ ?\\)" nil t)
+		(replace-match ""))
+	      (whitespace-cleanup)
+	      (buffer-substring-no-properties (point-min) (point-max))))))
+    (define-package-desc
+      pkg-name
+      (package-version-join pkg-vers)
+      pkg-desc
+      pkg-reqs
+      :commentary commentary
+      :kind 'builtin)))
+
+(defun package-newify-builtins ()
+  "Migrate `package--builtins' to list of `package-desc'."
+  (unless package-builtins-newified
+    (setq package--builtins
+	  (mapcar #'package-newify-one-builtin package--builtins)
+	  package-builtins-newified t)))
+
 (defun package--dir (name version)
   "Return the directory where a package is installed, or nil if none.
 NAME and VERSION are both strings."
