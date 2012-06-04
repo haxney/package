@@ -490,6 +490,9 @@ PKG should be (NAME . PACKAGE-VECTOR) where PACKAGE-VECTOR is
 	  (mapcar #'package-newify-one-builtin package--builtins)
 	  package-builtins-newified t)))
 
+(eval-after-load 'finder-inf
+  '(package-newify-builtins))
+
 (defun package--dir (name version)
   "Return the directory where a package is installed, or nil if none.
 NAME and VERSION are both strings."
