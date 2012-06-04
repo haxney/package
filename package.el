@@ -475,13 +475,14 @@ PKG should be (NAME . PACKAGE-VECTOR) where PACKAGE-VECTOR is
 		(replace-match ""))
 	      (whitespace-cleanup)
 	      (buffer-substring-no-properties (point-min) (point-max))))))
-    (define-package-desc
-      pkg-name
-      (package-version-join pkg-vers)
-      pkg-desc
-      pkg-reqs
-      :commentary commentary
-      :kind 'builtin)))
+    ;; Result should be an element for an alist.
+    (cons (car pkg) (define-package-desc
+		      pkg-name
+		      (package-version-join pkg-vers)
+		      pkg-desc
+		      pkg-reqs
+		      :commentary commentary
+		      :kind 'builtin))))
 
 (defun package-newify-builtins ()
   "Migrate `package--builtins' to list of `package-desc'."
