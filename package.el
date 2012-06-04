@@ -400,8 +400,7 @@ the package name and VERSION is its version."
 	 (pkg-file (expand-file-name
 		    (concat (package-strip-version package) "-pkg")
 		    pkg-dir)))
-    (when (and (file-directory-p pkg-dir)
-	       (file-exists-p (concat pkg-file ".el")))
+    (when (file-directory-p pkg-dir)
       (load pkg-file nil t))))
 
 (defun package-load-all-descriptors ()
