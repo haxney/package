@@ -1442,29 +1442,31 @@ Letters do not insert themselves; instead, they are commands.
   (setq tabulated-list-sort-key (cons "Status" nil))
   (tabulated-list-init-header))
 
-(defmacro package--push (package desc status listname)
+(defmacro package--push (pkg status listname)
   "Convenience macro for `package-menu--generate'.
-If the alist stored in the symbol LISTNAME lacks an entry for a
-package PACKAGE with descriptor DESC, add one.  The alist is
-keyed with cons cells (PACKAGE . VERSION-LIST), where PACKAGE is
-a symbol and VERSION-LIST is a version list."
-  `(let* ((version (package-desc-vers ,desc))
-	  (key (cons ,package version)))
-     (unless (assoc key ,listname)
-       (push (list key ,status (package-desc-doc ,desc)) ,listname))))
+If the alist stored in the symbol LISTNAME lacks an entry for
+`package-desc' PKG, add one.  The alist is keyed with cons
+cells (NAME . VERSION-LIST), where NAME is a symbol and
+VERSION-LIST is a version list and its value is (STATUS DOC)."
+  `(pushnew (list (cons (package-desc-name ,pkg)
+			(package-desc-vers ,pkg))
+		  ,status
+		  (package-desc-doc ,pkg))
+	    ,listname
+	    :key 'car))
 
 (defun package-menu--generate (remember-pos packages)
   "Populate the Package Menu.
 If REMEMBER-POS is non-nil, keep point on the same entry.
 PACKAGES should be t, which means to display all known packages,
 or a list of package names (symbols) to display."
-  ;; Construct list of ((PACKAGE . VERSION) STATUS DESCRIPTION).
+  ;; Construct list of ((NAME . VERSION-LIST) STATUS DESCRIPTION)
   (let (info-list name builtin)
     ;; Installed packages:
     (dolist (elt package-alist)
       (setq name (car elt))
       (when (or (eq packages t) (memq name packages))
-	(package--push name (cdr elt)
+	(package--push (cdr elt)
 		       (if (stringp (cadr (assq name package-load-list)))
 			   "held" "installed")
 		       info-list)))
@@ -1474,14 +1476,14 @@ or a list of package names (symbols) to display."
       (setq name (car elt))
       (when (and (not (eq name 'emacs)) ; Hide the `emacs' package.
 		 (or (eq packages t) (memq name packages)))
-	(package--push name (cdr elt) "built-in" info-list)))
+	(package--push (cdr elt) "built-in" info-list)))
 
     ;; Available and disabled packages:
     (dolist (elt package-archive-contents)
       (setq name (car elt))
       (when (or (eq packages t) (memq name packages))
 	(let ((hold (assq name package-load-list)))
-	  (package--push name (cdr elt)
+	  (package--push (cdr elt)
 			 (if (and hold (null (cadr hold)))
 			     "disabled"
 			   "available")
@@ -1491,7 +1493,7 @@ or a list of package names (symbols) to display."
     (dolist (elt package-obsolete-alist)
       (dolist (inner-elt (cdr elt))
 	(when (or (eq packages t) (memq (car elt) packages))
-	  (package--push (car elt) (cdr inner-elt) "obsolete" info-list))))
+	  (package--push (cdr inner-elt) "obsolete" info-list))))
 
     ;; Print the result.
     (setq tabulated-list-entries (mapcar 'package-menu--print-info info-list))
