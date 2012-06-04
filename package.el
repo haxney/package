@@ -1499,15 +1499,15 @@ or a list of package names (symbols) to display."
     (setq tabulated-list-entries (mapcar 'package-menu--print-info info-list))
     (tabulated-list-print remember-pos)))
 
-(defun package-menu--print-info (pkg)
+(defun package-menu--print-info (entry)
   "Return a package entry suitable for `tabulated-list-entries'.
-PKG has the form ((PACKAGE . VERSION) STATUS DOC).
-Return (KEY [NAME VERSION STATUS DOC]), where KEY is the
+ENTRY has the form ((NAME . VERSION-LIST) STATUS DOC).
+Return (KEY [NAME VERSION-STRING STATUS DOC]), where KEY is the
 identifier (NAME . VERSION-LIST)."
-  (let* ((package (caar pkg))
-	 (version (cdr (car pkg)))
-	 (status  (nth 1 pkg))
-	 (doc (or (nth 2 pkg) ""))
+  (let* ((name (caar entry))
+	 (version (cdar entry))
+	 (status  (nth 1 entry))
+	 (doc (or (nth 2 entry) ""))
 	 (face (cond
 		((string= status "built-in")  'font-lock-builtin-face)
 		((string= status "available") 'default)
@@ -1515,11 +1515,11 @@ identifier (NAME . VERSION-LIST)."
 		((string= status "disabled")  'font-lock-warning-face)
 		((string= status "installed") 'font-lock-comment-face)
 		(t 'font-lock-warning-face)))) ; obsolete.
-    (list (cons package version)
-	  (vector (list (symbol-name package)
+    (list (cons name version)
+	  (vector (list (symbol-name name)
 			'face 'link
 			'follow-link t
-			'package-symbol package
+			'package-symbol name
 			'action 'package-menu-describe-package)
 		  (propertize (package-version-join version)
 			      'font-lock-face face)
