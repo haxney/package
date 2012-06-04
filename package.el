@@ -353,8 +353,8 @@ loaded and/or activated, customize `package-load-list'.")
 
 (defvar package-obsolete-alist nil
   "Representation of obsolete packages.
-Like `package-alist', but maps package name to a second alist.
-The inner alist is keyed by version.")
+Each element of the list is (NAME . VERSION-ALIST), where each
+entry in VERSION-ALIST is (VERSION-LIST . PACKAGE-DESC).")
 (put 'package-obsolete-alist 'risky-local-variable t)
 
 (defun package-version-join (vlist)
