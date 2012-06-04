@@ -1600,10 +1600,9 @@ If optional arg BUTTON is non-nil, describe its associated package."
   (let (installed available upgrades)
     ;; Build list of installed/available packages in this buffer.
     (dolist (entry tabulated-list-entries)
-      ;; ENTRY is ((NAME . VERSION) [NAME VERSION STATUS DOC])
+      ;; ENTRY is ((NAME . VERSION-LIST) [NAME VERSION-STRING STATUS DOC])
       (let ((pkg (car entry))
-	    (status (aref (cadr entry) 2))
-	    old)
+	    (status (aref (cadr entry) 2)))
 	(cond ((equal status "installed")
 	       (push pkg installed))
 	      ((equal status "available")
