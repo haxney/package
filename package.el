@@ -522,7 +522,7 @@ NAME and VERSION are both strings."
       (push pkg-dir Info-directory-list))
     ;; Add to load path, add autoloads, and activate the package.
     (push pkg-dir load-path)
-    (load (expand-file-name (concat name "-autoloads") pkg-dir) nil t)
+    (load (expand-file-name (concat (symbol-name name) "-autoloads") pkg-dir) nil t)
     (push name package-activated-list)
     ;; Don't return nil.
     t))
@@ -680,8 +680,9 @@ untar into a directory named DIR; otherwise, signal an error."
   (tar-untar-buffer))
 
 (defun package-unpack (package version)
-  (let* ((name (symbol-name package))
-	 (dirname (concat name "-" version))
+  "Unpack a tar package.
+PACKAGE and VERSION must be strings."
+  (let* ((dirname (concat package "-" version))
 	 (pkg-dir (expand-file-name dirname package-user-dir)))
     (make-directory package-user-dir t)
     ;; FIXME: should we delete PKG-DIR if it exists?
@@ -710,8 +711,7 @@ PKG-DIR is the name of the package directory."
       (package--write-file-no-coding
        (expand-file-name (concat file-name ".el") package-user-dir))
     (let* ((pkg-dir  (expand-file-name (concat file-name "-"
-					       (package-version-join
-						(version-to-list version)))
+					       (package-version-join version))
 				       package-user-dir))
 	   (el-file  (expand-file-name (concat file-name ".el") pkg-dir))
 	   (pkg-file (expand-file-name (concat file-name "-pkg.el") pkg-dir)))
@@ -724,7 +724,7 @@ PKG-DIR is the name of the package directory."
 	  (prin1-to-string
 	   (list 'define-package
 		 file-name
-		 version
+		 (package-version-join version)
 		 desc
 		 (list 'quote
 		       ;; Turn version lists into string form.
