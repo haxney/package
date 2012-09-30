@@ -51,23 +51,15 @@
   "Save the old value of `package-user-dir' to be restored later.")
 
 (defvar package-test-user-dir (make-temp-name
-			       (concat temporary-file-directory "pkg-test-user-dir-"))
+                               (concat temporary-file-directory "pkg-test-user-dir-"))
   "Directory to use for installing packages during testing.")
 
 (setq package-user-dir package-test-user-dir)
 
-(defun package-test-cleanup ()
-  "Clear `package-user-dir' to prepare for the next test.
-
-WARNING: Make sure you aren't running this in your main Emacs
-session!"
-  (when (file-directory-p package-test-user-dir)
-   (delete-directory package-test-user-dir t)))
-
 (defvar simple-single-desc [cl-struct-package-desc simple-single (1 3)
-						   "A single-file package with no dependencies"
-						   nil single nil (".")
-						   ";;; Commentary:
+                                                   "A single-file package with no dependencies"
+                                                   nil single nil (".")
+                                                   ";;; Commentary:
 
 ;; This package provides a minor mode to frobnicate and/or bifurcate
 ;; any flanges you desire. To activate it, type \"C-M-r M-3 butterfly\"
@@ -75,6 +67,13 @@ session!"
 
 "]
   "Expected `package-desc' parsed from simple-single.el.")
+
+(defmacro with-package-test (&rest body)
+  "Set up temporary locations and variables for testing."
+  `(let ((package-user-dir package-test-user-dir))
+     ,@body
+     (when (file-directory-p package-test-user-dir)
+       (delete-directory package-test-user-dir t))))
 
 (ert-deftest package-test-buffer-info ()
   "Parse an elisp buffer to get a `package-desc' object."
