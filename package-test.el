@@ -35,15 +35,16 @@
 
 (require 'package)
 
+;; Highlight `ert-deftest' declaration
 (eval-after-load "semantic-el"
   '(semantic-elisp-setup-form-parser
        (lambda (form start end)
-	 (semantic-tag-new-function
-	  (symbol-name (nth 1 form))
-	  nil
-	  (semantic-elisp-desymbolify-args (nth 2 form))
-	  :user-visible-flag (eq (car-safe (nth 4 form)) 'interactive)
-	  :documentation (semantic-elisp-do-doc (nth 3 form))))
+         (semantic-tag-new-function
+          (symbol-name (nth 1 form))
+          nil
+          (semantic-elisp-desymbolify-args (nth 2 form))
+          :user-visible-flag (eq (car-safe (nth 4 form)) 'interactive)
+          :documentation (semantic-elisp-do-doc (nth 3 form))))
      ert-deftest))
 
 (defvar package-test-original-user-dir package-user-dir
