@@ -34,6 +34,8 @@
 ;;; Code:
 
 (require 'package)
+(eval-when-compile
+  (require 'cl))
 
 ;; Highlight `ert-deftest' declaration
 (eval-after-load "semantic-el"
@@ -68,24 +70,29 @@
 "]
   "Expected `package-desc' parsed from simple-single.el.")
 
-(defmacro with-package-test (&rest body)
+(defmacro* with-package-test ((&optional &key file) &rest body)
   "Set up temporary locations and variables for testing."
   `(let ((package-user-dir package-test-user-dir))
-     ,@body
+     (unless (file-directory-p package-user-dir)
+       (mkdir package-user-dir))
+          (with-temp-buffer
+            ,(if file
+                 (list 'insert-file-contents file))
+                ,@body)
      (when (file-directory-p package-test-user-dir)
        (delete-directory package-test-user-dir t))))
 
 (ert-deftest package-test-buffer-info ()
   "Parse an elisp buffer to get a `package-desc' object."
-  (with-temp-buffer
-    (insert-file-contents "simple-single.el")
-    (should (equal (package-buffer-info) simple-single-desc))))
+  (with-package-test
+   (:file "simple-single.el")
+   (should (equal (package-buffer-info) simple-single-desc))))
 
 (ert-deftest package-test-install-single ()
   "Install a single file without using an archive."
-  (with-temp-buffer
-    (insert-file-contents "simple-single.el")
-    (should (eq (package-install-from-buffer (package-buffer-info)) t))))
+  (with-package-test
+   (:file "simple-single.el")
+   (should (eq (package-install-from-buffer (package-buffer-info)) t))))
 
 (provide 'package-test)
 
