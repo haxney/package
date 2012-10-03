@@ -85,7 +85,7 @@
        (mkdir package-user-dir))
           (with-temp-buffer
             ,(if file
-                 (list 'insert-file-contents (expand-file-name file package-test-dir)))
+                 (list 'insert-file-contents file))
                 ,@body)
      (when (file-directory-p package-test-user-dir)
        (delete-directory package-test-user-dir t))))
