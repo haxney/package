@@ -686,7 +686,9 @@ PKG-DIR is the name of the package directory."
     (write-region (point-min) (point-max) file-name)))
 
 (defun package-unpack-single (name version desc requires)
-  "Install the contents of the current buffer as a package."
+  "Install the contents of the current buffer as a package.
+
+NAME, VERSION, and DESC must be strings."
   ;; Special case "package".
   (if (string= name "package")
       (package--write-file-no-coding
@@ -707,13 +709,14 @@ PKG-DIR is the name of the package directory."
                  name
                  version
                  desc
-                 (list 'quote
-                       ;; Turn version lists into string form.
-                       (mapcar
-                        (lambda (elt)
-                          (list (car elt)
-                                (package-version-join (cadr elt))))
-                        requires))))
+                 (when requires
+                     (list 'quote
+                           ;; Turn version lists into string form.
+                           (mapcar
+                            (lambda (elt)
+                              (list (car elt)
+                                    (package-version-join (cadr elt))))
+                            requires)))))
           "\n")
          nil
          pkg-file
@@ -1095,7 +1098,7 @@ or tar), but that information is now contained within the
         (cond
          ((eq kind 'single)
           (package-unpack-single (symbol-name file-name)
-                                 pkg-version
+                                 (package-version-join pkg-version)
                                  (package-desc-doc pkg-desc)
                                  requires))
          ((eq kind 'tar)
