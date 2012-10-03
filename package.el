@@ -660,16 +660,16 @@ untar into a directory named DIR; otherwise, signal an error."
         (error "Package does not untar cleanly into directory %s/" dir))))
   (tar-untar-buffer))
 
-(defun package-unpack (package version)
+(defun package-unpack (name version)
   "Unpack a tar package.
-PACKAGE and VERSION must be strings."
-  (let* ((dirname (concat package "-" version))
+NAME and VERSION must be strings."
+  (let* ((dirname (concat name "-" version))
          (pkg-dir (expand-file-name dirname package-user-dir)))
     (make-directory package-user-dir t)
     ;; FIXME: should we delete PKG-DIR if it exists?
     (let* ((default-directory (file-name-as-directory package-user-dir)))
       (package-untar-buffer dirname)
-      (package--make-autoloads-and-compile package pkg-dir))))
+      (package--make-autoloads-and-compile name pkg-dir))))
 
 (defun package--make-autoloads-and-compile (name pkg-dir)
   "Generate autoloads and do byte-compilation for package named NAME.
@@ -685,17 +685,17 @@ PKG-DIR is the name of the package directory."
   (let ((buffer-file-coding-system 'no-conversion))
     (write-region (point-min) (point-max) file-name)))
 
-(defun package-unpack-single (file-name version desc requires)
+(defun package-unpack-single (name version desc requires)
   "Install the contents of the current buffer as a package."
   ;; Special case "package".
-  (if (string= file-name "package")
+  (if (string= name "package")
       (package--write-file-no-coding
-       (expand-file-name (concat file-name ".el") package-user-dir))
-    (let* ((pkg-dir  (expand-file-name (concat file-name "-"
-                                               (package-version-join version))
+       (expand-file-name (concat name ".el") package-user-dir))
+    (let* ((pkg-dir  (expand-file-name (concat name "-"
+                                               version)
                                        package-user-dir))
-           (el-file  (expand-file-name (concat file-name ".el") pkg-dir))
-           (pkg-file (expand-file-name (concat file-name "-pkg.el") pkg-dir)))
+           (el-file  (expand-file-name (concat name ".el") pkg-dir))
+           (pkg-file (expand-file-name (concat name "-pkg.el") pkg-dir)))
       (make-directory pkg-dir t)
       (package--write-file-no-coding el-file)
       (let ((print-level nil)
@@ -704,8 +704,8 @@ PKG-DIR is the name of the package directory."
          (concat
           (prin1-to-string
            (list 'define-package
-                 file-name
-                 (package-version-join version)
+                 name
+                 version
                  desc
                  (list 'quote
                        ;; Turn version lists into string form.
@@ -718,7 +718,7 @@ PKG-DIR is the name of the package directory."
          nil
          pkg-file
          nil nil nil 'excl))
-      (package--make-autoloads-and-compile file-name pkg-dir))))
+      (package--make-autoloads-and-compile name pkg-dir))))
 
 (defmacro package--with-work-buffer (location file &rest body)
   "Run BODY in a buffer containing the contents of FILE at LOCATION.
