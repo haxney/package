@@ -70,6 +70,7 @@
 
 (cl-defmacro with-package-test ((&optional &key file build-dir) &rest body)
   "Set up temporary locations and variables for testing."
+  (declare (indent 1))
   `(let ((package-user-dir package-test-user-dir)
          (package-archives `(("gnu" . ,package-test-dir)))
          ,@(if build-dir (list (list 'build-dir build-dir)
@@ -143,51 +144,46 @@ Must called from within a `tar-mode' buffer."
 
 (ert-deftest package-test-buffer-info ()
   "Parse an elisp buffer to get a `package-desc' object."
-  (with-package-test
-   (:file "simple-single-1.3.el")
-   (should (equal (package-buffer-info) simple-single-desc))))
+  (with-package-test (:file "simple-single-1.3.el")
+    (should (equal (package-buffer-info) simple-single-desc))))
 
 (ert-deftest package-test-install-single ()
   "Install a single file without using an archive."
-  (with-package-test
-   (:file "simple-single-1.3.el")
-   (should (eq (package-install-from-buffer (package-buffer-info)) t))
-   (let ((simple-pkg-dir (file-name-as-directory
-                          (expand-file-name
-                           "simple-single-1.3"
-                           package-test-user-dir))))
-     (should (eq (file-directory-p simple-pkg-dir) t))
-     (with-temp-buffer
-       (insert-file-contents (expand-file-name "simple-single-pkg.el" simple-pkg-dir))
-       (should (string= (buffer-string)
-                        "(define-package \"simple-single\" \"1.3\" \"A single-file package with no dependencies\" nil)\n"))))))
+  (with-package-test (:file "simple-single-1.3.el")
+    (should (eq (package-install-from-buffer (package-buffer-info)) t))
+    (let ((simple-pkg-dir (file-name-as-directory
+                           (expand-file-name
+                            "simple-single-1.3"
+                            package-test-user-dir))))
+      (should (eq (file-directory-p simple-pkg-dir) t))
+      (with-temp-buffer
+        (insert-file-contents (expand-file-name "simple-single-pkg.el" simple-pkg-dir))
+        (should (string= (buffer-string)
+                         "(define-package \"simple-single\" \"1.3\" \"A single-file package with no dependencies\" nil)\n"))))))
 
 (ert-deftest package-test-refresh-contents ()
   "Parse an \"archive-contents\" file."
-  (with-package-test
-   ()
-   (package-refresh-contents)))
+  (with-package-test ()
+    (package-refresh-contents)))
 
 (ert-deftest package-test-install-single-from-archive ()
   "Install a single package from a package archive."
-  (with-package-test
-   ()
-   (package-refresh-contents)
-   (package-install 'simple-single)))
+  (with-package-test ()
+    (package-refresh-contents)
+    (package-install 'simple-single)))
 
 (ert-deftest package-test-build-multifile ()
   "Build a multi-file archive."
-  (with-package-test
-   (:build-dir "multi-file-0.2.3")
-   (should (file-exists-p build-tar))
-   (let ((suffixes
-          (remove build-tar (package-test-suffix-matches
-                             build-dir
-                             package-test-built-file-suffixes))))
-     (with-current-buffer (find-file build-tar)
-      (dolist (file suffixes)
-        (should (package-test-search-tar-file file)))
-      (kill-buffer)))))
+  (with-package-test (:build-dir "multi-file-0.2.3")
+    (should (file-exists-p build-tar))
+    (let ((suffixes
+           (remove build-tar (package-test-suffix-matches
+                              build-dir
+                              package-test-built-file-suffixes))))
+      (with-current-buffer (find-file build-tar)
+        (dolist (file suffixes)
+          (should (package-test-search-tar-file file)))
+        (kill-buffer)))))
 
 (ert-deftest package-test-update-listing ()
   "Ensure installed package status is updated."
