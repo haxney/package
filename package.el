@@ -153,8 +153,7 @@
 
 ;;; Code:
 
-(eval-when-compile
-  (require 'cl))
+(require 'cl-lib)
 
 (require 'tabulated-list)
 
@@ -263,7 +262,7 @@ contrast, `package-user-dir' contains packages for personal use."
   :group 'package
   :version "24.1")
 
-(defstruct (package-desc
+(cl-defstruct (package-desc
             (:constructor
              define-package-desc
              (name-string version-string &optional (doc "No description available.") requirements
@@ -670,7 +669,7 @@ PACKAGE and VERSION must be strings."
     ;; FIXME: should we delete PKG-DIR if it exists?
     (let* ((default-directory (file-name-as-directory package-user-dir)))
       (package-untar-buffer dirname)
-      (package--make-autoloads-and-compile name pkg-dir))))
+      (package--make-autoloads-and-compile package pkg-dir))))
 
 (defun package--make-autoloads-and-compile (name pkg-dir)
   "Generate autoloads and do byte-compilation for package named NAME.
@@ -776,7 +775,7 @@ It will move point to somewhere in the headers."
   (let ((location (package-archive-base name))
         (file (concat (symbol-name name) "-" version ".tar")))
     (package--with-work-buffer location file
-                               (package-unpack name version))))
+                               (package-unpack (symbol-name name) version))))
 
 (defun package-installed-p (package &optional min-version)
   "Return true if PACKAGE, of MIN-VERSION or newer, is installed.
@@ -1429,7 +1428,7 @@ If the alist stored in the symbol LISTNAME lacks an entry for
 `package-desc' PKG, add one.  The alist is keyed with cons
 cells (NAME . VERSION-LIST), where NAME is a symbol and
 VERSION-LIST is a version list and its value is (STATUS DOC)."
-  `(pushnew (list (cons (package-desc-name ,pkg)
+  `(cl-pushnew (list (cons (package-desc-name ,pkg)
                         (package-desc-vers ,pkg))
                   ,status
                   (package-desc-doc ,pkg))
