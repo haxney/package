@@ -77,18 +77,26 @@
   (expand-file-name "archive-contents" package-test-dir)
   "Path to a static copy of \"archive-contents\".")
 
+(defvar package-test-built-file-suffixes '(".tar" "/dir" "/*.info")
+  "Remove these files when cleaning up a built package.")
+
 (cl-defmacro with-package-test ((&optional &key file build-dir) &rest body)
   "Set up temporary locations and variables for testing."
   `(let ((package-user-dir package-test-user-dir)
-         (package-archives `(("gnu" . ,package-test-dir))))
+         (package-archives `(("gnu" . ,package-test-dir)))
+         ,@(if build-dir (list (list 'build-dir build-dir)
+                                (list 'build-tar (concat build-dir ".tar")))
+            (list 'none)))
      (unless (file-directory-p package-user-dir)
        (mkdir package-user-dir))
-          (with-temp-buffer
-            ,(if file
-                 (list 'insert-file-contents file))
-            ,(if build-dir
-                 (package-test-build-multifile build-dir))
-            ,@body)
+     ,(if build-dir
+          (list 'package-test-build-multifile 'build-dir))
+     (with-temp-buffer
+       ,(if file
+            (list 'insert-file-contents file))
+       ,@body)
+     ,(if build-dir
+          (list 'package-test-cleanup-built-files build-dir))
      (when (file-directory-p package-test-user-dir)
        (delete-directory package-test-user-dir t))))
 
@@ -97,12 +105,14 @@
 
 FILE should be a .texinfo file relative to the current `default-directory'"
   (let* ((full-file (expand-file-name file))
-        (info-file (replace-regexp-in-string "\\.texi\\'" ".info" full-file)))
+         (info-file (replace-regexp-in-string "\\.texi\\'" ".info" full-file)))
     (with-current-buffer (find-file-literally full-file)
       (require 'makeinfo)
       (makeinfo-buffer)
+      ;; Give `makeinfo-buffer' a chance to finish
+      (while compilation-in-progress
+        (sit-for 1))
       (kill-buffer)
-      (sit-for 1) ;; Give `makeinfo-buffer' a chance to finish
       (call-process "ginstall-info" nil (get-buffer "*scratch*") nil
                     (format "--info-dir=%s" default-directory)
                     (format "%s" info-file)))))
@@ -119,6 +129,29 @@ DIR must not have a trailing slash."
     (package-test-install-texinfo (concat pkg-name ".texi"))
     (cd (concat default-directory "/.."))
     (call-process "tar" nil nil nil "-caf" tar-name pkg-dirname)))
+
+(defun package-test-suffix-matches (base suffix-list)
+  "Return file names matching BASE concatenated with each item in SUFFIX-LIST"
+  (cl-mapcan
+   '(lambda (item) (file-expand-wildcards (concat base item)))
+   suffix-list))
+
+(defun package-test-cleanup-built-files (dir)
+  "Remove files which were the result of creating a tar archive.
+
+DIR is the base name of the package directory, without the trailing slash"
+  (let* ((pkg-dirname (file-name-nondirectory dir)))
+    (dolist (file (package-test-suffix-matches dir package-test-built-file-suffixes))
+      (delete-file file))))
+
+(defun package-test-search-tar-file (filename)
+  "Search the current buffer's `tar-parse-info' variable for FILENAME.
+
+Must called from within a `tar-mode' buffer."
+  (cl-dolist (header tar-parse-info)
+             (let ((tar-name (tar-header-name header)))
+              (when (string= tar-name filename)
+                (cl-return t)))))
 
 (ert-deftest package-test-buffer-info ()
   "Parse an elisp buffer to get a `package-desc' object."
@@ -158,11 +191,18 @@ DIR must not have a trailing slash."
   "Build a multi-file archive."
   (with-package-test
    (:build-dir "multi-file-0.2.3")
-   (file-exists-p "multi-file-0.2.3.tar")))
+   (should (file-exists-p build-tar))
+   (let ((suffixes
+          (remove build-tar (package-test-suffix-matches
+                             build-dir
+                             package-test-built-file-suffixes))))
+     (with-current-buffer (find-file build-tar)
+      (dolist (file suffixes)
+        (should (package-test-search-tar-file file)))
+      (kill-buffer)))))
 
 (ert-deftest package-test-update-listing ()
   "Ensure installed package status is updated."
-  ()
   (with-package-test
    ()
    (package-list-packages)
