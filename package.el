@@ -1439,7 +1439,8 @@ VERSION-LIST is a version list and its value is (STATUS DOC)."
                   ,status
                   (package-desc-doc ,pkg))
             ,listname
-            :key 'car))
+            :key 'car
+            :test 'equal))
 
 (defun package-menu--generate (remember-pos packages)
   "Populate the Package Menu.

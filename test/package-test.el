@@ -250,7 +250,12 @@ Must called from within a `tar-mode' buffer."
    (search-forward-regexp "^ +simple-single")
    (package-menu-mark-install)
    (package-menu-execute)
-   (should (package-installed-p 'simple-single))))
+   (should (package-installed-p 'simple-single))
+   (switch-to-buffer "*Packages*")
+   (goto-char (point-min))
+   (should (re-search-forward "^\\s-+simple-single\\s-+1.3\\s-+installed" nil t))
+   (goto-char (point-min))
+   (should-not (re-search-forward "^\\s-+simple-single\\s-+1.3\\s-+available" nil t))))
 
 (provide 'package-test)
 
