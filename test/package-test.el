@@ -34,8 +34,8 @@
 ;;; Code:
 
 (require 'package)
-(eval-when-compile
-  (require 'cl))
+(require 'ert)
+(require 'cl-lib)
 
 ;; Highlight `ert-deftest' declaration
 (eval-after-load "semantic-el"
@@ -70,14 +70,22 @@
 "]
   "Expected `package-desc' parsed from simple-single.el.")
 
-(defmacro* with-package-test ((&optional &key file) &rest body)
+(defvar package-test-dir (file-name-directory load-file-name)
+  "Base directory of package test files.")
+
+(defvar package-test-fake-contents-file
+  (expand-file-name "archive-contents" package-test-dir)
+  "Path to a static copy of \"archive-contents\".")
+
+(cl-defmacro with-package-test ((&optional &key file) &rest body)
   "Set up temporary locations and variables for testing."
-  `(let ((package-user-dir package-test-user-dir))
+  `(let ((package-user-dir package-test-user-dir)
+         (package-archives `(("gnu" . ,package-test-dir))))
      (unless (file-directory-p package-user-dir)
        (mkdir package-user-dir))
           (with-temp-buffer
             ,(if file
-                 (list 'insert-file-contents file))
+                 (list 'insert-file-contents (expand-file-name file package-test-dir)))
                 ,@body)
      (when (file-directory-p package-test-user-dir)
        (delete-directory package-test-user-dir t))))
@@ -93,6 +101,12 @@
   (with-package-test
    (:file "simple-single.el")
    (should (eq (package-install-from-buffer (package-buffer-info)) t))))
+
+(ert-deftest package-test-refresh-contents ()
+  "Parse an \"archive-contents\" file."
+  (with-package-test
+   ()
+   (package-refresh-contents)))
 
 (provide 'package-test)
 
