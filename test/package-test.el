@@ -77,7 +77,7 @@
   (expand-file-name "archive-contents" package-test-dir)
   "Path to a static copy of \"archive-contents\".")
 
-(cl-defmacro with-package-test ((&optional &key file) &rest body)
+(cl-defmacro with-package-test ((&optional &key file build-dir) &rest body)
   "Set up temporary locations and variables for testing."
   `(let ((package-user-dir package-test-user-dir)
          (package-archives `(("gnu" . ,package-test-dir))))
@@ -86,9 +86,39 @@
           (with-temp-buffer
             ,(if file
                  (list 'insert-file-contents file))
-                ,@body)
+            ,(if build-dir
+                 (package-test-build-multifile build-dir))
+            ,@body)
      (when (file-directory-p package-test-user-dir)
        (delete-directory package-test-user-dir t))))
+
+(defun package-test-install-texinfo (file)
+  "Install from texinfo FILE.
+
+FILE should be a .texinfo file relative to the current `default-directory'"
+  (let* ((full-file (expand-file-name file))
+        (info-file (replace-regexp-in-string "\\.texi\\'" ".info" full-file)))
+    (with-current-buffer (find-file-literally full-file)
+      (require 'makeinfo)
+      (makeinfo-buffer)
+      (kill-buffer)
+      (sit-for 1) ;; Give `makeinfo-buffer' a chance to finish
+      (call-process "ginstall-info" nil (get-buffer "*scratch*") nil
+                    (format "--info-dir=%s" default-directory)
+                    (format "%s" info-file)))))
+
+(defun package-test-build-multifile (dir)
+  "Build a tar package from a multiple-file directory DIR.
+
+DIR must not have a trailing slash."
+  (let* ((pkg-dirname (file-name-nondirectory dir))
+         (pkg-name (package-strip-version pkg-dirname))
+         (pkg-version (match-string-no-properties 2 pkg-dirname))
+         (tar-name (concat pkg-dirname ".tar"))
+         (default-directory (expand-file-name dir)))
+    (package-test-install-texinfo (concat pkg-name ".texi"))
+    (cd (concat default-directory "/.."))
+    (call-process "tar" nil nil nil "-caf" tar-name pkg-dirname)))
 
 (ert-deftest package-test-buffer-info ()
   "Parse an elisp buffer to get a `package-desc' object."
@@ -123,6 +153,12 @@
    ()
    (package-refresh-contents)
    (package-install 'simple-single)))
+
+(ert-deftest package-test-build-multifile ()
+  "Build a multi-file archive."
+  (with-package-test
+   (:build-dir "multi-file-0.2.3")
+   (file-exists-p "multi-file-0.2.3.tar")))
 
 (ert-deftest package-test-update-listing ()
   "Ensure installed package status is updated."
