@@ -100,7 +100,16 @@
   "Install a single file without using an archive."
   (with-package-test
    (:file "simple-single.el")
-   (should (eq (package-install-from-buffer (package-buffer-info)) t))))
+   (should (eq (package-install-from-buffer (package-buffer-info)) t))
+   (let ((simple-pkg-dir (file-name-as-directory
+                          (expand-file-name
+                           "simple-single-1.3"
+                           package-test-user-dir))))
+     (should (eq (file-directory-p simple-pkg-dir) t))
+     (with-temp-buffer
+       (insert-file-contents (expand-file-name "simple-single-pkg.el" simple-pkg-dir))
+       (should (string= (buffer-string)
+                        "(define-package \"simple-single\" \"1.3\" \"A single-file package with no dependencies\" nil)\n"))))))
 
 (ert-deftest package-test-refresh-contents ()
   "Parse an \"archive-contents\" file."
