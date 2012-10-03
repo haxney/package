@@ -642,7 +642,8 @@ EXTRA-PROPERTIES is a plist with the following keys:
          (version-control 'never))
     (unless (fboundp 'autoload-ensure-default-file)
       (package-autoload-ensure-default-file generated-autoload-file))
-    (update-directory-autoloads pkg-dir)))
+    (update-directory-autoloads pkg-dir)
+    (kill-buffer (get-file-buffer generated-autoload-file))))
 
 (defvar tar-parse-info)
 (declare-function tar-untar-buffer "tar-mode" ())
