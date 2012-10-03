@@ -73,20 +73,22 @@
   (declare (indent 1))
   `(let ((package-user-dir package-test-user-dir)
          (package-archives `(("gnu" . ,package-test-dir)))
+         (old-yes-no-defn (symbol-function 'yes-or-no-p))
          ,@(if build-dir (list (list 'build-dir build-dir)
                                 (list 'build-tar (concat build-dir ".tar")))
             (list 'none))) ;; Dummy value so `let' doesn't try to bind `nil'
+     (setf (symbol-function 'yes-or-no-p) #'ignore)
      (unless (file-directory-p package-user-dir)
        (mkdir package-user-dir))
      ,(if build-dir
           (list 'package-test-build-multifile 'build-dir))
      ,@(when install
-        (list
-         (list 'package-refresh-contents)
-         ;; The two quotes before `package-install' are required! One is
-         ;; consumed by the macro expansion and the other prevents trying to
-         ;; take the `symbol-value' of `package-install'
-         (list 'mapc ''package-install install)))
+         (list
+          (list 'package-refresh-contents)
+          ;; The two quotes before `package-install' are required! One is
+          ;; consumed by the macro expansion and the other prevents trying to
+          ;; take the `symbol-value' of `package-install'
+          (list 'mapc ''package-install install)))
      (with-temp-buffer
        ,(if file
             (list 'insert-file-contents file))
@@ -94,7 +96,8 @@
      ,(if build-dir
           (list 'package-test-cleanup-built-files build-dir))
      (when (file-directory-p package-test-user-dir)
-       (delete-directory package-test-user-dir t))))
+       (delete-directory package-test-user-dir t))
+     (setf (symbol-function 'yes-or-no-p) old-yes-no-defn)))
 
 (defun package-test-install-texinfo (file)
   "Install from texinfo FILE.
