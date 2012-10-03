@@ -68,18 +68,25 @@
 (defvar package-test-built-file-suffixes '(".tar" "/dir" "/*.info")
   "Remove these files when cleaning up a built package.")
 
-(cl-defmacro with-package-test ((&optional &key file build-dir) &rest body)
+(cl-defmacro with-package-test ((&optional &key file build-dir install) &rest body)
   "Set up temporary locations and variables for testing."
   (declare (indent 1))
   `(let ((package-user-dir package-test-user-dir)
          (package-archives `(("gnu" . ,package-test-dir)))
          ,@(if build-dir (list (list 'build-dir build-dir)
                                 (list 'build-tar (concat build-dir ".tar")))
-            (list 'none)))
+            (list 'none))) ;; Dummy value so `let' doesn't try to bind `nil'
      (unless (file-directory-p package-user-dir)
        (mkdir package-user-dir))
      ,(if build-dir
           (list 'package-test-build-multifile 'build-dir))
+     ,@(when install
+        (list
+         (list 'package-refresh-contents)
+         ;; The two quotes before `package-install' are required! One is
+         ;; consumed by the macro expansion and the other prevents trying to
+         ;; take the `symbol-value' of `package-install'
+         (list 'mapc ''package-install install)))
      (with-temp-buffer
        ,(if file
             (list 'insert-file-contents file))
@@ -92,19 +99,25 @@
 (defun package-test-install-texinfo (file)
   "Install from texinfo FILE.
 
-FILE should be a .texinfo file relative to the current `default-directory'"
+FILE should be a .texinfo file relative to the current
+`default-directory'"
+  (require 'info)
   (let* ((full-file (expand-file-name file))
-         (info-file (replace-regexp-in-string "\\.texi\\'" ".info" full-file)))
+         (info-file (replace-regexp-in-string "\\.texi\\'" ".info" full-file))
+         (old-info-defn (symbol-function 'Info-revert-find-node)))
+    (require 'info)
+    (setf (symbol-function 'Info-revert-find-node) #'ignore)
     (with-current-buffer (find-file-literally full-file)
       (require 'makeinfo)
       (makeinfo-buffer)
       ;; Give `makeinfo-buffer' a chance to finish
       (while compilation-in-progress
-        (sit-for 1))
-      (kill-buffer)
+        (sit-for 0.1))
       (call-process "ginstall-info" nil (get-buffer "*scratch*") nil
                     (format "--info-dir=%s" default-directory)
-                    (format "%s" info-file)))))
+                    (format "%s" info-file))
+      (kill-buffer))
+    (setf (symbol-function 'Info-revert-find-node) old-info-defn)))
 
 (defun package-test-build-multifile (dir)
   "Build a tar package from a multiple-file directory DIR.
@@ -116,7 +129,7 @@ DIR must not have a trailing slash."
          (tar-name (concat pkg-dirname ".tar"))
          (default-directory (expand-file-name dir)))
     (package-test-install-texinfo (concat pkg-name ".texi"))
-    (cd (concat default-directory "/.."))
+    (setq default-directory (file-name-directory default-directory))
     (call-process "tar" nil nil nil "-caf" tar-name pkg-dirname)))
 
 (defun package-test-suffix-matches (base suffix-list)
@@ -184,6 +197,33 @@ Must called from within a `tar-mode' buffer."
         (dolist (file suffixes)
           (should (package-test-search-tar-file file)))
         (kill-buffer)))))
+
+(ert-deftest package-test-install-multifile ()
+  "Check properties of the installed multi-file package."
+  (let ((autoload-file
+         (expand-file-name "multi-file-autoloads.el"
+                           (expand-file-name
+                            "multi-file-0.2.3"
+                            package-test-user-dir)))
+        (installed-files '("dir" "multi-file.info" "multi-file-sub.elc"
+                           "multi-file-autoloads.el" "multi-file.elc"))
+        (autoload-forms '("^(defvar multi-file-custom-var"
+                          "^(custom-autoload 'multi-file-custom-var"
+                          "^(autoload 'multi-file-mode"
+                          "^(provide 'multi-file-autoloads)"))
+        (pkg-dir (file-name-as-directory
+                            (expand-file-name
+                             "multi-file-0.2.3"
+                             package-test-user-dir))))
+    (with-package-test (:build-dir "multi-file-0.2.3"
+                                   :install '(multi-file)
+                                   :file autoload-file)
+      (should (package-installed-p 'multi-file))
+      (dolist (fn installed-files)
+        (should (file-exists-p (expand-file-name fn pkg-dir))))
+      (dolist (re autoload-forms)
+        (goto-char (point-min))
+        (should (re-search-forward re nil t))))))
 
 (ert-deftest package-test-tar-desc ()
   "Examine the properties parsed from a tar package"
