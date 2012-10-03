@@ -4,7 +4,7 @@
 
 ;; Author: Tom Tromey <tromey@redhat.com>
 ;; Created: 10 Mar 2007
-;; Version: 1.0
+;; Version: 1.5
 ;; Keywords: tools
 
 ;; This file is part of GNU Emacs.
@@ -224,7 +224,7 @@ a package can run arbitrary code."
   "Version number of the package archive understood by this file.
 Lower version numbers than this will probably be understood as well.")
 
-(defconst package-el-version "1.0"
+(defconst package-el-version "1.5"
   "Version of package.el.")
 
 ;; We don't prime the cache since it tends to get out of date.

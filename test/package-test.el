@@ -1,7 +1,7 @@
 ;;; package-test.el --- Tests for the Emacs package system
 
 ;; Author: Daniel Hackney <dan@haxney.org>
-;; Version: 1.0
+;; Version: 1.5
 
 ;; This file is not part of GNU Emacs.
 
