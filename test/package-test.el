@@ -124,6 +124,15 @@
    (package-refresh-contents)
    (package-install 'xclip)))
 
+(ert-deftest package-test-update-listing ()
+  "Ensure installed package status is updated."
+  ()
+  (package-list-packages)
+  (search-forward-regexp "^ +xclip")
+  (package-menu-mark-install)
+  (package-menu-execute)
+  (should (package-installed-p 'xclip)))
+
 (provide 'package-test)
 
 ;;; package-test.el ends here
