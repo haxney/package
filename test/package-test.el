@@ -185,6 +185,17 @@ Must called from within a `tar-mode' buffer."
           (should (package-test-search-tar-file file)))
         (kill-buffer)))))
 
+(ert-deftest package-test-tar-desc ()
+  "Examine the properties parsed from a tar package"
+  (with-package-test (:build-dir "multi-file-0.2.3")
+    (let ((info (package-tar-file-info (expand-file-name build-tar))))
+      (should (eq (package-desc-name info) 'multi-file))
+      (should (equal (package-desc-vers info) '(0 2 3)))
+      (should (equal (package-desc-doc info) "Example of a multi-file tar package"))
+      (should (equal (package-desc-reqs info) nil))
+      (should (equal (package-desc-kind info) 'tar))
+      (should (equal (package-desc-commentary info) "This is a bare-bones readme file for the multi-file package.\n")))))
+
 (ert-deftest package-test-update-listing ()
   "Ensure installed package status is updated."
   (with-package-test
