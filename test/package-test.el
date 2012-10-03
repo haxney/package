@@ -68,7 +68,7 @@
 ;; and all your dreams will come true.
 
 "]
-  "Expected `package-desc' parsed from simple-single.el.")
+  "Expected `package-desc' parsed from simple-single-1.3.el.")
 
 (defvar package-test-dir (file-name-directory load-file-name)
   "Base directory of package test files.")
@@ -93,13 +93,13 @@
 (ert-deftest package-test-buffer-info ()
   "Parse an elisp buffer to get a `package-desc' object."
   (with-package-test
-   (:file "simple-single.el")
+   (:file "simple-single-1.3.el")
    (should (equal (package-buffer-info) simple-single-desc))))
 
 (ert-deftest package-test-install-single ()
   "Install a single file without using an archive."
   (with-package-test
-   (:file "simple-single.el")
+   (:file "simple-single-1.3.el")
    (should (eq (package-install-from-buffer (package-buffer-info)) t))
    (let ((simple-pkg-dir (file-name-as-directory
                           (expand-file-name
@@ -122,16 +122,18 @@
   (with-package-test
    ()
    (package-refresh-contents)
-   (package-install 'xclip)))
+   (package-install 'simple-single)))
 
 (ert-deftest package-test-update-listing ()
   "Ensure installed package status is updated."
   ()
-  (package-list-packages)
-  (search-forward-regexp "^ +xclip")
-  (package-menu-mark-install)
-  (package-menu-execute)
-  (should (package-installed-p 'xclip)))
+  (with-package-test
+   ()
+   (package-list-packages)
+   (search-forward-regexp "^ +simple-single")
+   (package-menu-mark-install)
+   (package-menu-execute)
+   (should (package-installed-p 'simple-single))))
 
 (provide 'package-test)
 
