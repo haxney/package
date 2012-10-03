@@ -2,6 +2,6 @@
  (simple-single .
                 [(1 3)
                 nil "A single-file package with no dependencies" single])
- (yasnippet .
-            [(0 8 0)
-             nil "A template system for Emacs" tar]))
+ (multi-file .
+            [(0 2 3)
+             nil "Example of a multi-file tar package" tar]))
