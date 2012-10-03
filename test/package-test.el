@@ -108,6 +108,13 @@
    ()
    (package-refresh-contents)))
 
+(ert-deftest package-test-install-single-from-archive ()
+  "Install a single package from a package archive."
+  (with-package-test
+   ()
+   (package-refresh-contents)
+   (package-install 'xclip)))
+
 (provide 'package-test)
 
 ;;; package-test.el ends here
