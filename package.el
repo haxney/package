@@ -1062,7 +1062,8 @@ boundaries."
              ;; `define-package' with `define-package-desc' (which doesn't have
              ;; side-effects), add the readme, and eval that instead.
              (pkg-desc (eval (append (cons 'define-package-desc (cdr pkg-def-parsed))
-                                     `(:commentary ,readme)))))
+                                     `(:commentary ,readme
+                                                   :kind 'tar)))))
         (unless (equal (package-version-join (package-desc-vers pkg-desc))
                        pkg-version)
           (error "Package has inconsistent versions"))
@@ -1102,7 +1103,8 @@ or tar), but that information is now contained within the
                                  (package-desc-doc pkg-desc)
                                  requires))
          ((eq kind 'tar)
-          (package-unpack file-name pkg-version))
+          (package-unpack (symbol-name file-name)
+                          (package-version-join pkg-version)))
          (t
           (error "Unknown package type: %s" kind)))
         ;; Try to activate it.
