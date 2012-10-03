@@ -24,14 +24,6 @@
 ;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 ;; Boston, MA 02110-1301, USA.
 
-;;; Change Log:
-
-;;  2 Apr 2007 - now using ChangeLog file
-;; 15 Mar 2007 - updated documentation
-;; 14 Mar 2007 - Changed how obsolete packages are handled
-;; 13 Mar 2007 - Wrote package-install-from-buffer
-;; 12 Mar 2007 - Wrote package-menu mode
-
 ;;; Commentary:
 
 ;; The idea behind package.el is to be able to download packages and
@@ -101,17 +93,18 @@
 ;;; Thanks:
 ;;; (sorted by sort-lines):
 
+;; Daniel Hackney <dan@haxney.org>
 ;; Jim Blandy <jimb@red-bean.com>
 ;; Karl Fogel <kfogel@red-bean.com>
 ;; Kevin Ryde <user42@zip.com.au>
 ;; Lawrence Mitchell
 ;; Michael Olson <mwolson@member.fsf.org>
+;; Phil Hagelberg <phil@hagelb.org>
 ;; Sebastian Tennant <sebyte@smolny.plus.com>
 ;; Stefan Monnier <monnier@iro.umontreal.ca>
 ;; Vinicius Jose Latorre <viniciusjl@ig.com.br>
-;; Phil Hagelberg <phil@hagelb.org>
 
-;;; ToDo:
+;;; TODO:
 
 ;; - a trust mechanism, since compiling a package can run arbitrary code.
 ;;   For example, download package signatures and check that they match.
@@ -126,9 +119,6 @@
 ;; - give users a way to view a package's documentation when it
 ;;   only appears in the .el
 ;; - use/extend checkdoc so people can tell if their package will work
-;; - "installed" instead of a blank in the status column
-;; - tramp needs its files to be compiled in a certain order.
-;;   how to handle this?  fix tramp?
 ;; - on emacs 21 we don't kill the -autoloads.el buffer.  what about 22?
 ;; - maybe we need separate .elc directories for various emacs versions
 ;;   and also emacs-vs-xemacs.  That way conditional compilation can
@@ -141,26 +131,18 @@
 ;;   installing it
 ;; - Interface with desktop.el so that restarting after an install
 ;;   works properly
-;; - Implement M-x package-upgrade, to upgrade any/all existing packages
 ;; - Use hierarchical layout.  PKG/etc PKG/lisp PKG/info
 ;;   ... except maybe lisp?
 ;; - It may be nice to have a macro that expands to the package's
 ;;   private data dir, aka ".../etc".  Or, maybe data-directory
 ;;   needs to be a list (though this would be less nice)
 ;;   a few packages want this, eg sokoban
-;; - package menu needs:
-;;     ability to know which packages are built-in & thus not deletable
-;;     it can sometimes print odd results, like 0.3 available but 0.4 active
-;;        why is that?
 ;; - Allow multiple versions on the server...?
 ;;   [ why bother? ]
 ;; - Don't install a package which will invalidate dependencies overall
-;; - Allow something like (or (>= emacs 21.0) (>= xemacs 21.5))
-;;   [ currently thinking, why bother.. KISS ]
 ;; - Allow optional package dependencies
 ;;   then if we require 'bbdb', bbdb-specific lisp in lisp/bbdb
 ;;   and just don't compile to add to load path ...?
-;; - Have a list of archive URLs?  [ maybe there's no point ]
 ;; - David Kastrup pointed out on the xemacs list that for GPL it
 ;;   is friendlier to ship the source tree.  We could "support" that
 ;;   by just having a "src" subdir in the package.  This isn't ideal
